@@ -58,15 +58,24 @@ names(delta_state) <- append(c('Time'), sheetnames)
 
 experiment <- 'perturbhist'
 
+# load sacramento river flow alone:
+sac_only <- read.csv('../../data/dsm2_rsac155_flow_histdss.csv', skip=4, header=FALSE)
+sac_only$Time <- lubridate::dmy(sac_only$V2) + lubridate::days(1)
+sac_only <- sac_only[,c('Time','V4')]
+names(sac_only) <- c('Time','Sacramento')
+
+delta_state <- merge(delta_state, sac_only, by='Time')
+delta_state$NF_nonSac <- delta_state$`Northern Flow`-delta_state$Sacramento
+
 # Set parameters ----------------------------------------------------------
 
 scale_denom <- 2476156.199 # through some testing this seems to be the scaling ratio where the first number is the approximate increase in flow on the peaks
 pulse_params <- hash() # flow peak scaling, random shift mean, random shift standard deviation, min criteria, max criteria
 
-pulse_params[['Northern Flow']] <- c(15000/scale_denom, 200, 1500, 5000, NA)
+# pulse_params[['Northern Flow']] <- c(15000/scale_denom, 200, 1500, 5000, NA)
+pulse_params[['Sacramento']] <- c(15000/scale_denom, 200, 1500, 5000, NA)
 pulse_params[['SJR Flow']] <- c(2000/scale_denom, 50, 500, 200, NA)
 pulse_params[['Exports']] <- c(100/scale_denom, 1000, 2000, 50, max(delta_state$Exports))
-pulse_params[['DCC Gate']] <- c(1/scale_denom, 0, 1.5, NA, NA)
 
 # Create data variability -------------------------------------------------
 
@@ -74,7 +83,7 @@ years <- seq(2006,2016,1)
 
 for (year in years) {
   delta_df <- delta_state[lubridate::year(delta_state$Time)==year,]
-  delta_df$`Net Delta Outflow` <- delta_df$`Northern Flow` + delta_df$`SJR Flow` - 
+  delta_df$`Net Delta Outflow` <- delta_df$NF_nonSac + delta_df$Sacramento + delta_df$`SJR Flow` - 
     delta_df$Exports - delta_df$`Consump. Use`
   
   edit.df <- perturb_all(delta_df, pulse_params)
@@ -87,20 +96,11 @@ for (year in years) {
 }
 
 
-# Fix DCC
-full.df$`DCC Gate`[full.df$`DCC Gate`>=0] <- 1
-full.df$`DCC Gate`[full.df$`DCC Gate`<0] <- 0
-
 # Net Delta Outflow
-full.df$`Net Delta Outflow` <- full.df$`Northern Flow` + full.df$`SJR Flow` - full.df$Exports - 
+full.df$`Net Delta Outflow` <- full.df$NF_nonSac + full.df$Sacramento + full.df$`SJR Flow` - full.df$Exports - 
   delta_state$`Consump. Use`[delta_state$Time>=min(full.df$Time) & delta_state$Time<=max(full.df$Time)]
-delta_state$`Net Delta Outflow` <- delta_state$`Northern Flow` + delta_state$`SJR Flow` - delta_state$Exports - 
+delta_state$`Net Delta Outflow` <- delta_state$NF_nonSac + delta_state$Sacramento + delta_state$`SJR Flow` - delta_state$Exports - 
   delta_state$`Consump. Use`
-
-# Shift tide data
-shift.tide <- delta_state[,c('Time','Tidal Amp')]
-shift.tide$Time <- lubridate::days(100) + shift.tide$Time # tidal cycle ~27.3 days
-full.df <- merge(full.df, shift.tide, by='Time') 
 
 
 # Plots
@@ -130,8 +130,8 @@ file.rename(pltl_name, paste0("plots/",pltl_name))
 
 csv_dir <- "./data_out/"
 
-for (name in names(edit.df)[!(names(edit.df) %in% c('Time','Net Delta Outflow'))]) {
-  out_df <- edit.df[,names(edit.df) %in% c('Time',name)]
+for (name in names(edit.df)[!(names(edit.df) %in% c('Time','Net Delta Outflow','NF_nonSac'))]) {
+  out_df <- edit.df[,c('Time',name)]
   out_csv <- str_replace_all(name," ","_")
   write.table(out_df, file=paste0(csv_dir,'/',out_csv,'_',min(years),'-',max(years),'_perturb_historical.csv'), 
               sep=',', row.names=FALSE, col.names=FALSE)

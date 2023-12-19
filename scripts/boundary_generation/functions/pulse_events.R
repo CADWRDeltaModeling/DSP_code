@@ -87,6 +87,7 @@ perturb_all <- function(delta_df, pulse_params) {
     
     edit.df <- data.frame(matrix(nrow=nrow(delta_df),ncol=length(keys(pulse_params))))
     names(edit.df) <- keys(pulse_params)
+    edit.df$NF_nonSac <- delta_df$NF_nonSac
     edit.df$Time <- delta_df$Time
     # Create edited fields
     for (key in keys(pulse_params)) {
@@ -116,7 +117,7 @@ perturb_all <- function(delta_df, pulse_params) {
     } # end key loop 
     
     # Check for net delta outflow requirements
-    net_delta_outflow <- edit.df$`Northern Flow` + edit.df$`SJR Flow` - edit.df$Exports - 
+    net_delta_outflow <- edit.df$NF_nonSac + edit.df$Sacramento + edit.df$`SJR Flow` - edit.df$Exports - 
       delta_df$`Consump. Use`
     
     if (min(net_delta_outflow)>min.ndo) {

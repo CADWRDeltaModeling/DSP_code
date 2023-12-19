@@ -1,0 +1,18 @@
+# Breaks down the cases for 7 latin hypercube cases
+
+
+training_set: latinhypercube_v1
+  perturbations:
+    - name: sac_scaled_1.1:
+      model_input: sac
+        variable: flow
+        method: scale
+        args:
+          variable: sac
+          scale_factor: 1.1
+    - name: sac_hist_pert:
+      model_input: sac
+        variable: flow
+        method: read
+        args:
+          file: ./data_out/Northern_Flow_2006-2016_perturb_historical.csv
