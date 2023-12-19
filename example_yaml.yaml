@@ -1,0 +1,96 @@
+# Notes "unperturbed" is just a special case of perturbation
+# Training sets may or may not be where runs are done
+# One continguous stretch of simulation that is mined for a specific period is a "Case"
+# Two Cases may be bundled into one Run, the economy of which is model-specific 
+
+training_set: ann_20231208
+    homedir: /path/to/ann_20231208
+    base_model: 
+        model: [schism | dsm2]   # drives extractors ... should these be "magic"?
+        location: /path/to/base_model
+            
+    # A perturbation is a synthetic input or perturbed version of the model_base 
+    # It should cover the whole period or at least the runs in which used. Probably easier to just do whole thing?
+    # Perturbations are ingredients, not runs 
+    
+    perturbations:
+        # these are calculated as individual series that are saved in
+        # a location combining homedir and the perturbation name with "perturbed inputs"
+        # path/to/surrogage_20231208/perturbed_inputs/sac_scaled_1.1.csv
+        # but is some sort of groups checking needed?
+        - name: sac_scaled_1.1:
+          model_input: sac
+          variable: flow
+          method: scale
+          args:
+              variable: sac
+              scale_factor: 1.1
+        - name: export_shifts_events:
+          model_input: exports
+          model_variable: flow
+          method: shift_and_event:
+          args: 
+              blah
+        - name: sjr_shifts_events
+          model_input: sjr
+          
+
+    # Cases group (mix and match) perturbations (as with hypercube). Either:
+    # 1. We shoud allow cases to be long and have the perturbations apply in date ranges
+         in which case the 
+    # 2. We should have a run that 
+            
+    cases:
+        - name: model1
+          extends: model_base
+          model_dir: /path/to/model-ready/inputs
+          subcases:
+             - label: case_1
+               case_start: 2012-02-10   # where case gets different
+               case_end: 2013-12-31     # where case ends 
+               perturbations: None
+               ann_data:
+                  train:
+                      start: 2013-02-12 # Could be multiple?
+                      end: 2013-09-30
+                  test: 
+                      start: 2013-10-01
+                      end: 2013-10-01
+          
+        - name: lhq1
+            perturbations:
+                - sac_scaled_1.1
+                - something else
+            ann_periods:
+               train:
+                 - start: 2013-02-12 # Could be multiple?
+                   end: 2013-09-30
+               test: 
+                 - start: 2013-10-01
+                   end: 2013-10-01
+                
+        - name: lhq2
+            extends: lhq1
+            start: 2013-01-02
+            perturbations:
+                - sac_scaled_1.1
+                - something else
+            ann_periods:
+               train:
+                 - start: 2013-02-12 # Could be multiple?
+                   end: 2013-09-30
+               test: 
+                 - start: 2013-10-01
+                   end: 2013-10-01
+            
+        
+                   
+
+    runs:
+        run2012a:
+            homedir: path/to/
+            
+            cases:
+                - base:
+                - meta_1       
+                
