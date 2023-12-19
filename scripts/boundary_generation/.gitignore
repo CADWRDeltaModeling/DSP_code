@@ -1,3 +1,7 @@
 plots/*
 
 !plots/README.txt
+
+# R files
+*.RData
+*.RHistory
