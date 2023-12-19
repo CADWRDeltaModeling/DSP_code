@@ -1,3 +1,10 @@
+library(readxl)
+
+
+# load_delta_vars: Function -----------------------------------------------
+# reads in a variable from the DSM2 dataset
+
+
 load_delta_vars <- function(dsm2_filename, var_out) {
   sheetlist <- excel_sheets(path=dsm2_filename)
   

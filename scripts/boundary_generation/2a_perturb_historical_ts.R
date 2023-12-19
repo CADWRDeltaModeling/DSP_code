@@ -117,8 +117,13 @@ plt <- ggplot(data=plt.df) +
   scale_x_date(limits=lubridate::ymd(c(paste0(years[1],'-1-1'),
                                        paste0(max(years),'12-31'))))
 
-plt
-ggplotly(plt, dynamicTicks=TRUE)
+# plt
+pltl <- ggplotly(plt, dynamicTicks=TRUE)
+
+pltl_name <- "perturb_historical.html"
+
+saveWidget(pltl, pltl_name, selfcontained=TRUE)
+file.rename(pltl_name, paste0("plots/",pltl_name))
 
 
 # Write out results -------------------------------------------------------
@@ -128,6 +133,6 @@ csv_dir <- "./data_out/"
 for (name in names(edit.df)[!(names(edit.df) %in% c('Time','Net Delta Outflow'))]) {
   out_df <- edit.df[,names(edit.df) %in% c('Time',name)]
   out_csv <- str_replace_all(name," ","_")
-  write.table(out_df, file=paste0(csv_dir,'/',out_csv,'_',min(years),'-',max(years),'.csv'), 
+  write.table(out_df, file=paste0(csv_dir,'/',out_csv,'_',min(years),'-',max(years),'_perturb_historical.csv'), 
               sep=',', row.names=FALSE, col.names=FALSE)
 }
