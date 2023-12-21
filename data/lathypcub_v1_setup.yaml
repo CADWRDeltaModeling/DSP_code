@@ -1,0 +1,129 @@
+# Breaks down the cases for 7 latin hypercube cases
+
+training_set: latinhypcub_v1
+  
+output_dir: ./data_out/latinhypercube_v1_bundles
+
+perturbations:
+- name: sac_scaled_1.1
+  model_input: sac
+  variable: flow
+  method: scale
+  args:
+    file: ../../data/dsm2_rsac155_flow_histdss.csv
+    scale_factor: 1.1
+- name: sac_pert_hist
+  model_input: sac
+  variable: flow
+  method: read
+  args:
+    file: ./data_out/Sacramento_2006-2016_perturb_historical.csv
+- name: sjr_pert_hist
+  model_input: sjr
+  variable: flow
+  method: read
+  args:
+    file: ./data_out/SJR_Flow_2006-2016_perturb_historical.csv
+- name: exports_pert_hist
+  variable: flow
+  components:
+    - model_input: chcc
+      method: read
+      args:
+        file: ./data_out/CHCC006_perturb_historical.csv
+    - model_input: chdm
+      method: read
+      args:
+        file: ./data_out/CHDMC004_perturb_historical.csv
+    - model_input: swp
+      method: read
+      args:
+        file: ./data_out/CHSWP003_perturb_historical.csv
+    - model_input: ccvct
+      method: read
+      args:
+        file: ./data_out/CHVCT001_perturb_historical.csv
+    - model_input: rold
+      method: read
+      args:
+        file: ./data_out/ROLD034_perturb_historical.csv
+- name: dcc_mark_pert
+  model_input: dcc
+  variable: pos
+  method: read
+  args:
+    file: ./data_out/RSAC128_markov_pert.csv
+- name: dcc_open
+  model_input: dcc
+  variable: pos
+  method: set
+  args:
+    file: ../../data/dsm2_rsac128_pos_gatesdss.csv
+    set_value: 1
+- name: dcc_close
+  model_input: dcc
+  variable: pos
+  method: set
+  args:
+    file: ../../data/dsm2_rsac128_pos_gatesdss.csv
+    set_value: 0
+- name: tide_shift_100
+  model_input: tide
+  variable: stage
+  method: shift
+  args:
+    file: ../../data/dsm2_rsac054_stage_histdss.csv
+    shift_forward: 100
+
+cases:
+- name: lhc_1
+  extends: model_base
+  case_start: 2013-10-24
+  case_end: 2015-12-31
+  perturbations:
+    - tide_shift_100
+    - dcc_open
+    - sac_scaled_1.1
+- name: lhc_2
+  extends: model_base
+  case_start: 2009-10-29
+  case_end: 2011-12-31
+  perturbations:
+    - dcc_mark_pert
+    - sac_scaled_1.1
+- name: lhc_3
+  extends: model_base
+  case_start: 2006-11-14
+  case_end: 2018-12-31
+- name: lhc_4
+  extends: model_base
+  case_start: 2013-10-24
+  case_end: 2015-12-31
+  perturbations:
+    - tide_shift_100
+    - dcc_close
+    - sac_pert_hist
+    - sjr_pert_hist
+    - exports_pert_hist
+- name: lhc_5
+  extends: model_base
+  case_start: 2011-10-18
+  case_end: 2012-12-31
+  perturbations:
+    - dcc_open
+- name: lhc_6
+  extends: model_base
+  case_start: 2009-10-29
+  case_end: 2011-12-31
+  perturbations:
+    - tide_shift_100
+    - dcc_mark_pert
+    - sac_scaled_1.1
+- name: lhc_7
+  extends: model_base
+  case_start: 2006-11-14
+  case_end: 2018-12-31
+  perturbations:
+    - sac_pert_hist
+    - sjr_pert_hist
+    - exports_pert_hist
