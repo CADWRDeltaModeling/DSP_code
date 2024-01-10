@@ -30,7 +30,7 @@ perturbations:
     - model_input: chcc
       method: read
       args:
-        file: ./data_out/CHCC006_perturb_historical.csv
+        file: ./data_out/CHCCC006_perturb_historical.csv
     - model_input: chdm
       method: read
       args:
@@ -59,7 +59,7 @@ perturbations:
   method: set
   args:
     file: ../../data/dsm2_rsac128_pos_gatesdss.csv
-    set_value: 1
+    set_value: 2.0
 - name: dcc_close
   model_input: dcc
   variable: pos
@@ -94,7 +94,7 @@ cases:
 - name: lhc_3
   extends: model_base
   case_start: 2006-11-14
-  case_end: 2018-12-31
+  case_end: 2008-12-31
 - name: lhc_4
   extends: model_base
   case_start: 2013-10-24
