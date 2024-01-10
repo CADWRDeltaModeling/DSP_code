@@ -1,2 +1,8 @@
 # ignore model files for now
 model/*
+
+# ignore lily's script to clean/modify file format of input data from DSS
+data/fix_csv.py
+
+# ignore output from latinhypercube generation
+scripts/boundary_generation/data_out/*bundles*

@@ -20,18 +20,27 @@ def build_dict(node):
                 od[key] = node[key]
     return od
 
+
+
 def apply_method(pert_dict):
-    method = pert_dict.get('method')
+    method = pert_dict['method']
+    file_in = pert_dict['args']['file']
+    dat_in = pd.read_csv(file_in, parse_dates=[0], index_col=[0], header=None)
+
     if method == 'read':
-        print('\tread it')
+        dat_out = dat_in
     elif method == 'shift':
-        print('\tshift it')
+        dat_out = dat_in.copy()
+        dat_out.index = dat_out.index - pd.Timedelta(days=pert_dict['args']['shift_forward'])
     elif method == 'set':
-        print('\tset it')
+        dat_out = dat_in.copy()
+        dat_out[1] = float(pert_dict['args']['set_value'])
     elif method == 'scale':
-        print('\tscale it')
+        dat_out = dat_in.copy()
+        dat_out[1] = float(pert_dict['args']['scale_factor'])*dat_out[1]
     else:
         raise ValueError(f'Perturbation method "{method}" is not defined in the code at the moment.')
+    return dat_out
 
 # read in yaml
 def create_cases(in_fname):
@@ -39,6 +48,11 @@ def create_cases(in_fname):
         # loader = RawLoader(stream)
         inputs = schism_yaml.load(f)
         output_dir = process_output_dir(inputs)
+
+    # create output folder
+    if not os.path.exists(output_dir):
+        print(f'Creating output directory {output_dir}')
+        os.mkdir(output_dir)
 
     keys_top_level = ["training_set", "output_dir", "perturbations", "cases"] \
         + schism_yaml.include_keywords
@@ -62,15 +76,25 @@ def create_cases(in_fname):
             perturbs[pname] = build_dict({k: perturb[k] for k in set(list(perturb.keys())) - set(['name'])})
 
     if item_exist(inputs, 'cases'):
+        print(f'Handling cases:')
         case_items = inputs.get('cases')
         keys_case_section = ['name']
 
         # retrieve and write out cases
         for case in case_items:
+
             cname = case.get('name')
-            print(cname)
-            crange = [dt.datetime.strftime(case.get('case_start'), format='%Y-%m-%d'),
-                      dt.datetime.strftime(case.get('case_end'), format='%Y-%m-%d')]
+            print(f'\t- {cname}')
+            # create output folder
+            case_dir = os.path.join(output_dir, cname)
+            if not os.path.exists(case_dir):
+                print(f'\t\t Creating output directory {case_dir}')
+                os.mkdir(case_dir)
+
+            # crange = [dt.datetime.strftime(case.get('case_start'), format='%Y-%m-%d 00:00'),
+            #           dt.datetime.strftime(case.get('case_end')+dt.timedelta(days=1), format='%Y-%m-%d 00:00')]
+            crange = [dt.datetime.strftime(case.get('case_start'), format='%Y%m%d0000'),
+                      dt.datetime.strftime(case.get('case_end')+dt.timedelta(days=1), format='%Y%m%d0000')]
 
             # get perturbations
             
@@ -80,16 +104,29 @@ def create_cases(in_fname):
                     try:
                         pdict = perturbs[cp]
                     except:
-                        raise ValueError(f"The perturbation {cp} needs to be defined in the yaml file")
+                        raise ValueError(f"The perturbation {cp} needs to be defined in the perturbations section of the yaml file")
 
                     if 'components' in pdict.keys():
                         cdict = pdict.get('components')
                         for comp in cdict:
-                            print('\tTODO: start here and apply method per sub-component of perturbation')
+                            # create output folder
+                            subout_dir = os.path.join(case_dir, cp)
+                            if not os.path.exists(subout_dir):
+                                print(f'\t\t\t Creating sub-output directory {subout_dir}')
+                                os.mkdir(subout_dir)
+                            
+                            # loop through and apply methods
+                            dat_out = apply_method(comp)
+                            dat_out = dat_out[dat_out.index.between(crange[0],crange[1])]
+                            dat_out.to_csv(os.path.join(subout_dir, f'{comp["model_input"]}_{comp["method"]}_{crange[0]}-{crange[1]}.csv'),
+                                           header=None,
+                                           index=False)
                     else:
-                        apply_method(pdict)
-                        
-                    print('\t\twrite out file(s) to folder')
+                        dat_out = apply_method(pdict)
+                        dat_out = dat_out[dat_out.index.between(crange[0],crange[1])]
+                        dat_out.to_csv(os.path.join(case_dir, f'{pdict["model_input"]}_{pdict["method"]}_{crange[0]}-{crange[1]}.csv'),
+                                           header=None,
+                                           index=False)
 
     
 
