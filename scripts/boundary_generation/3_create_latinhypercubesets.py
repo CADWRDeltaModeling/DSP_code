@@ -108,6 +108,7 @@ def create_cases(in_fname):
 
                     if 'components' in pdict.keys():
                         cdict = pdict.get('components')
+                        
                         # create output folder
                         subout_dir = os.path.join(case_dir, cp)
                         if not os.path.exists(subout_dir):
@@ -115,6 +116,7 @@ def create_cases(in_fname):
                             os.mkdir(subout_dir)
                         
                         for comp in cdict:
+
                             
                             # loop through and apply methods
                             dat_out = apply_method(comp)
