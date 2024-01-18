@@ -3,7 +3,7 @@ training_set: latinhypcub_v1
 dsp_home: "D:/projects/delta_salinity" # LAT Computer: D:/projects/delta_salinity, EA computer: f:/projects/ann_dsp
 
 # Define DSS data/parameters
-in_dss_dir: "/model/dsm2/2021DSM2FP_202301/timeseries"
+in_dss_dir: "model/dsm2/2021DSM2FP_202301/timeseries"
 hist_dss: "hist.dss"
 gates_dss: "gates-v8.dss"
 
@@ -35,7 +35,7 @@ model_config:
 - model_input: rold
   dss_file: hist_dss
   primary_part: ROLD034
-  part_c: FLOW-DIVERSION
+  part_c: FLOW-EXPORT
   unit_part: CFS
 
 - model_input: dcc

@@ -28,7 +28,7 @@ def apply_method(pert_dict):
     dat_in = pd.read_csv(file_in, parse_dates=[0], index_col=[0], header=None)
 
     if method == 'read':
-        dat_out = dat_in
+        dat_out = dat_in.copy()
     elif method == 'shift':
         dat_out = dat_in.copy()
         dat_out.index = dat_out.index - pd.Timedelta(days=pert_dict['args']['shift_forward'])
@@ -93,8 +93,10 @@ def create_cases(in_fname):
 
             # crange = [dt.datetime.strftime(case.get('case_start'), format='%Y-%m-%d 00:00'),
             #           dt.datetime.strftime(case.get('case_end')+dt.timedelta(days=1), format='%Y-%m-%d 00:00')]
-            crange = [dt.datetime.strftime(case.get('case_start'), format='%Y%m%d0000'),
-                      dt.datetime.strftime(case.get('case_end')+dt.timedelta(days=1), format='%Y%m%d0000')]
+            start_date = case.get('case_start')
+            end_date = case.get('case_end')
+            crange = [dt.datetime.strftime(start_date, format='%Y%m%d0000'),
+                      dt.datetime.strftime(end_date + dt.timedelta(days=1), format='%Y%m%d0000')]
 
             # get perturbations
             
@@ -108,7 +110,7 @@ def create_cases(in_fname):
 
                     if 'components' in pdict.keys():
                         cdict = pdict.get('components')
-                        
+
                         # create output folder
                         subout_dir = os.path.join(case_dir, cp)
                         if not os.path.exists(subout_dir):
@@ -120,16 +122,14 @@ def create_cases(in_fname):
                             
                             # loop through and apply methods
                             dat_out = apply_method(comp)
-                            dat_out = dat_out[dat_out.index.between(crange[0],crange[1])]
+                            dat_out = dat_out[dat_out.index.to_series().between(pd.to_datetime(start_date),pd.to_datetime(end_date))]
                             dat_out.to_csv(os.path.join(subout_dir, f'{comp["model_input"]}_{comp["method"]}_{crange[0]}-{crange[1]}.csv'),
-                                           header=None,
-                                           index=False)
+                                           header=None)
                     else:
                         dat_out = apply_method(pdict)
-                        dat_out = dat_out[dat_out.index.between(crange[0],crange[1])]
+                        dat_out = dat_out[dat_out.index.to_series().between(pd.to_datetime(start_date),pd.to_datetime(end_date))]
                         dat_out.to_csv(os.path.join(case_dir, f'{pdict["model_input"]}_{pdict["method"]}_{crange[0]}-{crange[1]}.csv'),
-                                           header=None,
-                                           index=False)
+                                           header=None)
 
     
 

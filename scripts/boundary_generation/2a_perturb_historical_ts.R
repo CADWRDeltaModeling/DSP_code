@@ -59,9 +59,10 @@ names(delta_state) <- append(c('Time'), sheetnames)
 experiment <- 'perturbhist'
 
 # load sacramento river flow alone:
-sac_only <- read.csv('../../data/dsm2_rsac155_flow_histdss.csv', skip=4, header=FALSE)
-sac_only$Time <- lubridate::dmy(sac_only$V2) + lubridate::days(1)
-sac_only <- sac_only[,c('Time','V4')]
+# sac_only <- read.csv('../../data/dsm2_rsac155_flow_histdss.csv', skip=4, header=FALSE)
+sac_only <- read.csv('../../data/dsm2_rsac155_flow_histdss.csv', header=FALSE)
+sac_only$Time <- lubridate::ymd(sac_only$V1) + lubridate::days(1)
+sac_only <- sac_only[,c('Time','V2')]
 names(sac_only) <- c('Time','Sacramento')
 
 delta_state <- merge(delta_state, sac_only, by='Time')
@@ -79,16 +80,16 @@ pulse_params[['Exports']] <- c(100/scale_denom, 1000, 2000, 50, max(delta_state$
 
 # Create data variability -------------------------------------------------
 
-years <- seq(2006,2016,1)
+runyrs <- seq(2006,2016,1)
 
-for (year in years) {
-  delta_df <- delta_state[lubridate::year(delta_state$Time)==year,]
+for (runyr in runyrs) {
+  delta_df <- delta_state[lubridate::year(delta_state$Time)==runyr,]
   delta_df$`Net Delta Outflow` <- delta_df$NF_nonSac + delta_df$Sacramento + delta_df$`SJR Flow` - 
     delta_df$Exports - delta_df$`Consump. Use`
   
   edit.df <- perturb_all(delta_df, pulse_params)
   
-  if (year==years[1]){
+  if (runyr==runyrs[1]){
     full.df <- edit.df
   } else {
     full.df <- dplyr::bind_rows(full.df, edit.df)
@@ -114,8 +115,8 @@ plt.df <- rbind(plt.df, og.plt.df)
 plt <- ggplot(data=plt.df) + 
   geom_line(aes(x=Time, y=value, color=Version)) +
   facet_wrap(~variable, ncol=1, scales='free_y') +
-  scale_x_date(limits=lubridate::ymd(c(paste0(years[1],'-1-1'),
-                                       paste0(max(years),'12-31'))))
+  scale_x_date(limits=lubridate::ymd(c(paste0(runyrs[1],'-1-1'),
+                                       paste0(max(runyrs),'12-31'))))
 
 # plt
 pltl <- ggplotly(plt, dynamicTicks=TRUE)
@@ -130,9 +131,9 @@ file.rename(pltl_name, paste0("plots/",pltl_name))
 
 csv_dir <- "./data_out/"
 
-for (name in names(edit.df)[!(names(edit.df) %in% c('Time','Net Delta Outflow','NF_nonSac'))]) {
-  out_df <- edit.df[,c('Time',name)]
+for (name in names(full.df)[!(names(full.df) %in% c('Time','Net Delta Outflow','NF_nonSac'))]) {
+  out_df <- full.df[,c('Time',name)]
   out_csv <- str_replace_all(name," ","_")
-  write.table(out_df, file=paste0(csv_dir,'/',out_csv,'_',min(years),'-',max(years),'_perturb_historical.csv'), 
+  write.table(out_df, file=paste0(csv_dir,'/',out_csv,'_',min(runyrs),'-',max(runyrs),'_perturb_historical.csv'), 
               sep=',', row.names=FALSE, col.names=FALSE)
 }
