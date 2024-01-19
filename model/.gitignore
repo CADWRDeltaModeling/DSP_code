@@ -1,0 +1,23 @@
+# model output files
+**/outputs/*
+**/output/*
+
+# large model files
+*.nc # like hotstarts etc
+*.th
+*.ic
+*.prop
+**/restoration_dem/*
+*.gr3
+*.2dm
+*vgrid.in.*
+*hgrid.ll
+*dem_misses.txt
+*zsmoothsave.txt
+*echo.yaml
+*.dss
+*.lnk
+
+# DSM2 download
+*2021DSM2FP_202301
+
