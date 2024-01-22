@@ -130,13 +130,20 @@ def create_dsm2_bcs(in_fname, dsm2_config_fname):
     with open(dsm2_config_fname, 'r') as f:
         dsm2_inputs = schism_yaml.load(f)
     dsm2_config = dsm2_inputs.get('model_config')
-
+    
+    training_set = dsm2_inputs.get('training_set')
     dsp_home = dsm2_inputs.get('dsp_home')
     in_dss_dir = os.path.join(dsp_home, dsm2_inputs.get('in_dss_dir'))
+    out_dss_dir = os.path.join(dsp_home, dsm2_inputs.get('out_dss_dir'))
     hist_dss = dsm2_inputs.get('hist_dss')
     gates_dss = dsm2_inputs.get('gates_dss')
     hist_dss_file = os.path.join(in_dss_dir, hist_dss)
     gates_dss_file = os.path.join(in_dss_dir, gates_dss)
+
+    # check that the timeseries output folder exists
+    dsm2_dir = os.path.join(out_dss_dir, f'{training_set}/timeseries/')
+    if not os.path.exists(dsm2_dir):
+        os.mkdir(dsm2_dir)
     
     # update perturbations
     configs = {}
@@ -173,9 +180,6 @@ def create_dsm2_bcs(in_fname, dsm2_config_fname):
         print(f'\t- {cname}')
         # create output folder
         case_dir = os.path.join(output_dir, cname)
-        dsm2_dir = os.path.join(case_dir,'DSM2')
-        if not os.path.exists(dsm2_dir):
-            os.mkdir(dsm2_dir)
 
         crange = [dt.datetime.strftime(case.get('case_start'), format='%Y%m%d0000'),
                   dt.datetime.strftime(case.get('case_end')+dt.timedelta(days=1), format='%Y%m%d0000')]

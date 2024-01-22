@@ -1,9 +1,10 @@
-training_set: latinhypcub_v1
+training_set: latinhypercube_v1
 
 dsp_home: "D:/projects/delta_salinity" # LAT Computer: D:/projects/delta_salinity, EA computer: f:/projects/ann_dsp
 
 # Define DSS data/parameters
-in_dss_dir: "model/dsm2/2021DSM2FP_202301/timeseries"
+in_dss_dir: "scripts/DSP_code/model/dsm2/2021DSM2FP_202301/timeseries"
+out_dss_dir: "scripts/DSP_code/model/dsm2/DSP_DSM2_202307"
 hist_dss: "hist.dss"
 gates_dss: "gates-v8.dss"
 
