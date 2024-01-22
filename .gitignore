@@ -7,3 +7,10 @@ data/fix_csv.py
 
 # ignore output from latinhypercube generation
 scripts/boundary_generation/data_out/*bundles*
+
+# ignore caches
+**/__pycache__/*
+
+# ignore ANN experiment output
+**/ann_training/Experiments/*
+**/ann_training/tf_training_logs/*
