@@ -1,6 +1,8 @@
 # model output files
 **/outputs/*
 **/output/*
+**/anninputs/*
+**/timeseries/*
 
 # large model files
 *.nc # like hotstarts etc
