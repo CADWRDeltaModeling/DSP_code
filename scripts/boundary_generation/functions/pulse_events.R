@@ -17,11 +17,11 @@
 # sh.mean <- 500
 # sh.sd <- 1500
 
-pulse_events <- function(ts.df, nstep=365, rescale=0.015, sh.mean=500, sh.sd=1500) {
+pulse_events <- function(ts.df, nstep=365, rescale=0.015, sh.mean=500, sh.sd=1500, num.pulse=2) {
   
   ## Peak events
   ## Number of events
-  ns <- rpois(1, 2*as.integer(nstep/365)) # enough events for about 2 per year
+  ns <- rpois(1, num.pulse*as.integer(nstep/365)) # enough events for about num.pulse per year
   if (ns==0) {ns <- 1}
   # print(ns)
   
@@ -89,27 +89,38 @@ perturb_all <- function(delta_df, pulse_params) {
     names(edit.df) <- keys(pulse_params)
     edit.df$NF_nonSac <- delta_df$NF_nonSac
     edit.df$Time <- delta_df$Time
+    
     # Create edited fields
     for (key in keys(pulse_params)) {
       # print(key)
       ts.df <- data.frame(Time=delta_df$Time, Value=delta_df[,key])
       # ts.df <- ts.df[lubridate::year(ts.df$Time)==yr.slct,]
-      scale <- pulse_params[[key]][1] # through some testing this seems to be the scaling ratio where the first number is the approximate increase in flow on the peaks
+      scale <- pulse_params[[key]][1]
+      sh.mean <- pulse_params[[key]][2]
+      sh.sd <- pulse_params[[key]][3]
+      min.crit <- pulse_params[[key]][4]
+      max.crit <- pulse_params[[key]][5]
+      num.pulse <- pulse_params[[key]][6]
       
       # create randomly edited flow field
-      ts.df.e <- pulse_events(ts.df, nstep=nrow(ts.df), rescale=scale, sh.mean=pulse_params[[key]][2], sh.sd=pulse_params[[key]][3])
+      ts.df.e <- pulse_events(ts.df, nstep=nrow(ts.df), rescale=scale, sh.mean, sh.sd, num.pulse)
+      
+      # debug check
+      # ggplot(data=ts.df.e,aes(x=Time)) +
+      #   geom_line(aes(y=Value, color='orig')) +
+      #   geom_line(aes(y=Edit, color='edit'))
       
       # check for min max criteria
-      if (!is.na(pulse_params[[key]][4]) | !is.na(pulse_params[[key]][5])) {
+      if (!is.na(min.crit) | !is.na(max.crit)) {
         pass <- TRUE
         while (pass) {
-          ts.df.e <- pulse_events(ts.df, nstep=nrow(ts.df), rescale=scale, sh.mean=pulse_params[[key]][2], sh.sd=pulse_params[[key]][3])
+          ts.df.e <- pulse_events(ts.df, nstep=nrow(ts.df), rescale=scale, sh.mean, sh.sd, num.pulse)
           
           # check for min/max criteria
-          if (is.na(pulse_params[[key]][5])) {
-            if (min(ts.df.e$Edit)<pulse_params[[key]][4]) {
+          if (is.na(max.crit)) {
+            if (min(ts.df.e$Edit)<min.crit) {
               pass <- TRUE } else { pass <- FALSE}
-          } else if (min(ts.df.e$Edit)<pulse_params[[key]][4] | max(ts.df.e$Edit)>pulse_params[[key]][5]) {
+          } else if (min(ts.df.e$Edit)<min.crit | max(ts.df.e$Edit)>max.crit) {
             pass <- TRUE } else { pass <- FALSE}
         } # end while loop for min/max criteria
       } # end min/max def check
@@ -118,7 +129,7 @@ perturb_all <- function(delta_df, pulse_params) {
     
     # Check for net delta outflow requirements
     net_delta_outflow <- edit.df$NF_nonSac + edit.df$Sacramento + edit.df$`SJR Flow` - edit.df$Exports - 
-      delta_df$`Consump. Use`
+      edit.df$`Consump. Use`
     
     if (min(net_delta_outflow)>min.ndo) {
       ndo_pass <- FALSE

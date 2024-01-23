@@ -5,3 +5,5 @@ plots/*
 # R files
 *.RData
 *.RHistory
+
+**- Copy*

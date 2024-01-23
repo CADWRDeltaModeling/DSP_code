@@ -29,6 +29,11 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) # Setworking directo
 source("./functions/load_delta_vars.R")
 source("./functions/pulse_events.R")
 
+
+# Specify overwrite -------------------------------------------------------
+
+overwrite <- c('Consump Use','SJR Flow','Exports','Sacramento')
+
 # Load data ---------------------------------------------------------------
 
 # load delta state vars
@@ -38,7 +43,7 @@ sheetlist <- c("northern_flow","sjr_flow","exports","dxc_gate_fraction",
                "net_delta_cu","mtz_daily_max-min_stage",
                "sjr_vernalis_ec","sac_ec","base_ec_output")
 sheetnames <- c('Northern Flow', 'SJR Flow','Exports','DCC Gate',
-                'Consump. Use','Tidal Amp', 
+                'Consump Use','Tidal Amp', 
                 'San Joaquin EC','Sacramento EC')
 
 for (sheet in sheetlist){
@@ -71,12 +76,18 @@ delta_state$NF_nonSac <- delta_state$`Northern Flow`-delta_state$Sacramento
 # Set parameters ----------------------------------------------------------
 
 scale_denom <- 2476156.199 # through some testing this seems to be the scaling ratio where the first number is the approximate increase in flow on the peaks
-pulse_params <- hash() # flow peak scaling, random shift mean, random shift standard deviation, min criteria, max criteria
+pulse_params <- hash() # flow peak scaling, random shift mean, random shift standard deviation, 
+#                       min criteria, max criteria, number of pulses
 
 # pulse_params[['Northern Flow']] <- c(15000/scale_denom, 200, 1500, 5000, NA)
-pulse_params[['Sacramento']] <- c(15000/scale_denom, 200, 1500, 5000, NA)
-pulse_params[['SJR Flow']] <- c(2000/scale_denom, 50, 500, 200, NA)
-pulse_params[['Exports']] <- c(100/scale_denom, 1000, 2000, 50, max(delta_state$Exports))
+pulse_params[['Sacramento']] <- c(15000/scale_denom, 200, 1500, 
+                                  5000, NA, 2)
+pulse_params[['SJR Flow']] <- c(2000/scale_denom, 50, 500, 
+                                200, NA, 2)
+pulse_params[['Exports']] <- c(100/scale_denom, 1000, 2000, 
+                               50, max(delta_state$Exports), 2)
+pulse_params[['Consump Use']] <- c(200/scale_denom, 1000, 2000, 
+                                    -15000, 5000, 6)
 
 # Create data variability -------------------------------------------------
 
@@ -105,10 +116,12 @@ delta_state$`Net Delta Outflow` <- delta_state$NF_nonSac + delta_state$Sacrament
 
 
 # Plots
+plt.vars <- append(keys(pulse_params),c('Time', 'Net Delta Outflow', 'Tidal Amp'))
 plt.df <- melt(full.df, id.vars='Time')
 plt.df$Version <- 'Edited'
 plt.df$value <- as.numeric(plt.df$value)
-og.plt.df <- melt(delta_state[,names(delta_state) %in% append(keys(pulse_params),c('Time', 'Net Delta Outflow', 'Tidal Amp'))], id.vars='Time')
+plt.df <- plt.df[plt.df$variable %in% plt.vars,]
+og.plt.df <- melt(delta_state[,names(delta_state) %in% plt.vars], id.vars='Time')
 og.plt.df$Version <- 'Original'
 plt.df <- rbind(plt.df, og.plt.df)
 
@@ -117,9 +130,10 @@ plt <- ggplot(data=plt.df) +
   facet_wrap(~variable, ncol=1, scales='free_y') +
   scale_x_date(limits=lubridate::ymd(c(paste0(runyrs[1],'-1-1'),
                                        paste0(max(runyrs),'12-31'))))
-
 # plt
+
 pltl <- ggplotly(plt, dynamicTicks=TRUE)
+# pltl
 
 pltl_name <- "perturb_historical.html"
 
@@ -131,9 +145,11 @@ file.rename(pltl_name, paste0("plots/",pltl_name))
 
 csv_dir <- "./data_out/"
 
-for (name in names(full.df)[!(names(full.df) %in% c('Time','Net Delta Outflow','NF_nonSac'))]) {
-  out_df <- full.df[,c('Time',name)]
-  out_csv <- str_replace_all(name," ","_")
-  write.table(out_df, file=paste0(csv_dir,'/',out_csv,'_',min(runyrs),'-',max(runyrs),'_perturb_historical.csv'), 
-              sep=',', row.names=FALSE, col.names=FALSE)
+for (name in overwrite) {
+    
+    out_df <- full.df[,c('Time',name)]
+    out_csv <- str_replace_all(name," ","_")
+    write.table(out_df, file=paste0(csv_dir,'/',out_csv,'_',min(runyrs),'-',max(runyrs),'_perturb_historical.csv'), 
+                sep=',', row.names=FALSE, col.names=FALSE)
+    
 }
