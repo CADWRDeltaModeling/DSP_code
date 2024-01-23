@@ -161,7 +161,7 @@ class ModelANN(object):
     A class to create datasets to input to ANN
     """
     def __init__(self, dsp_home, 
-                 compression_opts=dict(method='zip', archive_name='out.csv'),
+                 compression_opts=None, #or dict(method='zip', archive_name='out.csv')
                  ndays=118, NFEATURES=8, initial_lr = 0.01):
                  
         self.dsp_home = dsp_home
