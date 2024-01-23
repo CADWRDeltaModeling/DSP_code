@@ -1,4 +1,5 @@
 import pandas as pd
+from vtools.functions.filter import cosine_lanczos
 import pyhecdss
 import os
 
@@ -129,13 +130,12 @@ def create_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file,
     b_part_c_part_dict={'RSAC054': 'STAGE'}
     df_mtz_stage = get_dss_data(b_part_dss_filename_dict, 'b_part', \
         primary_part_c_part_dict=b_part_c_part_dict, daily_avg=False)
-    df_mtz_daily_max = df_mtz_stage.resample('D', closed='right').max()
-    df_mtz_daily_max.columns=['max']
-    df_mtz_daily_min = df_mtz_stage.resample('D', closed='right').min()
-    df_mtz_daily_min.columns=['min']
+    df_nrg = cosine_lanczos((df_mtz_stage-cosine_lanczos(df_mtz_stage.copy(), 
+                                                         cutoff_period ='40D', padtype='odd'))**2, 
+                            cutoff_period ='40D', padtype='odd') # = < (z- <z>)^2 >
+    df_mtz_tidal_energy = df_nrg.resample('D', closed='right').mean()
+    df_mtz_tidal_energy.columns=['tidal_energy']
 
-    df_mtz_tidal_energy = pd.merge(df_mtz_daily_max, df_mtz_daily_min, how='outer', left_index=True, right_index=True)
-    df_mtz_tidal_energy['tidal_energy'] = df_mtz_tidal_energy['max']-df_mtz_tidal_energy['min']
     df_mtz_stage.to_csv(output_folder+'/df_mtz_stage.csv')    
     df_mtz_tidal_energy.to_csv(output_folder+'/df_mtz_tidal_energy.csv')
 
