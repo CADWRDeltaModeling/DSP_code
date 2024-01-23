@@ -95,9 +95,17 @@ def create_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file,
     c_part = 'POS'
     gate_output_file = output_folder+'/dcc_gate_op.csv'
     process_gate_data(gate_dss_file, gate_output_file, b_part, c_part)
+    
+    ################################################
+    # 5. Suisun gate operation as daily percentage #
+    ################################################
+    # b_part = 'XXX'
+    # c_part = 'POS'
+    # gate_output_file = output_folder+'/dcc_gate_op.csv'
+    # process_gate_data(gate_dss_file, gate_output_file, b_part, c_part)
 
     ############################################################
-    # 5. Net Delta CU, daily (DIV+SEEP-DRAIN) for DCD and SMCD #
+    # 6. Net Delta CU, daily (DIV+SEEP-DRAIN) for DCD and SMCD #
     ############################################################
     div_seep_dcd_c_part_dss_filename_dict = {'DIV-FLOW': dcd_dss_file, 'SEEP-FLOW': dcd_dss_file}
     div_seep_smcd_c_part_dss_filename_dict = {'DIV-FLOW': smcd_dss_file, 'SEEP-FLOW': smcd_dss_file}
@@ -124,7 +132,7 @@ def create_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file,
     cu_total[['cu_total']].to_csv(output_folder+'/df_cu_total.csv')
 
     ########################################
-    # 6. Tidal Energy: daily max-daily min #
+    # 7. Tidal Energy: daily max-daily min #
     ########################################
     b_part_dss_filename_dict={'RSAC054': hist_dss_file}
     b_part_c_part_dict={'RSAC054': 'STAGE'}
@@ -140,7 +148,7 @@ def create_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file,
     df_mtz_tidal_energy.to_csv(output_folder+'/df_mtz_tidal_energy.csv')
 
     #############################################
-    # 7. SJR inflow salinity at vernalis, daily #
+    # 8. SJR inflow salinity at vernalis, daily #
     #############################################
     b_part_dss_filename_dict = {'RSAN112': hist_dss_file}
     b_part_c_part_dict = {'RSAN112': 'EC'}
@@ -148,7 +156,7 @@ def create_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file,
     df_sjr_ec.to_csv(output_folder + '/df_sjr_ec.csv')
 
     ##########################
-    # 8. Sacramento River EC #
+    # 9. Sacramento River EC #
     ##########################
     b_part_dss_filename_dict = {'RSAC139': hist_dss_file}
     b_part_c_part_dict = {'RSAC139': 'EC'}
@@ -156,7 +164,7 @@ def create_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file,
     df_sac_ec.to_csv(output_folder + '/df_sac_ec.csv')
 
     ######################################
-    # 9. EC Output for various locations #
+    # 10. EC Output for various locations #
     ######################################
     b_part_dss_filename_dict = {'CHDMC006': model_ec_file, 'CHSWP003': model_ec_file,\
         'CHVCT000': model_ec_file, 'OLD_MID': model_ec_file, 'ROLD024': model_ec_file,
