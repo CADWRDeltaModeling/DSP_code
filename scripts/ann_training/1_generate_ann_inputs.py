@@ -99,10 +99,10 @@ def create_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file,
     ################################################
     # 5. Suisun gate operation as daily percentage #
     ################################################
-    # b_part = 'XXX'
-    # c_part = 'POS'
-    # gate_output_file = output_folder+'/dcc_gate_op.csv'
-    # process_gate_data(gate_dss_file, gate_output_file, b_part, c_part)
+    b_part = 'MTZSL'
+    c_part = 'RADIAL_OP'
+    gate_output_file = output_folder+'/suisun_gate_op.csv'
+    process_gate_data(gate_dss_file, gate_output_file, b_part, c_part)
 
     ############################################################
     # 6. Net Delta CU, daily (DIV+SEEP-DRAIN) for DCD and SMCD #
@@ -242,12 +242,14 @@ def csv_to_ann_xlsx(csv_dir, xlsx_filepath):
                         'net_delta_cu': ['df_cu_total.csv','cu_total','div+seep-drain_dcd+smcd'],
                         'dxc_gate_fraction':['dcc_gate_op.csv','gate_pos',
                                              'gate_pos'],
+                        'suisun_gate_fraction':['suisun_gate_op.csv','gate_pos',
+                                             'gate_pos'],
                         'exports':['df_exports_flow.csv','exports','exports'],
                         'sjr_flow':['df_sjr_flow.csv','RSAN112','sjr_flow'],
                         'northern_flow':['df_northern_flow.csv', 'northern_flow', 'northern_flow']
     }
 
-    ordered_sheets = ['northern_flow','sjr_flow','exports','dxc_gate_fraction','net_delta_cu',
+    ordered_sheets = ['northern_flow','sjr_flow','exports','dxc_gate_fraction','suisun_gate_fraction','net_delta_cu',
                       'mtz_daily_max-min_stage','sjr_vernalis_ec','sac_ec','base_ec_output']
     
     with pd.ExcelWriter(xlsx_filepath) as writer:
@@ -262,9 +264,9 @@ def csv_to_ann_xlsx(csv_dir, xlsx_filepath):
 
 if __name__ == '__main__':
 
-    base_study_folder = r'D:\projects\delta_salinity\scripts\DSP_code\model\dsm2\2021DSM2FP_202301' 
+    base_study_folder = r'D:/projects/delta_salinity/scripts/DSP_code/model/dsm2/2021DSM2FP_202301' 
     model_input_folder = os.path.join(base_study_folder, 'timeseries')
-    model_folder = r'D:\projects\delta_salinity\scripts\DSP_code\model\dsm2\DSP_DSM2_202307\latinhypercube_v1/'
+    model_folder = r'D:/projects/delta_salinity/scripts/DSP_code/model/dsm2/DSP_DSM2_202307/latinhypercube_v1/'
     model_output_folder = os.path.join(model_folder, 'output')
     
     dcd_dss_file = os.path.join(model_input_folder, 'DCD_hist_Lch5.dss')
@@ -275,11 +277,11 @@ if __name__ == '__main__':
         hist_dss_file = os.path.join(model_folder, f'timeseries/lhc_{case_num}_hist.dss')
         gate_dss_file = os.path.join(model_folder, f'timeseries/lhc_{case_num}_gates.dss')
         model_ec_file = os.path.join(model_output_folder, f'lhc_{case_num}_EC.dss')
-        output_folder = fr'D:\projects\delta_salinity\scripts\DSP_code\model\dsm2\DSP_DSM2_202307\latinhypercube_v1\anninputs/lhc_{case_num}' # where the ann inputs will be written to
+        output_folder = fr'D:/projects/delta_salinity/scripts/DSP_code/model/dsm2/DSP_DSM2_202307/latinhypercube_v1/anninputs_mods/lhc_{case_num}' # where the ann inputs will be written to
 
         # generate aggregated ANN inputs from DSM2 outputs
         create_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file, model_ec_file, output_folder)
 
         # combine ANN input csv files into xlsx file (TODO: make this unecessary?)
-        xlsx_filepath = os.path.join(output_folder,f'dsm2_ann_inputs_lhc_{case_num}.xlsx')
+        xlsx_filepath = f'D:/projects/delta_salinity/scripts/DSP_code/model/dsm2/DSP_DSM2_202307/latinhypercube_v1/anninputs_mods/dsm2_ann_inputs_lhc_{case_num}.xlsx'
         csv_to_ann_xlsx(output_folder, xlsx_filepath)
