@@ -269,62 +269,40 @@ class ModelANN(object):
 
         return model, xscaler, yscaler
 
-    def compile_inputs(self, experiment, test_files, test_data, numbers, aug_windows, 
-                       window_size=0, nwindows=0):
+    def concat_dfs(self, files, windows):
+
+        X_df= None
+        Y_df= None
+        for infile, window in zip(tqdm(files), windows):
+            if not os.path.exists(infile):
+                print("local root: ",local_root_path)
+                raise ValueError(f"Data path {infile} does not exist")
+            dfinps, dfouts = annutils.read_and_split(infile, self.num_sheets, self.observed_stations_ordered_by_median, vars_include=self.vars_include)
+            print("\nread_split",dfinps.first_valid_index())
+            
+            dfinps = annutils.create_antecedent_inputs(dfinps,ndays=self.ndays,window_size=self.window_size,nwindows=self.nwindows)
+            dfinps, dfouts = annutils.synchronize(dfinps, dfouts)
+            
+            dfinps = annutils.include(dfinps, window)
+            dfouts = annutils.include(dfouts, window)
+            X_df = pd.concat([X_df, dfinps], axis=0)
+            Y_df = pd.concat([Y_df, dfouts], axis=0)
+
+        return X_df, Y_df
+    
+    def compile_inputs(self, experiment, train_files, train_windows, test_files, test_windows, 
+                       window_size=0, nwindows=0, vars_include=None):
         
         self.window_size = window_size
         self.nwindows = nwindows
+        self.experiment = experiment
+        self.vars_include = vars_include
 
         if not os.path.exists("Experiments/" + experiment):
             os.mkdir("Experiments/" + experiment)
 
-        X_df= None
-        Y_df= None
-
-        for case_num, yearran in numbers.items():
-
-            #aug_data = [(f'{str(yearran)}-1-1',f'{str(yearran)}-12-31')]
-            aug_data = [aug_windows[yearran]]
-            
-            # Eli
-            if case_num == 0:
-                aug_input_file = test_files[0]
-            else:
-                aug_input_file = fr"{dsp_home}\model\dsm2\DSP_DSM2_202307\{experiment}\anninputs\lhc_{str(case_num)}\dsm2_ann_inputs_lhc_{str(case_num)}.xlsx"
-
-            dfinps, dfouts = annutils.read_and_split(aug_input_file, self.num_sheets, self.observed_stations_ordered_by_median)
-            print("read_split",dfinps.first_valid_index())
-            # This is where indexiing may cause issue
-            dfinps = annutils.create_antecedent_inputs(dfinps,ndays=self.ndays,window_size=window_size,nwindows=nwindows)
-            dfinps, dfouts = annutils.synchronize(dfinps, dfouts)
-            
-            dfinps = annutils.include(dfinps, aug_data)
-            dfouts = annutils.include(dfouts, aug_data)
-            X_df = pd.concat([X_df, dfinps], axis=0)
-            Y_df = pd.concat([Y_df, dfouts], axis=0)
-
-        train_X = X_df #annutils.include(X_df, aug_data)
-        train_Y = Y_df # annY_df #annutils.include(dfouts, aug_data)
-
-        # Add test data
-        X_df= None
-        Y_df= None
-
-        for data_file in tqdm(test_files):
-            data_path = data_file 
-            if not os.path.exists(data_path):
-                print("local root: ",local_root_path)
-                raise ValueError(f"Data path {data_path} does not exist")
-            dfinps, dfouts = annutils.read_and_split(data_path, self.num_sheets, self.observed_stations_ordered_by_median)
-            dfinps = annutils.create_antecedent_inputs(dfinps,ndays=self.ndays,window_size=window_size,nwindows=nwindows)
-            dfinps, dfouts = annutils.synchronize(dfinps, dfouts)
-            dfinps = annutils.include(dfinps, test_data)
-            dfouts = annutils.include(dfouts, test_data)
-            X_df = pd.concat([X_df, dfinps], axis=0)
-            Y_df = pd.concat([Y_df, dfouts], axis=0)
-
-        test_X = X_df
-        test_Y = Y_df
+        train_X, train_Y = self.concat_dfs(train_files, train_windows) 
+        test_X, test_Y = self.concat_dfs(test_files, test_windows) 
 
         xx= list(train_X.columns.copy())
         yy = list(test_X.columns.copy())
@@ -332,7 +310,9 @@ class ModelANN(object):
         for xxx,yyy in zip(xx,yy): 
             if "dcc" in xxx or "dcc" in yyy or "128" in xxx or "128" in yyy: 
                 print(xxx," ",yyy)
-        print(f'non-overlapping columns: {len(set(train_X.columns) ^ set(test_X.columns))}')
+        nonovlp = len(set(train_X.columns) ^ set(test_X.columns))
+        if nonovlp > 0:
+            raise ValueError(f'Non-overlapping columns in train and test data: {nonovlp}')
 
         train_X.to_csv(os.path.join("Experiments", experiment, "train_X.csv"), compression=self.compression_opts,float_format="%.2f")
         train_Y.to_csv(os.path.join("Experiments", experiment, "train_Y.csv"), compression=self.compression_opts,float_format="%.2f")
@@ -341,188 +321,199 @@ class ModelANN(object):
 
         print(f"Finished compiling inputs for {experiment} experiment")
 
-    def train_models(self, experiments, models):
-        self.experiments = experiments
-        for experiment in self.experiments:
-            print("experiment: ", experiment)
+    def train_models(self, models):
+        print("experiment: ", self.experiment)
 
-            # create folders to save results
-            result_folders = ['models', 'results', 'images']
-            for result_folder in result_folders:
-                folder_path = os.path.join(local_root_path, "Experiments", experiment, result_folder)
-                if not os.path.exists(folder_path):
-                    os.makedirs(folder_path)
+        # create folders to save results
+        result_folders = ['models', 'results', 'images']
+        for result_folder in result_folders:
+            folder_path = os.path.join(local_root_path, "Experiments", self.experiment, result_folder)
+            if not os.path.exists(folder_path):
+                os.makedirs(folder_path)
 
-            train_X = pd.read_csv(os.path.join("Experiments", experiment, "train_X.csv"), index_col=0, compression=self.compression_opts)
-            train_Y = pd.read_csv(os.path.join("Experiments", experiment, "train_Y.csv"), index_col=0, compression=self.compression_opts)
-            test_X = pd.read_csv(os.path.join("Experiments", experiment, "test_X.csv"), index_col=0, compression=self.compression_opts)
-            test_Y = pd.read_csv(os.path.join("Experiments", experiment, "test_Y.csv"), index_col=0, compression=self.compression_opts)
+        train_X = pd.read_csv(os.path.join("Experiments", self.experiment, "train_X.csv"), index_col=0, compression=self.compression_opts)
+        train_Y = pd.read_csv(os.path.join("Experiments", self.experiment, "train_Y.csv"), index_col=0, compression=self.compression_opts)
+        test_X = pd.read_csv(os.path.join("Experiments", self.experiment, "test_X.csv"), index_col=0, compression=self.compression_opts)
+        test_Y = pd.read_csv(os.path.join("Experiments", self.experiment, "test_Y.csv"), index_col=0, compression=self.compression_opts)
 
-            for  model_type, num_neurons_multiplier in models.items():
-                start = time.time()
-                model_str_def = build_model_string(model_type, num_neurons_multiplier)
+        for  model_type, num_neurons_multiplier in models.items():
+            start = time.time()
+            model_str_def = build_model_string(model_type, num_neurons_multiplier)
 
-                full_model_str_def = 'i%d_' % (self.ndays + self.nwindows) + model_str_def
+            full_model_str_def = 'i%d_' % (self.ndays + self.nwindows) + model_str_def
 
-                model_path_prefix = "mtl_%s" % (full_model_str_def)
-                model, xscaler, yscaler = self.build_or_load_model(model_path_prefix, full_model_str_def, train_Y.shape)
+            model_path_prefix = "mtl_%s" % (full_model_str_def)
+            model, xscaler, yscaler = self.build_or_load_model(model_path_prefix, full_model_str_def, train_Y.shape)
 
-                epochs = 50
+            epochs = 50
 
-                print("Model summary:")
-                print(model.summary())
+            print("Model summary:")
+            print(model.summary())
 
-                if(xscaler is None or yscaler is None):
-                    print("Creating new scalers")
+            if(xscaler is None or yscaler is None):
+                print("Creating new scalers")
 
-                xscaler, yscaler = annutils.create_or_update_xyscaler(xscaler, yscaler, train_X, train_Y)
-                print("Xscaler Min[0]: %s" % xscaler.min_val[0])
-                print("Xscaler Max[0]: %s" % xscaler.max_val[0])
+            xscaler, yscaler = annutils.create_or_update_xyscaler(xscaler, yscaler, train_X, train_Y)
+            print("Xscaler Min[0]: %s" % xscaler.min_val[0])
+            print("Xscaler Max[0]: %s" % xscaler.max_val[0])
 
-                scaled_X = xscaler.transform(train_X)
-                scaled_Y = yscaler.transform(train_Y)
+            scaled_X = xscaler.transform(train_X)
+            scaled_Y = yscaler.transform(train_Y)
 
 
-                scaled_test_X = xscaler.transform(test_X)
-                scaled_test_Y = yscaler.transform(test_Y)
+            scaled_test_X = xscaler.transform(test_X)
+            scaled_test_Y = yscaler.transform(test_Y)
 
 
 
-                history = model.fit(
-                    scaled_X,
-                    scaled_Y,
-                    epochs=epochs,
-                    batch_size=36,
-                    validation_data=(scaled_test_X, scaled_test_Y),
-                    callbacks=[
-                        keras.callbacks.EarlyStopping(
-                            monitor="val_loss", patience=50, mode="min", restore_best_weights=True),
-                        self.tensorboard_cb
-                    ],
-                    verbose=2,
-                )
+            history = model.fit(
+                scaled_X,
+                scaled_Y,
+                epochs=epochs,
+                batch_size=36,
+                validation_data=(scaled_test_X, scaled_test_Y),
+                callbacks=[
+                    keras.callbacks.EarlyStopping(
+                        monitor="val_loss", patience=50, mode="min", restore_best_weights=True),
+                    self.tensorboard_cb
+                ],
+                verbose=2,
+            )
 
-                # plot_history(history)
+            # plot_history(history)
 
-                model_savepath = os.path.join(local_root_path, "Experiments", experiment, 'models', model_path_prefix)
-                # tf.saved_model.save(model, model_savepath)
-                annutils.save_model(model_savepath, model, xscaler, yscaler)
-                print('Model saved to %s' % model_savepath)
-                print('Training time: %d min' % ((time.time() - start) / 60))
-            print(f"Finished training model for {experiment}")
+            model_savepath = os.path.join(local_root_path, "Experiments", self.experiment, 'models', model_path_prefix)
+            # tf.saved_model.save(model, model_savepath)
+            annutils.save_model(model_savepath, model, xscaler, yscaler)
+            print('Model saved to %s' % model_savepath)
+            print('Training time: %d min' % ((time.time() - start) / 60))
+
+        print(f"Finished training model for {self.experiment}")
 
     def make_predictions(self, excel_files):
-        for experiment in tqdm(self.experiments):
-            print("Experiment: %s" % experiment)
-            experiment_dir = os.path.join(local_root_path, "Experiments", experiment)
+        print("Experiment: %s" % experiment)
+        experiment_dir = os.path.join(local_root_path, "Experiments", experiment)
 
-            model_dir = os.path.join(experiment_dir, "models")
-            model_files = [f for f in os.listdir(model_dir) if f.endswith(".h5")]
+        model_dir = os.path.join(experiment_dir, "models")
+        model_files = [f for f in os.listdir(model_dir) if f.endswith(".h5")]
 
-            print("Local root: ",local_root_path)
-            for data_file in tqdm(excel_files):
-                print("Data file: %s" % data_file)
-                data_path = os.path.join(local_root_path,data_file)
-                dfinps, dfouts = annutils.read_and_split(data_path, self.num_sheets, self.observed_stations_ordered_by_median)
-                for cn in dfinps.columns:
-                    print("Col "+cn)
+        print("Local root: ",local_root_path)
+        for data_file in tqdm(excel_files):
+            print("Data file: %s" % data_file)
+            data_path = os.path.join(local_root_path,data_file)
+            dfinps, dfouts = annutils.read_and_split(data_path, self.num_sheets, self.observed_stations_ordered_by_median)
+            for cn in dfinps.columns:
+                print("Col "+cn)
 
-                dfinps = annutils.create_antecedent_inputs(dfinps,ndays=self.ndays,window_size=self.window_size,nwindows=self.nwindows)
-                dfinps, dfouts = annutils.synchronize(dfinps, dfouts)
+            dfinps = annutils.create_antecedent_inputs(dfinps,ndays=self.ndays,window_size=self.window_size,nwindows=self.nwindows)
+            dfinps, dfouts = annutils.synchronize(dfinps, dfouts)
 
 
-                #get the name of the file without the extension
-                # file_name = os.path.splitext(data_file)[0]
-                file_name = os.path.splitext(os.path.basename(data_file))[0]
+            #get the name of the file without the extension
+            # file_name = os.path.splitext(data_file)[0]
+            file_name = os.path.splitext(os.path.basename(data_file))[0]
 
-                dirs = ["input", "target", "prediction"]
-                for dir in dirs:
-                    os.makedirs(os.path.join("Experiments", experiment, "results", dir), exist_ok=True)
+            dirs = ["input", "target", "prediction"]
+            for dir in dirs:
+                os.makedirs(os.path.join("Experiments", experiment, "results", dir), exist_ok=True)
 
-                input_file = os.path.join("Experiments", experiment, "results", "input", file_name + ".csv")
-                dfinps.to_csv(input_file, compression=self.compression_opts)
+            input_file = os.path.join("Experiments", experiment, "results", "input", file_name + ".csv")
+            dfinps.to_csv(input_file, compression=self.compression_opts)
 
-                # read_in = pd.read_csv(input_file, compression=compression_opts, index_col=0)
+            # read_in = pd.read_csv(input_file, compression=compression_opts, index_col=0)
 
-                target_file = os.path.join("Experiments", experiment, "results", "target", file_name + "_target.csv")
-                dfouts.to_csv(target_file, compression=self.compression_opts)
+            target_file = os.path.join("Experiments", experiment, "results", "target", file_name + "_target.csv")
+            dfouts.to_csv(target_file, compression=self.compression_opts)
 
-                for model_file in tqdm(model_files):
-                    print("Model file: %s" % model_file)
-                    model_name = os.path.splitext(model_file)[0]
+            for model_file in tqdm(model_files):
+                print("Model file: %s" % model_file)
+                model_name = os.path.splitext(model_file)[0]
 
-                    model_prediction_dir = os.path.join(experiment_dir, "results", "prediction", model_name)
-                    os.makedirs(model_prediction_dir, exist_ok=True)
+                model_prediction_dir = os.path.join(experiment_dir, "results", "prediction", model_name)
+                os.makedirs(model_prediction_dir, exist_ok=True)
 
-                    location = os.path.join(model_dir, model_name)
-                    print("Location: %s" % location)
-                    #prediction = predict(location, dfinps, dfouts.columns)
-                    model=keras.models.load_model('%s.h5'%location,custom_objects={"mse_loss_masked": mse_loss_masked})
-                    xscaler,yscaler=joblib.load('%s_xyscaler.dump'%location)
-                    print("Xscaler Min[0]: %s" % xscaler.min_val[0])
-                    print("Xscaler Max[0]: %s" % xscaler.max_val[0])
-                    scaled_input = xscaler.transform(dfinps)
-                    print("scaled input")
-                    print(scaled_input.iloc[0])
-                    #print(scaled_input.iloc[1])
-                    #print(scaled_input)
-                    dfx = pd.DataFrame(scaled_input, dfinps.index, columns=dfinps.columns)
+                location = os.path.join(model_dir, model_name)
+                print("Location: %s" % location)
+                #prediction = predict(location, dfinps, dfouts.columns)
+                model=keras.models.load_model('%s.h5'%location,custom_objects={"mse_loss_masked": mse_loss_masked})
+                xscaler,yscaler=joblib.load('%s_xyscaler.dump'%location)
+                print("Xscaler Min[0]: %s" % xscaler.min_val[0])
+                print("Xscaler Max[0]: %s" % xscaler.max_val[0])
+                scaled_input = xscaler.transform(dfinps)
+                print("scaled input")
+                print(scaled_input.iloc[0])
+                #print(scaled_input.iloc[1])
+                #print(scaled_input)
+                dfx = pd.DataFrame(scaled_input, dfinps.index, columns=dfinps.columns)
 
-                    yyp=model.predict(dfx, verbose=True)
-                    predicted_y = yscaler.inverse_transform(yyp)
-                    prediction = pd.DataFrame(predicted_y, index=dfinps.index, columns=dfouts.columns)
-                    print("prediction")
-                    print(prediction)
-                    prediction_file = os.path.join(model_prediction_dir, file_name + ".csv")
-                    print(f"Writing to {prediction_file}")
-                    prediction.to_csv(prediction_file, compression=self.compression_opts)
+                yyp=model.predict(dfx, verbose=True)
+                predicted_y = yscaler.inverse_transform(yyp)
+                prediction = pd.DataFrame(predicted_y, index=dfinps.index, columns=dfouts.columns)
+                print("prediction")
+                print(prediction)
+                prediction_file = os.path.join(model_prediction_dir, file_name + ".csv")
+                print(f"Writing to {prediction_file}")
+                prediction.to_csv(prediction_file, compression=self.compression_opts)
 
-            print(f"Finished making predictions for {experiment}")
+        print(f"Finished making predictions for {experiment}")
 
 if __name__ == '__main__':
 
+    from schimpy import schism_yaml
+    import numpy as np
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
-
-    # Initialize
-    dsp_home = r"D:\projects\delta_salinity\scripts\DSP_code"
+    
+    in_fname = "../../data/lathypcub_v1_ann_config.yaml"
+    
+    with open(in_fname, 'r') as f:
+        # loader = RawLoader(stream)
+        inputs = schism_yaml.load(f)
+    dsp_home = inputs.get('dsp_home')
+    
+    # Initialize ###############################
     ann_mod = ModelANN(dsp_home)
 
-    # Create Inputs
-    experiment = 'latinhypercube_v1'
-
-    test_files = [os.path.join(dsp_home,rf"model\dsm2\DSP_DSM2_202307\{experiment}\anninputs\dsm2_ann_inputs_historical.xlsx")]
-    test_data = [
-        ('2007-10-1','2008-9-30'),
-        ('2009-10-1','2010-9-30'),
-        ('2011-10-1','2012-9-30'),
-        ('2013-10-1','2014-9-30')
-    ]
-    numbers = { 0: 1997,
-                1: 2014,
-                2: 2010,
-                3: 2008,
-                4: 2014,
-                5: 2012,
-                6: 2010,
-                7: 2008
-    }
-
-    aug_windows = { 1997: ('1997-5-1','1997-9-1'),
-                2008: ('2007-2-1','2008-8-31'),
-                2010: ('2010-01-1','2011-12-31'),
-                2012: ('2012-01-1','2012-12-31'),
-                2014: ('2014-01-1','2015-5-31')
-                }
+    # Create Inputs ############################
+    experiment = inputs.get('experiment') # name of folder where outputs are etc.
     
-    ann_mod.compile_inputs(experiment, test_files, test_data, numbers, aug_windows)
+    if 'train_config' in inputs.keys():
+        train_files = [tc.get('file').format(**globals(), **locals()) for tc in inputs.get('train_config')]
+        train_windows = [[(tc.get('start'),tc.get('end'))] for tc in inputs.get('train_config')] # windows to use to extract training data from
+    else:
+        train_files = [t.format(**globals(), **locals()) for t in inputs.get('train_files')]
+        train_windows = [[(s,e)] for s,e in zip(inputs.get('train_windows')[0].get('start'), 
+                                              inputs.get('train_windows')[1].get('end'))] # windows to use to extract train data from
+  
+    if 'test_config' in inputs.keys():
+        test_files = [tc.get('file').format(**globals(), **locals()) for tc in inputs.get('test_config')]
+        test_windows = [[(tc.get('start'),tc.get('end'))] for tc in inputs.get('test_config')] # windows to use to extract training data from
+    else:
+        test_files = [t.format(**globals(), **locals()) for t in inputs.get('test_files')] # files to be used to test/train the model
+        test_windows = [[(s,e)] for s,e in zip(inputs.get('test_windows')[0].get('start'), 
+                                             inputs.get('test_windows')[1].get('end'))] # windows to use to extract test data from
+        # fill any missing files or windows
+        if len(test_files)==1 and len(test_windows)>1:
+            test_files = np.repeat(test_files, len(test_windows))
+        elif len(test_files)>1 and len(test_windows)==1:
+            test_windows = np.repeat(test_windows, len(test_files))
 
-    # Train Model
-    experiments = [experiment]
-    models = {"lstm": [14]}
+    if 'vars_include' in inputs.keys():
+        vars_include = [v for v in inputs.get('vars_include')]
+    else:
+        vars_include = None
 
-    ann_mod.train_models(experiments, models)
+    # run compile
+    ann_mod.compile_inputs(experiment, train_files, train_windows, test_files, test_windows, 
+                           vars_include=vars_include)
 
-    # Make Predictions
-    excel_files = [rf"{dsp_home}\model\dsm2\DSP_DSM2_202307\latinhypercube_v1\anninputs\dsm2_ann_inputs_historical.xlsx"]
+    # Train Model ##############################
+    models = {m.get('name'):[p for p in m.get('params')] for m in inputs.get('models')}
 
+    # run train
+    ann_mod.train_models(models)
+
+    # Make Predictions #########################
+    excel_files = [e.format(**globals(),**locals()) for e in inputs.get('excel_files')] 
+    
+    # run predcit
     ann_mod.make_predictions(excel_files)

@@ -444,6 +444,12 @@ def read_excel_sheet(data_path, sheet_index):
         retval.to_pickle(pickle_path)
     return retval
 
+def sht_names(data_path):
+    retval = pd.read_excel(data_path, sheet_name=None)
+    sheet_names = list(retval.keys())
+
+    return sheet_names
+
 def create_or_update_xyscaler(xscaler, yscaler, dfinps, dfouts):
     # create tuple of calibration and validation sets and the xscaler and yscaler on the combined inputs
     if xscaler is None:
@@ -467,8 +473,13 @@ def read_output_stations(output_stations, observed_stations):
     output_stations = list(name_mapping.values())
     return output_stations, name_mapping
 
-def read_and_split(data_path, num_sheets, observed_stations):
-    dflist = [read_excel_sheet(data_path, i) for i in range(num_sheets)]
+def read_and_split(data_path, num_sheets, observed_stations, vars_include=None):
+    # exclude any non-included variables
+    if vars_include is not None:
+        sheet_names = sht_names(data_path)
+        dflist = [read_excel_sheet(data_path, i) for i,sht in enumerate(sheet_names) if sht in vars_include]
+    else:
+        dflist = [read_excel_sheet(data_path, i) for i in range(num_sheets)]
     
     df_inputs_and_outputs = pd.concat(dflist[0:num_sheets], axis=1).dropna(axis=0)
     last_sheet_columns = dflist[num_sheets - 1].columns
