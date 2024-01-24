@@ -1,0 +1,23 @@
+name: dsp
+channels:
+  - conda-forge            # Note: the order listed in yaml is not enforced by conda
+  - nodefaults               # For predictable behavior, set your conda config
+  - cadwr-dms
+dependencies:
+  - python=3.8
+  - schimpy
+  - pydelmod
+  - pyhecdss
+  - pip
+  - matplotlib
+  - pandas
+  - holoviews
+  - hvplot
+  - panel
+#  - ipykernel  
+  - pillow == 9.0.1
+  - pip:
+    - keras-tuner
+    - scikit-learn
+    - tensorflow
+    - openpyxl==3.0.7
