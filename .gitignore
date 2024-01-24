@@ -10,6 +10,7 @@ scripts/boundary_generation/data_out/*bundles*
 
 # ignore caches
 **/__pycache__/*
+**/src
 
 # ignore ANN experiment output
 **/ann_training/Experiments/*

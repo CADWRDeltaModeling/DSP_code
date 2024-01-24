@@ -6,18 +6,26 @@ channels:
 dependencies:
   - python=3.8
   - schimpy
-  - pydelmod
+  - dms-datastore
   - pyhecdss
   - pip
   - matplotlib
   - pandas
+  - dask
+  - xarray
+  - scipy
   - holoviews
   - hvplot
   - panel
 #  - ipykernel  
-  - pillow == 9.0.1
+  - pillow == 9.0.1 
+ 
   - pip:
-    - keras-tuner
-    - scikit-learn
-    - tensorflow
-    - openpyxl==3.0.7
+     - -e git+https://github.com/CADWRDeltaModeling/pydelmod#egg=pydelmod
+     - -e git+https://github.com/CADWRDeltaModeling/pydsm#egg=pydsm
+  # - pip:
+    # pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org tensorflow
+    # pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org keras-tuner
+    # pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org openpyxl==3.0.7
+    
+    # - scikit-learn
