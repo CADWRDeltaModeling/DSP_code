@@ -162,7 +162,8 @@ class ModelANN(object):
     """
     def __init__(self, dsp_home, 
                  compression_opts=None, #or dict(method='zip', archive_name='out.csv')
-                 ndays=118, NFEATURES=8, initial_lr = 0.01):
+                 ndays=118, NFEATURES=8, initial_lr = 0.01,
+                 stas_include=None):
                  
         self.dsp_home = dsp_home
         self.compression_opts =  compression_opts
@@ -180,11 +181,14 @@ class ModelANN(object):
             os.mkdir("Experiments")
 
         self.num_sheets = 9
-
-        self.observed_stations_ordered_by_median = ['RSMKL008', 'RSAN032', 'RSAN037', 'RSAC092', 'SLTRM004', 'ROLD024',
-                                            'CHVCT000', 'RSAN018', 'CHSWP003', 'CHDMC006', 'SLDUT007', 'RSAN072',
-                                            'OLD_MID', 'RSAN058', 'ROLD059', 'RSAN007', 'RSAC081', 'SLMZU025',
-                                            'RSAC075', 'SLMZU011', 'SLSUS012', 'SLCBN002', 'RSAC064']
+        
+        if stas_include is not None:
+            self.observed_stations_ordered_by_median = stas_include
+        else:
+            self.observed_stations_ordered_by_median = ['RSMKL008', 'RSAN032', 'RSAN037', 'RSAC092', 'SLTRM004', 'ROLD024',
+                                                'CHVCT000', 'RSAN018', 'CHSWP003', 'CHDMC006', 'SLDUT007', 'RSAN072',
+                                                'OLD_MID', 'RSAN058', 'ROLD059', 'RSAN007', 'RSAC081', 'SLMZU025',
+                                                'RSAC075', 'SLMZU011', 'SLSUS012', 'SLCBN002', 'RSAC064']
 
         self.output_stations = ['CHDMC006-CVP INTAKE', 'CHSWP003-CCFB_INTAKE', 'CHVCT000-VICTORIA INTAKE',
                         'OLD_MID-OLD RIVER NEAR MIDDLE RIVER', 'ROLD024-OLD RIVER AT BACON ISLAND',
@@ -463,15 +467,19 @@ if __name__ == '__main__':
     import numpy as np
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
-    in_fname = "../../data/lathypcub_v1_ann_config.yaml"
+    in_fname = "../../data/lathypcub_v1p1_ann_config.yaml"
     
     with open(in_fname, 'r') as f:
         # loader = RawLoader(stream)
         inputs = schism_yaml.load(f)
     dsp_home = inputs.get('dsp_home')
+    if 'stas_include' in inputs.keys():
+        stas_include = [v for v in inputs.get('stas_include')]
+    else:
+        stas_include = None
     
     # Initialize ###############################
-    ann_mod = ModelANN(dsp_home)
+    ann_mod = ModelANN(dsp_home, stas_include=stas_include)
 
     # Create Inputs ############################
     experiment = inputs.get('experiment') # name of folder where outputs are etc.

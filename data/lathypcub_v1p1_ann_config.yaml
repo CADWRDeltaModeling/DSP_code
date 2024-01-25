@@ -1,6 +1,6 @@
 dsp_home: D:/projects/delta_salinity/scripts/DSP_code # where the main folder of this project is
 
-experiment: latinhypercube_v1 # name of folder to look inside of test_file dir
+experiment: latinhypercube_v1p1 # name of folder to look inside of test_file dir
 
 test_files:
 - '{dsp_home}/model/dsm2/DSP_DSM2_202307/historical/anninputs/dsm2_ann_inputs_historical.xlsx'
@@ -22,11 +22,23 @@ vars_include:
 - sjr_flow
 - exports
 - dxc_gate_fraction
+- suisun_gate_fraction
 - net_delta_cu
 - mtz_tidal_nrg
-- sjr_vernalis_ec
-- sac_ec
 - base_ec_output
+
+stas_include:
+- CHDMC006
+- CHSWP003
+- CHVCT000
+- ROLD024
+- RSAC075
+- RSAC081
+- RSAC092
+- RSAN018
+- SLMZU011
+- SLRCK005
+- RSAN032
 
 train_config: # a dictinoary to take the place of train_files and train_windows
 - num: 0

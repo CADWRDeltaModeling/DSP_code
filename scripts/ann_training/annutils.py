@@ -477,12 +477,16 @@ def read_and_split(data_path, num_sheets, observed_stations, vars_include=None):
     # exclude any non-included variables
     if vars_include is not None:
         sheet_names = sht_names(data_path)
+        missing = list(set(vars_include)-set(sheet_names))
+        if len(missing) > 0:
+            raise ValueError(f'vars_include looking for sheets that are not there: {", ".join(missing)} \n in {data_path}')
         dflist = [read_excel_sheet(data_path, i) for i,sht in enumerate(sheet_names) if sht in vars_include]
+        last_sheet_columns = dflist[sheet_names[-1]].columns
     else:
         dflist = [read_excel_sheet(data_path, i) for i in range(num_sheets)]
+        last_sheet_columns = dflist[num_sheets - 1].columns
     
     df_inputs_and_outputs = pd.concat(dflist[0:num_sheets], axis=1).dropna(axis=0)
-    last_sheet_columns = dflist[num_sheets - 1].columns
     col_mask = df_inputs_and_outputs.columns.isin(last_sheet_columns)
     df_inputs = df_inputs_and_outputs.loc[:, ~col_mask]
     df_outputs = df_inputs_and_outputs.loc[:, col_mask]

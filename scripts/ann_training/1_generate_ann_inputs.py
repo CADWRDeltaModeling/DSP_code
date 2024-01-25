@@ -238,7 +238,7 @@ def csv_to_ann_xlsx(csv_dir, xlsx_filepath):
     csv_to_xlsx_dict = { 'base_ec_output':['df_model_ec.csv',None,None],
                         'sac_ec':['df_sac_ec.csv','RSAC139','sac_greens_ec'],
                         'sjr_vernalis_ec':['df_sjr_ec.csv','RSAN112','sjr_vernalis_ec'],
-                        'mtz_daily_max-min_stage':['df_mtz_tidal_energy.csv','tidal_energy','daily_max-min'],
+                        'mtz_tidal_nrg':['df_mtz_tidal_energy.csv','tidal_energy','daily_nrg'],
                         'net_delta_cu': ['df_cu_total.csv','cu_total','div+seep-drain_dcd+smcd'],
                         'dxc_gate_fraction':['dcc_gate_op.csv','gate_pos',
                                              'gate_pos'],
@@ -250,7 +250,7 @@ def csv_to_ann_xlsx(csv_dir, xlsx_filepath):
     }
 
     ordered_sheets = ['northern_flow','sjr_flow','exports','dxc_gate_fraction','suisun_gate_fraction','net_delta_cu',
-                      'mtz_daily_max-min_stage','sjr_vernalis_ec','sac_ec','base_ec_output']
+                      'mtz_tidal_nrg','sjr_vernalis_ec','sac_ec','base_ec_output']
     
     with pd.ExcelWriter(xlsx_filepath) as writer:
         for sheet in ordered_sheets:
@@ -264,24 +264,59 @@ def csv_to_ann_xlsx(csv_dir, xlsx_filepath):
 
 if __name__ == '__main__':
 
-    base_study_folder = r'D:/projects/delta_salinity/scripts/DSP_code/model/dsm2/2021DSM2FP_202301' 
-    model_input_folder = os.path.join(base_study_folder, 'timeseries')
-    model_folder = r'D:/projects/delta_salinity/scripts/DSP_code/model/dsm2/DSP_DSM2_202307/latinhypercube_v1/'
-    model_output_folder = os.path.join(model_folder, 'output')
+    from schimpy import schism_yaml
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
-    dcd_dss_file = os.path.join(model_input_folder, 'DCD_hist_Lch5.dss')
-    smcd_dss_file = os.path.join(model_input_folder, 'SMCD_hist.dss')
+    # in_fname = "../../data/lathypcub_v1_dsm2-ann_config.yaml"
+    in_fname = "../../data/historical_dsm2-ann_config.yaml"
+    
+    with open(in_fname, 'r') as f:
+        # loader = RawLoader(stream)
+        inputs = schism_yaml.load(f)
+    
+    dsp_home = inputs.get('dsp_home')
+    experiment = inputs.get('experiment')
 
-    for case_num in range(1,8):
+    def fmt_str(in_str):
+        try:
+            out_str = in_str.format(**locals())
+        except:
+            out_str = in_str.format(**globals(),**locals())
 
-        hist_dss_file = os.path.join(model_folder, f'timeseries/lhc_{case_num}_hist.dss')
-        gate_dss_file = os.path.join(model_folder, f'timeseries/lhc_{case_num}_gates.dss')
-        model_ec_file = os.path.join(model_output_folder, f'lhc_{case_num}_EC.dss')
-        output_folder = fr'D:/projects/delta_salinity/scripts/DSP_code/model/dsm2/DSP_DSM2_202307/latinhypercube_v1/anninputs_mods/lhc_{case_num}' # where the ann inputs will be written to
+        return out_str
 
+    base_study_folder = fmt_str(inputs.get('base_study_folder'))
+    model_input_folder = fmt_str(inputs.get('model_input_folder'))
+    model_folder = fmt_str(inputs.get('model_folder'))
+    model_output_folder = fmt_str(inputs.get('model_output_folder'))
+    dcd_dss_file = fmt_str(inputs.get('dcd_dss_file'))
+    smcd_dss_file = fmt_str(inputs.get('smcd_dss_file'))
+    
+    if 'cases' in inputs.keys():
+        cases = inputs.get('cases')
+        for case in cases:
+            case_num = case.get('case_num')
+            hist_dss_file = fmt_str(inputs.get('hist_dss_file'))
+            gate_dss_file = fmt_str(inputs.get('gate_dss_file'))
+            model_ec_file = fmt_str(inputs.get('model_ec_file'))
+            output_folder = fmt_str(inputs.get('output_folder'))
+            xlsx_filepath = fmt_str(inputs.get('xlsx_filepath'))
+
+            # generate aggregated ANN inputs from DSM2 outputs
+            create_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file, model_ec_file, output_folder)
+
+            # combine ANN input csv files into xlsx file (TODO: make this unecessary?)
+            csv_to_ann_xlsx(output_folder, xlsx_filepath)
+
+    else:
+        hist_dss_file = fmt_str(inputs.get('hist_dss_file'))
+        gate_dss_file = fmt_str(inputs.get('gate_dss_file'))
+        model_ec_file = fmt_str(inputs.get('model_ec_file'))
+        output_folder = fmt_str(inputs.get('output_folder'))
+        xlsx_filepath = fmt_str(inputs.get('xlsx_filepath'))
+        
         # generate aggregated ANN inputs from DSM2 outputs
         create_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file, model_ec_file, output_folder)
 
         # combine ANN input csv files into xlsx file (TODO: make this unecessary?)
-        xlsx_filepath = f'D:/projects/delta_salinity/scripts/DSP_code/model/dsm2/DSP_DSM2_202307/latinhypercube_v1/anninputs_mods/dsm2_ann_inputs_lhc_{case_num}.xlsx'
         csv_to_ann_xlsx(output_folder, xlsx_filepath)
