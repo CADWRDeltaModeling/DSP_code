@@ -19,13 +19,13 @@ dependencies:
   - panel
 #  - ipykernel  
   - pillow == 9.0.1 
- 
-  - pip:
-     - -e git+https://github.com/CADWRDeltaModeling/pydelmod#egg=pydelmod
-     - -e git+https://github.com/CADWRDeltaModeling/pydsm#egg=pydsm
-  # - pip:
-    # pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org tensorflow
-    # pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org keras-tuner
-    # pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org openpyxl==3.0.7
-    
-    # - scikit-learn
+  
+# Install the following with command line
+#  pip install -e git+https://github.com/CADWRDeltaModeling/pydelmod#egg=pydelmod
+#  pip install -e git+https://github.com/CADWRDeltaModeling/pydsm#egg=pydsm
+
+# pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org tensorflow
+# pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org keras-tuner
+# pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org openpyxl==3.0.7
+
+# - scikit-learn
