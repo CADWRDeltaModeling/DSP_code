@@ -481,7 +481,7 @@ def read_and_split(data_path, num_sheets, observed_stations, vars_include=None):
         if len(missing) > 0:
             raise ValueError(f'vars_include looking for sheets that are not there: {", ".join(missing)} \n in {data_path}')
         dflist = [read_excel_sheet(data_path, i) for i,sht in enumerate(sheet_names) if sht in vars_include]
-        last_sheet_columns = dflist[sheet_names[-1]].columns
+        last_sheet_columns = dflist[len(dflist)-1].columns
     else:
         dflist = [read_excel_sheet(data_path, i) for i in range(num_sheets)]
         last_sheet_columns = dflist[num_sheets - 1].columns

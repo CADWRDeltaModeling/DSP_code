@@ -5,7 +5,7 @@ import os
 
 from pydelmod.create_ann_inputs import get_dss_data
 
-def process_gate_data(dss_filename, output_file, b_part, c_part):
+def process_gate_data(dss_filename, output_file, b_part, c_part, map_zero_one=['df==0','df==1']):
     '''
     Read delta cross-channel gate operation data
     Create daily time series indicating fraction of maximum gate opening (100% means both gates open all day).
@@ -25,13 +25,15 @@ def process_gate_data(dss_filename, output_file, b_part, c_part):
                 df,units,ptype=d.read_rts(p)
             print('path='+p)
 
+            df[eval(map_zero_one[0])] = 0
+            df[eval(map_zero_one[1])] = 1
+
             # resample to 1 minute, then fill forward (with last value)
             df_1min = df.resample('T', closed='right').ffill()
             # now find daily averages of one minute data
             df_daily_avg = df_1min.resample('D', closed='right').mean()
-            df_daily_avg_half = df_daily_avg / 2.0
-            df_daily_avg_half = df_daily_avg_half.rename(columns={p:'gate_pos'})
-            df_daily_avg_half.to_csv(output_file)
+            df_daily_avg = df_daily_avg.rename(columns={p:'gate_pos'})
+            df_daily_avg.to_csv(output_file)
         d.close()
 
 def create_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file, model_ec_file, output_folder):
@@ -94,7 +96,7 @@ def create_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file,
     b_part = 'RSAC128'
     c_part = 'POS'
     gate_output_file = output_folder+'/dcc_gate_op.csv'
-    process_gate_data(gate_dss_file, gate_output_file, b_part, c_part)
+    process_gate_data(gate_dss_file, gate_output_file, b_part, c_part, map_zero_one=['df<2','df==2'])
     
     ################################################
     # 5. Suisun gate operation as daily percentage #
@@ -102,7 +104,8 @@ def create_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file,
     b_part = 'MTZSL'
     c_part = 'RADIAL_OP'
     gate_output_file = output_folder+'/suisun_gate_op.csv'
-    process_gate_data(gate_dss_file, gate_output_file, b_part, c_part)
+    #TODO: update suisun so -10 maps to 1 and everyother value maps to 0
+    process_gate_data(gate_dss_file, gate_output_file, b_part, c_part, map_zero_one = ['df!=-10','df==-10'])
 
     ############################################################
     # 6. Net Delta CU, daily (DIV+SEEP-DRAIN) for DCD and SMCD #
@@ -243,7 +246,7 @@ def csv_to_ann_xlsx(csv_dir, xlsx_filepath):
                         'dxc_gate_fraction':['dcc_gate_op.csv','gate_pos',
                                              'gate_pos'],
                         'suisun_gate_fraction':['suisun_gate_op.csv','gate_pos',
-                                             'gate_pos'],
+                                             's_gate_pos'],
                         'exports':['df_exports_flow.csv','exports','exports'],
                         'sjr_flow':['df_sjr_flow.csv','RSAN112','sjr_flow'],
                         'northern_flow':['df_northern_flow.csv', 'northern_flow', 'northern_flow']
@@ -267,8 +270,8 @@ if __name__ == '__main__':
     from schimpy import schism_yaml
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
-    # in_fname = "../../data/lathypcub_v1_dsm2-ann_config.yaml"
-    in_fname = "../../data/historical_dsm2-ann_config.yaml"
+    in_fname = "../../data/lathypcub_v1_dsm2-ann_config.yaml"
+    # in_fname = "../../data/historical_dsm2-ann_config.yaml"
     
     with open(in_fname, 'r') as f:
         # loader = RawLoader(stream)

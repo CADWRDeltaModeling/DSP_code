@@ -323,6 +323,8 @@ class ModelANN(object):
         test_X.to_csv(os.path.join("Experiments", experiment, "test_X.csv"), compression=self.compression_opts,float_format="%.2f")
         test_Y.to_csv(os.path.join("Experiments", experiment, "test_Y.csv"), compression=self.compression_opts,float_format="%.2f")
 
+        self.train_X, self.train_Y, self.test_X, self.test_Y = train_X, train_Y, test_X, test_Y
+
         print(f"Finished compiling inputs for {experiment} experiment")
 
     def train_models(self, models):
@@ -335,11 +337,6 @@ class ModelANN(object):
             if not os.path.exists(folder_path):
                 os.makedirs(folder_path)
 
-        train_X = pd.read_csv(os.path.join("Experiments", self.experiment, "train_X.csv"), index_col=0, compression=self.compression_opts)
-        train_Y = pd.read_csv(os.path.join("Experiments", self.experiment, "train_Y.csv"), index_col=0, compression=self.compression_opts)
-        test_X = pd.read_csv(os.path.join("Experiments", self.experiment, "test_X.csv"), index_col=0, compression=self.compression_opts)
-        test_Y = pd.read_csv(os.path.join("Experiments", self.experiment, "test_Y.csv"), index_col=0, compression=self.compression_opts)
-
         for  model_type, num_neurons_multiplier in models.items():
             start = time.time()
             model_str_def = build_model_string(model_type, num_neurons_multiplier)
@@ -347,7 +344,7 @@ class ModelANN(object):
             full_model_str_def = 'i%d_' % (self.ndays + self.nwindows) + model_str_def
 
             model_path_prefix = "mtl_%s" % (full_model_str_def)
-            model, xscaler, yscaler = self.build_or_load_model(model_path_prefix, full_model_str_def, train_Y.shape)
+            model, xscaler, yscaler = self.build_or_load_model(model_path_prefix, full_model_str_def, self.train_Y.shape)
 
             epochs = 50
 
@@ -357,16 +354,16 @@ class ModelANN(object):
             if(xscaler is None or yscaler is None):
                 print("Creating new scalers")
 
-            xscaler, yscaler = annutils.create_or_update_xyscaler(xscaler, yscaler, train_X, train_Y)
+            xscaler, yscaler = annutils.create_or_update_xyscaler(xscaler, yscaler, self.train_X, self.train_Y)
             print("Xscaler Min[0]: %s" % xscaler.min_val[0])
             print("Xscaler Max[0]: %s" % xscaler.max_val[0])
 
-            scaled_X = xscaler.transform(train_X)
-            scaled_Y = yscaler.transform(train_Y)
+            scaled_X = xscaler.transform(self.train_X)
+            scaled_Y = yscaler.transform(self.train_Y)
 
 
-            scaled_test_X = xscaler.transform(test_X)
-            scaled_test_Y = yscaler.transform(test_Y)
+            scaled_test_X = xscaler.transform(self.test_X)
+            scaled_test_Y = yscaler.transform(self.test_Y)
 
 
 
@@ -405,7 +402,7 @@ class ModelANN(object):
         for data_file in tqdm(excel_files):
             print("Data file: %s" % data_file)
             data_path = os.path.join(local_root_path,data_file)
-            dfinps, dfouts = annutils.read_and_split(data_path, self.num_sheets, self.observed_stations_ordered_by_median)
+            dfinps, dfouts = annutils.read_and_split(data_path, self.num_sheets, self.observed_stations_ordered_by_median, vars_include=self.vars_include)
             for cn in dfinps.columns:
                 print("Col "+cn)
 
@@ -467,6 +464,7 @@ if __name__ == '__main__':
     import numpy as np
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
+    # in_fname = "../../data/lathypcub_v1p1_ann_config.yaml"
     in_fname = "../../data/lathypcub_v1p1_ann_config.yaml"
     
     with open(in_fname, 'r') as f:
@@ -510,14 +508,24 @@ if __name__ == '__main__':
     else:
         vars_include = None
 
-    # run compile
+    # run compile (if already ran and you want to save time comment out): 
     ann_mod.compile_inputs(experiment, train_files, train_windows, test_files, test_windows, 
                            vars_include=vars_include)
-
+    
+    # (if already ran and you want to save time uncomment out): 
+    # ann_mod.window_size = 0
+    # ann_mod.nwindows = 0
+    # ann_mod.experiment = experiment
+    # ann_mod.vars_include = vars_include
+    # ann_mod.train_X = pd.read_csv(os.path.join("Experiments", experiment, "train_X.csv"), index_col=0, compression=ann_mod.compression_opts)
+    # ann_mod.train_Y = pd.read_csv(os.path.join("Experiments", experiment, "train_Y.csv"), index_col=0, compression=ann_mod.compression_opts)
+    # ann_mod.test_X = pd.read_csv(os.path.join("Experiments", experiment, "test_X.csv"), index_col=0, compression=ann_mod.compression_opts)
+    # ann_mod.test_Y = pd.read_csv(os.path.join("Experiments", experiment, "test_Y.csv"), index_col=0, compression=ann_mod.compression_opts)
+    
     # Train Model ##############################
     models = {m.get('name'):[p for p in m.get('params')] for m in inputs.get('models')}
 
-    # run train
+    # run train  (if already ran and you want to save time comment out): 
     ann_mod.train_models(models)
 
     # Make Predictions #########################
