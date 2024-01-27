@@ -19,8 +19,8 @@ library(stringr)
 # https://github.com/CADWRDeltaModeling/stochCycle.git
 # install.packages('devtools')
 # devtools::install_github("CADWRDeltaModeling/stochCycle")
-# library(stochCycle)
-# doingStochCycle=TRUE
+library(stochCycle)
+doingStochCycle=TRUE
 
 # Set wd to current file --------------------------------------------------
 
@@ -32,7 +32,7 @@ source("./functions/pulse_events.R")
 
 # Specify overwrite -------------------------------------------------------
 
-overwrite <- c('Consump Use','SJR Flow','Exports','Sacramento')
+overwrite <- c('SJR Flow','Exports','Sacramento')
 
 # Load data ---------------------------------------------------------------
 
@@ -78,25 +78,31 @@ delta_state$NF_nonSac <- delta_state$`Northern Flow`-delta_state$Sacramento
 scale_denom <- 2476156.199 # through some testing this seems to be the scaling ratio where the first number is the approximate increase in flow on the peaks
 pulse_params <- hash() # flow peak scaling, random shift mean, random shift standard deviation, 
 #                       min criteria, max criteria, number of pulses
+#                       apply stochify, stochCycle scaling
 
 # pulse_params[['Northern Flow']] <- c(15000/scale_denom, 200, 1500, 5000, NA)
 pulse_params[['Sacramento']] <- c(15000/scale_denom, 200, 1500, 
-                                  5000, NA, 2)
+                                  5000, NA, 2,
+                                  TRUE, 1.01)
 pulse_params[['SJR Flow']] <- c(2000/scale_denom, 50, 500, 
-                                200, NA, 2)
+                                200, NA, 2,
+                                TRUE, 1.01)
 pulse_params[['Exports']] <- c(100/scale_denom, 1000, 2000, 
-                               50, max(delta_state$Exports), 2)
-pulse_params[['Consump Use']] <- c(200/scale_denom, 1000, 2000, 
-                                    -15000, 5000, 6)
+                               50, max(delta_state$Exports), 2,
+                               FALSE, 1.0)
+# pulse_params[['Consump Use']] <- c(200/scale_denom, 1000, 2000, 
+#                                     -15000, 5000, 6,
+#                                    FALSE, 1.0)
 
 # Create data variability -------------------------------------------------
 
 runyrs <- seq(2006,2016,1)
+runyr <- 2006
 
 for (runyr in runyrs) {
   delta_df <- delta_state[lubridate::year(delta_state$Time)==runyr,]
   delta_df$`Net Delta Outflow` <- delta_df$NF_nonSac + delta_df$Sacramento + delta_df$`SJR Flow` - 
-    delta_df$Exports - delta_df$`Consump. Use`
+    delta_df$Exports - delta_df$`Consump Use`
   
   edit.df <- perturb_all(delta_df, pulse_params)
   
@@ -110,13 +116,13 @@ for (runyr in runyrs) {
 
 # Net Delta Outflow
 full.df$`Net Delta Outflow` <- full.df$NF_nonSac + full.df$Sacramento + full.df$`SJR Flow` - full.df$Exports - 
-  delta_state$`Consump. Use`[delta_state$Time>=min(full.df$Time) & delta_state$Time<=max(full.df$Time)]
+  delta_state$`Consump Use`[delta_state$Time>=min(full.df$Time) & delta_state$Time<=max(full.df$Time)]
 delta_state$`Net Delta Outflow` <- delta_state$NF_nonSac + delta_state$Sacramento + delta_state$`SJR Flow` - delta_state$Exports - 
-  delta_state$`Consump. Use`
+  delta_state$`Consump Use`
 
 
 # Plots
-plt.vars <- append(keys(pulse_params),c('Time', 'Net Delta Outflow', 'Tidal Amp'))
+plt.vars <- append(keys(pulse_params),c('Time', 'Net Delta Outflow'))
 plt.df <- melt(full.df, id.vars='Time')
 plt.df$Version <- 'Edited'
 plt.df$value <- as.numeric(plt.df$value)
@@ -130,7 +136,7 @@ plt <- ggplot(data=plt.df) +
   facet_wrap(~variable, ncol=1, scales='free_y') +
   scale_x_date(limits=lubridate::ymd(c(paste0(runyrs[1],'-1-1'),
                                        paste0(max(runyrs),'12-31'))))
-# plt
+plt
 
 pltl <- ggplotly(plt, dynamicTicks=TRUE)
 # pltl

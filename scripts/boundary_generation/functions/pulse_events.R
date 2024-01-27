@@ -17,7 +17,13 @@
 # sh.mean <- 500
 # sh.sd <- 1500
 
-pulse_events <- function(ts.df, nstep=365, rescale=0.015, sh.mean=500, sh.sd=1500, num.pulse=2) {
+# pulse_events(ts.df, nstep=nrow(ts.df), rescale=scale, sh.mean, sh.sd, num.pulse, stochit, stochscale)
+# nstep <- nrow(ts.df)
+# rescale <- scale
+# sh.mean <- pulse_params[[key]][2]
+# sh.sd <- pulse_params[[key]][3]
+
+pulse_events <- function(ts.df, nstep=365, rescale=0.015, sh.mean=500, sh.sd=1500, num.pulse=2, stochit=FALSE, stochscale=1) {
   
   ## Peak events
   ## Number of events
@@ -40,6 +46,7 @@ pulse_events <- function(ts.df, nstep=365, rescale=0.015, sh.mean=500, sh.sd=150
     u[ps[isn]:(ls[isn]+ps[isn])] <- rgamma(1,70,rate=1/80000) # populate the positions with a random massive number
   }
   # print(max(u))
+  # par(mfrow=c(5,1))
   # ts.plot(u,xlim=c(1,nstep))
   
   # Now create a response function to that stimulus that has mean
@@ -69,14 +76,78 @@ pulse_events <- function(ts.df, nstep=365, rescale=0.015, sh.mean=500, sh.sd=150
   # ts.plot(rshift)
   # ts.plot(rshift+z)
   
-  ts.df$Edit <- ts.df$Value + z + rshift
+  if (stochit) {
+    stoch <- stochify(nstep, scale=stochscale)
+    # ts.plot(stoch)
+    
+    # ts.plot(rshift+z+stoch)
+    ts.df$Edit <- ts.df$Value + z + rshift
+  } else {
+    ts.df$Edit <- ts.df$Value + z + rshift
+  }
+  
   ts.df$Edit[is.na(ts.df$Edit)] <- ts.df$Value[is.na(ts.df$Edit)]
   
   return(ts.df)
 }
 
 
+# function: stochify ------------------------------------------------------
+
+stochify <- function(nstep, scale=1, nstep_buf=3500, base_period_days=128) {
+  ########## This is a perturbation that includes drift plus periodicities
+  # of 14,28 and 56 days. The first couple lines are where those periods are
+  # basically you set some frequencies and it randomly modulates those as well as creating a trend.
+  
+  
+  lambdabase = 2*pi/base_period_days
+  # You could add or remove periods here by changing c(1,2,4)
+  # The lowest frequency corresponds to the 1 element (128 days divided by 1)
+  lambda = c(1,2,4,8)*2*pi/base_period_days
+  
+  order_trend <- 2
+  order_cycle <- 4
+  freqs <- lambda
+  rho <- 0.994
+  sigma2_eps <- 1e-4
+  sigma2_zeta <- 2e-4
+  sigma2_kappa <- rep(9e-11,length(lambda))
+  sigma2_diffuse <- 1.
+  
+  mod <- sc_model_build(order_trend,order_cycle,freqs,rho,
+                        sigma2_eps=sigma2_eps,sigma2_zeta=sigma2_zeta,
+                        sigma2_kappa=sigma2_kappa,sigma2_diffuse=sigma2_diffuse)
+  mod$GG[1,2] <- 0.99
+  mod$GG[2,2] <- 0.99
+  mod$FF[2] <- 0.99
+  nstate <- dim(mod$GG)[1]
+  sigma_eps <- sqrt(sigma2_eps)
+  sigma <- sqrt(diag(mod$W))
+  y = rep(NA,nstep_buf)
+  m = matrix(nrow=nstate,ncol=nstep_buf)
+  m[,]<-0.
+  
+  
+  for (i in 2:nstep_buf){
+    m[,i] = mod$GG%*%m[,i-1] + rnorm(nstate,sd=sigma)
+    y[i] = mod$FF%*%m[,i] + rnorm(1,sigma_eps)
+  }
+  ndx <- c(1,order_trend+1+order_cycle*2*(0:(length(freqs)-1)))
+  m <- m[ndx,1001:(1000+nstep)]*4
+  y <- colSums(m)+rnorm(nstep)*2
+  
+  y <- y * scale
+  
+  return(y)
+  # par(mfrow=c(4,1))
+  # for(jplot in 2:4){ts.plot(m[jplot,])}
+  # ts.plot(y)
+}
+
 # function: perturb_all ---------------------------------------------------
+
+# debug
+# key <- 'Sacramento'
 
 perturb_all <- function(delta_df, pulse_params) {
   
@@ -101,9 +172,11 @@ perturb_all <- function(delta_df, pulse_params) {
       min.crit <- pulse_params[[key]][4]
       max.crit <- pulse_params[[key]][5]
       num.pulse <- pulse_params[[key]][6]
+      stochit <- pulse_params[[key]][7]
+      stochscale <- pulse_params[[key]][8]
       
       # create randomly edited flow field
-      ts.df.e <- pulse_events(ts.df, nstep=nrow(ts.df), rescale=scale, sh.mean, sh.sd, num.pulse)
+      ts.df.e <- pulse_events(ts.df, nstep=nrow(ts.df), rescale=scale, sh.mean, sh.sd, num.pulse, stochit, stochscale)
       
       # debug check
       # ggplot(data=ts.df.e,aes(x=Time)) +
@@ -129,7 +202,7 @@ perturb_all <- function(delta_df, pulse_params) {
     
     # Check for net delta outflow requirements
     net_delta_outflow <- edit.df$NF_nonSac + edit.df$Sacramento + edit.df$`SJR Flow` - edit.df$Exports - 
-      edit.df$`Consump. Use`
+      delta_df$`Consump Use`
     
     if (min(net_delta_outflow)>min.ndo) {
       ndo_pass <- FALSE
