@@ -29,6 +29,8 @@ seed <- 1
 nLHScol <- 15
 nLHSsamples <- 7
 
+version <- 'v2'
+
 
 # Run ---------------------------------------------------------------------
 match <- FALSE
@@ -80,6 +82,8 @@ while (!match) {
 
 seed # ends up being 113
 res_df
+
+write.csv(res_df, paste0("./data_out/lhc_",version,".csv"), row.names=FALSE)
 
 # for adding rows to existing LHS use:
 # b <- augmentLHS(num.df,m=2)

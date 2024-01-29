@@ -86,9 +86,12 @@ def sample_binary_ts():
 if __name__ == "__main__":
 
     bddsm_dir = "D:/dsm2/DSM2v821/timeseries"
-    primary_pathname_part_dss_filename_dict = {'RSAC128': os.path.join(bddsm_dir, "gates-v8-201712.dss")}
-    primary_part_c_part_dict = {'RSAC128': 'POS'}
-    unit_part_dict = {'RSAC128': 'UNSPECIF'}
+    primary_pathname_part_dss_filename_dict = {'RSAC128': os.path.join(bddsm_dir, "gates-v8-201712.dss"),
+                                               'MTZSL': os.path.join(bddsm_dir, "gates-v8-201712.dss")}
+    primary_part_c_part_dict = {'RSAC128': 'POS',
+                                'MTZSL': 'RADIAL_OP'}
+    unit_part_dict = {'RSAC128': 'UNSPECIF',
+                      'MTZSL':'UNSPECIF'}
     primary_pathname_part = 'b_part'
     
     P00 = 0.988
@@ -108,11 +111,30 @@ if __name__ == "__main__":
 
         # need to fill NaNs and convert from 0-2 float to 0 or 1 binary
         in_ts = in_ts.ffill()
-        in_ts = (in_ts>0.1).astype(int)
 
-        out_ts = perturb_binary(in_ts,P00=P00,P11=P11)
+        # two versions of perturbed binary for Suisun
+        if 'MTZSL' == gate:
+            in_ts[in_ts==-10] = 1
+            in_ts[in_ts!=-10] = 0
 
-        # Save to output
-        out_ts.to_csv(os.path.join(output_dir,f"{gate}_markov_pert.csv"), 
-                      index=True,
-                      header=False)
+            # v1
+            out_ts = perturb_binary(in_ts,P00=P00,P11=P11)
+            # Save to output
+            out_ts.to_csv(os.path.join(output_dir,f"{gate}_markov_pert_v1.csv"), 
+                        index=True,
+                        header=False)
+            
+            # v2
+            out_ts = perturb_binary(in_ts,P00=P00,P11=P11)
+            # Save to output
+            out_ts.to_csv(os.path.join(output_dir,f"{gate}_markov_pert_v2.csv"), 
+                        index=True,
+                        header=False)
+        else:
+            in_ts = (in_ts>0.1).astype(int)
+            out_ts = perturb_binary(in_ts,P00=P00,P11=P11)
+
+            # Save to output
+            out_ts.to_csv(os.path.join(output_dir,f"{gate}_markov_pert.csv"), 
+                        index=True,
+                        header=False)
