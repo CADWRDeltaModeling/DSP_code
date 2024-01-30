@@ -19,7 +19,7 @@ library(stringr)
 # https://github.com/CADWRDeltaModeling/stochCycle.git
 # install.packages('devtools')
 # devtools::install_github("CADWRDeltaModeling/stochCycle")
-library(stochCycle)
+suppressMessages(library(stochCycle, quietly=TRUE))
 doingStochCycle=TRUE
 
 # Set wd to current file --------------------------------------------------
@@ -83,13 +83,13 @@ pulse_params <- hash() # flow peak scaling, random shift mean, random shift stan
 # pulse_params[['Northern Flow']] <- c(15000/scale_denom, 200, 1500, 5000, NA)
 pulse_params[['Sacramento']] <- c(15000/scale_denom, 200, 1500, 
                                   5000, NA, 2,
-                                  TRUE, 1.01)
+                                  TRUE, 0.8)
 pulse_params[['SJR Flow']] <- c(2000/scale_denom, 50, 500, 
                                 200, NA, 2,
-                                TRUE, 1.01)
+                                TRUE, 0.2)
 pulse_params[['Exports']] <- c(100/scale_denom, 1000, 2000, 
                                50, max(delta_state$Exports), 2,
-                               FALSE, 1.0)
+                               FALSE, 0.1)
 # pulse_params[['Consump Use']] <- c(200/scale_denom, 1000, 2000, 
 #                                     -15000, 5000, 6,
 #                                    FALSE, 1.0)
@@ -100,6 +100,7 @@ runyrs <- seq(2006,2016,1)
 runyr <- 2006
 
 for (runyr in runyrs) {
+  print(runyr)
   delta_df <- delta_state[lubridate::year(delta_state$Time)==runyr,]
   delta_df$`Net Delta Outflow` <- delta_df$NF_nonSac + delta_df$Sacramento + delta_df$`SJR Flow` - 
     delta_df$Exports - delta_df$`Consump Use`
@@ -139,7 +140,7 @@ plt <- ggplot(data=plt.df) +
 plt
 
 pltl <- ggplotly(plt, dynamicTicks=TRUE)
-# pltl
+pltl
 
 pltl_name <- "perturb_historical.html"
 

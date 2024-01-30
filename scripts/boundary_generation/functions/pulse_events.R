@@ -22,8 +22,11 @@
 # rescale <- scale
 # sh.mean <- pulse_params[[key]][2]
 # sh.sd <- pulse_params[[key]][3]
+# plotshow <- TRUE
 
 pulse_events <- function(ts.df, nstep=365, rescale=0.015, sh.mean=500, sh.sd=1500, num.pulse=2, stochit=FALSE, stochscale=1) {
+  
+  plotshow <- FALSE
   
   ## Peak events
   ## Number of events
@@ -46,8 +49,9 @@ pulse_events <- function(ts.df, nstep=365, rescale=0.015, sh.mean=500, sh.sd=150
     u[ps[isn]:(ls[isn]+ps[isn])] <- rgamma(1,70,rate=1/80000) # populate the positions with a random massive number
   }
   # print(max(u))
-  # par(mfrow=c(5,1))
-  # ts.plot(u,xlim=c(1,nstep))
+  if (plotshow) {
+  par(mfrow=c(5,1))
+  ts.plot(u,xlim=c(1,nstep))}
   
   # Now create a response function to that stimulus that has mean
   # at shape/rate and peak mode (shape-1)/rate days after the stimulus
@@ -57,7 +61,7 @@ pulse_events <- function(ts.df, nstep=365, rescale=0.015, sh.mean=500, sh.sd=150
   
   f <- f*rescale
   z <- stats::filter(u,f) # shape the events in u to create z
-  # ts.plot(z,xlim=c(1,nstep))
+  if (plotshow) {ts.plot(z,xlim=c(1,nstep))}
   
   # Random shifts
   ns <- rpois(1, 12*as.integer(nstep/365)) # enough for about 12 per year
@@ -73,15 +77,21 @@ pulse_events <- function(ts.df, nstep=365, rescale=0.015, sh.mean=500, sh.sd=150
     ibase <- end
     # print(ibase)
   }
-  # ts.plot(rshift)
+  if (plotshow) {ts.plot(rshift)}
   # ts.plot(rshift+z)
   
   if (stochit) {
-    stoch <- stochify(nstep, scale=stochscale)
-    # ts.plot(stoch)
+    # print('Running stochify')
+    log <- capture.output({
+      stoch <- stochify(nstep, scale=stochscale);
+    })
+    if (plotshow) {ts.plot(stoch)}
+    if (min(stoch)/min(rshift)>1.1) {
+      stochscale <- stochscale * min(rshift)/min(stoch)
+    }
     
-    # ts.plot(rshift+z+stoch)
-    ts.df$Edit <- ts.df$Value + z + rshift
+    if (plotshow) {ts.plot(rshift+z+stoch)}
+    ts.df$Edit <- ts.df$Value + z + rshift + stoch
   } else {
     ts.df$Edit <- ts.df$Value + z + rshift
   }
@@ -108,10 +118,10 @@ stochify <- function(nstep, scale=1, nstep_buf=3500, base_period_days=128) {
   order_trend <- 2
   order_cycle <- 4
   freqs <- lambda
-  rho <- 0.994
+  rho <- 0.993
   sigma2_eps <- 1e-4
-  sigma2_zeta <- 2e-4
-  sigma2_kappa <- rep(9e-11,length(lambda))
+  sigma2_zeta <- 1e-10
+  sigma2_kappa <- rep(5e-10,length(lambda))
   sigma2_diffuse <- 1.
   
   mod <- sc_model_build(order_trend,order_cycle,freqs,rho,
@@ -148,13 +158,21 @@ stochify <- function(nstep, scale=1, nstep_buf=3500, base_period_days=128) {
 
 # debug
 # key <- 'Sacramento'
+# key <- 'SJR Flow'
 
 perturb_all <- function(delta_df, pulse_params) {
   
-  ndo_pass <- TRUE
+  ndo_pass <- FALSE
   min.ndo <- 300
+  ndoct <- 1
   
-  while (ndo_pass) {
+  while (!ndo_pass) {
+    
+    if (ndoct%%10==0) {
+      print('Reducing stochscales by 90%')
+      for (key in keys(pulse_params)) {
+        pulse_params[[key]][8] <- pulse_params[[key]][8] * .9
+      }}
     
     edit.df <- data.frame(matrix(nrow=nrow(delta_df),ncol=length(keys(pulse_params))))
     names(edit.df) <- keys(pulse_params)
@@ -163,7 +181,7 @@ perturb_all <- function(delta_df, pulse_params) {
     
     # Create edited fields
     for (key in keys(pulse_params)) {
-      # print(key)
+      print(key)
       ts.df <- data.frame(Time=delta_df$Time, Value=delta_df[,key])
       # ts.df <- ts.df[lubridate::year(ts.df$Time)==yr.slct,]
       scale <- pulse_params[[key]][1]
@@ -176,7 +194,9 @@ perturb_all <- function(delta_df, pulse_params) {
       stochscale <- pulse_params[[key]][8]
       
       # create randomly edited flow field
-      ts.df.e <- pulse_events(ts.df, nstep=nrow(ts.df), rescale=scale, sh.mean, sh.sd, num.pulse, stochit, stochscale)
+      # print(key)
+      ts.df.e <- pulse_events(ts.df, nstep=nrow(ts.df), rescale=scale, sh.mean, 
+                              sh.sd, num.pulse, stochit, stochscale)
       
       # debug check
       # ggplot(data=ts.df.e,aes(x=Time)) +
@@ -185,16 +205,22 @@ perturb_all <- function(delta_df, pulse_params) {
       
       # check for min max criteria
       if (!is.na(min.crit) | !is.na(max.crit)) {
-        pass <- TRUE
-        while (pass) {
-          ts.df.e <- pulse_events(ts.df, nstep=nrow(ts.df), rescale=scale, sh.mean, sh.sd, num.pulse)
+        pass <- FALSE
+        pct <- 1
+        while (!pass) {
+          if (pct%%10==0) {
+            stochscale=stochscale*.9
+            print(paste0('Modifying stochscale to ', stochscale))}
+          ts.df.e <- pulse_events(ts.df, nstep=nrow(ts.df), rescale=scale, sh.mean, 
+                                  sh.sd, num.pulse, stochit, stochscale)
           
           # check for min/max criteria
           if (is.na(max.crit)) {
             if (min(ts.df.e$Edit)<min.crit) {
-              pass <- TRUE } else { pass <- FALSE}
+              pass <- FALSE } else { pass <- TRUE}
           } else if (min(ts.df.e$Edit)<min.crit | max(ts.df.e$Edit)>max.crit) {
-            pass <- TRUE } else { pass <- FALSE}
+            pass <- FALSE } else { pass <- TRUE}
+          pct <- pct + 1
         } # end while loop for min/max criteria
       } # end min/max def check
       edit.df[,key] <- ts.df.e$Edit
@@ -205,7 +231,7 @@ perturb_all <- function(delta_df, pulse_params) {
       delta_df$`Consump Use`
     
     if (min(net_delta_outflow)>min.ndo) {
-      ndo_pass <- FALSE
+      ndo_pass <- TRUE
     } #else {
     # print(paste0("Minimum net delta outflow is ", min(net_delta_outflow)))
     # print(paste0("Maximum Exports is ", max(edit.df$Exports)))
@@ -213,8 +239,9 @@ perturb_all <- function(delta_df, pulse_params) {
     # print(paste0("Maximum SJR Flow is ", max(edit.df$`SJR Flow`)))
     # } # end ndo check
     
-    return(edit.df)
+    ndoct <- ndoct + 1
   } # end ndo loop
   
+  return(edit.df)
   
 }
