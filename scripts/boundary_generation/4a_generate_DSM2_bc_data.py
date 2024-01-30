@@ -295,7 +295,7 @@ if __name__ == "__main__":
     in_fname = "./input/lathypcub_v2_setup.yaml"
     
     # cases = create_cases()
-    dsm2_config_fname = "./input/data/lathypcub_v2_dsm2_config.yaml"
+    dsm2_config_fname = "./input/lathypcub_v2_dsm2_config.yaml"
     # in_fname = "../../../../model/schism/dsp_202311_baseline/dsp_baseline_bay_delta.yaml"
 
     # args = Namespace(main_inputfile=in_fname)
