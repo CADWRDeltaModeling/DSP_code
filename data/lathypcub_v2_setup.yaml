@@ -68,13 +68,13 @@ perturbations:
     file: ../../data/dsm2_rsac128_pos_gatesdss.csv
     set_value: 0
 - name: suisun_mark_pert_v1
-  model_input: dcc
+  model_input: suisgate
   variable: radial_op
   method: read
   args:
     file: ./data_out/MTZSL_markov_pert_v1.csv
 - name: suisun_mark_pert_v2
-  model_input: dcc
+  model_input: suisgate
   variable: radial_op
   method: read
   args:
@@ -86,19 +86,28 @@ perturbations:
   args:
     file: ../../data/dsm2_rsac054_stage_histdss.csv
     shift_forward: 100
-
 - name: dcd_pert_v1
-  model_input: dcd
   variable: flow
-  method: read_dcd
-  args:
-    file: ./data_out/DCD_hist_Lch5_v1_{ssvar}.csv
+  components:
+    - model_input: dcdsink
+      method: read_dcd
+      args:
+        file: ./data_out/DCD_hist_Lch5_v1_sink.csv
+    - model_input: dcdsource
+      method: read_dcd
+      args:
+        file: ./data_out/DCD_hist_Lch5_v1_source.csv
 - name: dcd_pert_v2
-  model_input: dcd
   variable: flow
-  method: read_dcd
-  args:
-    file: ./data_out/DCD_hist_Lch5_v2_{ssvar}.csv
+  components:
+    - model_input: dcdsink
+      method: read_dcd
+      args:
+        file: ./data_out/DCD_hist_Lch5_v2_sink.csv
+    - model_input: dcdsource
+      method: read_dcd
+      args:
+        file: ./data_out/DCD_hist_Lch5_v2_source.csv
 
 cases:
 - name: lhc_1

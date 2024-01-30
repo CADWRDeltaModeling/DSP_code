@@ -22,12 +22,14 @@ def build_dict(node):
 
 
 
-def apply_method(pert_dict, ssvar=None):
+def apply_method(pert_dict):
     method = pert_dict['method']
     file_in = pert_dict['args']['file']
+    header = None
     if method == 'read_dcd':
-        dat_in = pd.read_csv(file_in.format(**locals()), parse_dates=[0], index_col=[0])
+        dat_in = pd.read_csv(file_in, parse_dates=[0], index_col=[0])
         dat_out = dat_in.copy()
+        header = True
     else:
         dat_in = pd.read_csv(file_in, parse_dates=[0], index_col=[0], header=None)
 
@@ -46,7 +48,7 @@ def apply_method(pert_dict, ssvar=None):
         pass
     else:
         raise ValueError(f'Perturbation method "{method}" is not defined in the code at the moment.')
-    return dat_out
+    return dat_out, header
 
 # read in yaml
 def create_cases(in_fname):
@@ -126,21 +128,15 @@ def create_cases(in_fname):
                         for comp in cdict:
 
                             # loop through and apply methods
-                            dat_out = apply_method(comp)
+                            dat_out, header = apply_method(comp)
                             dat_out = dat_out[dat_out.index.to_series().between(pd.to_datetime(start_date),pd.to_datetime(end_date))]
                             dat_out.to_csv(os.path.join(subout_dir, f'{comp["model_input"]}_{comp["method"]}_{crange[0]}-{crange[1]}.csv'),
-                                           header=None)
-                    elif pdict.get('method') == 'read_dcd':
-                        for ssvar in ['source','sink']:
-                            dat_out = apply_method(pdict, ssvar=ssvar)
-                            dat_out = dat_out[dat_out.index.to_series().between(pd.to_datetime(start_date),pd.to_datetime(end_date))]
-                            dat_out.to_csv(os.path.join(case_dir, f'{pdict["model_input"]}_{pdict["method"]}_{ssvar}_{crange[0]}-{crange[1]}.csv'),
-                                            header=None)
+                                           header=header)
                     else:
-                        dat_out = apply_method(pdict)
+                        dat_out, header = apply_method(pdict)
                         dat_out = dat_out[dat_out.index.to_series().between(pd.to_datetime(start_date),pd.to_datetime(end_date))]
                         dat_out.to_csv(os.path.join(case_dir, f'{pdict["model_input"]}_{pdict["method"]}_{crange[0]}-{crange[1]}.csv'),
-                                           header=None)
+                                           header=header)
 
     
 

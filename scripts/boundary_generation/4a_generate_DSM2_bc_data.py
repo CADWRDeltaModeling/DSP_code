@@ -44,17 +44,18 @@ def get_pathname(dss_filename, b_part, c_part, e_part=None, f_part=None, filter_
     return path_list
 
 def update_DSS(pdict, case_dir, crange, in_dss, out_dss, pathname, 
-               paths_out, f_part_out, d_part_replace, unit_part):  
+               paths_out, f_part_out, d_part_replace, unit_part, ts_df=None):  
     # Take in information about the perturbation and update the ouptut DSS file  
 
     model_input = pdict['model_input']
     print(f'\t Creating outputs for {model_input}')
 
     mod_file = os.path.join(case_dir, f'{pdict["model_input"]}_{pdict["method"]}_{crange[0]}-{crange[1]}.csv')
-         
-    # read in modified/augmented data
-    ts_df = pd.read_csv(mod_file, header=None, index_col=0, names=['Modified'])
-    # ts_df.set_index(pd.DatetimeIndex(ts_df.index).to_period(freq='D'), inplace=True)
+
+    if ts_df is None:     
+        # read in modified/augmented data
+        ts_df = pd.read_csv(mod_file, header=None, index_col=0, names=['Modified'])
+    
     ts_df.set_index(pd.DatetimeIndex(ts_df.index), inplace=True)
     ts_df.Modified = ts_df.Modified.astype(float)
     if 'Timestamp' not in str(type(ts_df.index[0])):
@@ -88,7 +89,7 @@ def update_DSS(pdict, case_dir, crange, in_dss, out_dss, pathname,
     ts_df.sort_index(inplace=True)
     
     # Write out
-    dss_out_file = out_dss[os.path.basename(in_dss)]
+    dss_out_file = out_dss[locals()['in_dss']]
 
     with pyhecdss.DSSFile(dss_out_file) as d_out:
         print(f'Writing out {pathname_out}')
@@ -135,10 +136,9 @@ def create_dsm2_bcs(in_fname, dsm2_config_fname):
     dsp_home = dsm2_inputs.get('dsp_home')
     in_dss_dir = os.path.join(dsp_home, dsm2_inputs.get('in_dss_dir'))
     out_dss_dir = os.path.join(dsp_home, dsm2_inputs.get('out_dss_dir'))
-    hist_dss = dsm2_inputs.get('hist_dss')
-    gates_dss = dsm2_inputs.get('gates_dss')
-    hist_dss_file = os.path.join(in_dss_dir, hist_dss)
-    gates_dss_file = os.path.join(in_dss_dir, gates_dss)
+    hist_dss = os.path.join(in_dss_dir, dsm2_inputs.get('hist_dss'))
+    gates_dss = os.path.join(in_dss_dir,  dsm2_inputs.get('gates_dss'))
+    dcd_dss = os.path.join(in_dss_dir,  dsm2_inputs.get('dcd_dss'))
 
     # check that the timeseries output folder exists
     dsm2_dir = os.path.join(out_dss_dir, f'{training_set}/timeseries/')
@@ -156,21 +156,29 @@ def create_dsm2_bcs(in_fname, dsm2_config_fname):
     for config in dsm2_config:
         mname = config.get('model_input')
         print(f'\t- {mname}')
-        primary_part = config['primary_part']
 
-        if config['dss_file'] == 'hist_dss':
-            primary_pathname_part_dss_filename_dict[primary_part] = hist_dss_file
-        elif config['dss_file'] == 'gates_dss':
-            primary_pathname_part_dss_filename_dict[primary_part] = gates_dss_file
-        primary_part_c_part_dict[primary_part] = config['part_c']
-        unit_part_dict[primary_part] = config['unit_part']
+        if 'get_parts_from_csv' in config.keys():
+            csv_in = pd.read_csv(config.get('get_parts_from_csv'), parse_dates=[0], index_col=[0])
+            for cpath in csv_in.columns:
+                path_parts = cpath.split("/")
+                primary_part = path_parts[2]
+                primary_pathname_part_dss_filename_dict[primary_part] = locals()[config.get('dss_file')]
+                primary_part_c_part_dict[primary_part] = path_parts[3]
+                unit_part_dict[primary_part] = config['unit_part']
+
+        else:
+            primary_part = config['primary_part']
+
+            primary_pathname_part_dss_filename_dict[primary_part] = locals()[config.get('dss_file')]
+            primary_part_c_part_dict[primary_part] = config['part_c']
+            unit_part_dict[primary_part] = config['unit_part']
 
         configs[mname] = build_dict({k: config[k] for k in set(list(config.keys())) - set(['name'])})
 
     print('Getting input DSS files')
-    df_input = get_dss_data(primary_pathname_part_dss_filename_dict, primary_pathname_part, 
-                            primary_part_c_part_dict=primary_part_c_part_dict,
-                            primary_part_e_part_dict=None, primary_part_f_part_dict=None, daily_avg=True, filter_b_part_numeric=False)
+    # df_input = get_dss_data(primary_pathname_part_dss_filename_dict, primary_pathname_part, 
+    #                         primary_part_c_part_dict=primary_part_c_part_dict,
+    #                         primary_part_e_part_dict=None, primary_part_f_part_dict=None, daily_avg=True, filter_b_part_numeric=False)
 
     # retrieve and write out cases
     print('Handling cases:')
@@ -191,7 +199,8 @@ def create_dsm2_bcs(in_fname, dsm2_config_fname):
         # Case setup
         f_part_out = f'DSP_{cname}'
         out_dss = {hist_dss: f'{dsm2_dir}/{cname}_hist.dss',
-                   gates_dss: f'{dsm2_dir}/{cname}_gates.dss'}
+                   gates_dss: f'{dsm2_dir}/{cname}_gates.dss',
+                   dcd_dss: f'{dsm2_dir}/{cname}_dcd.dss'}
         # create DSS files
         for key, out_file in out_dss.items():
             if not os.path.exists(out_file):
@@ -218,13 +227,32 @@ def create_dsm2_bcs(in_fname, dsm2_config_fname):
 
                         for comp in cdict:
                             model_input = configs[comp['model_input']]
-                            b_part = model_input['primary_part']
-                            in_dss = primary_pathname_part_dss_filename_dict[b_part]
-                            pathname = get_pathname(in_dss, b_part, primary_part_c_part_dict[b_part])[0]
-                            unit_part = unit_part_dict[b_part]
+                            if 'get_parts_from_csv' in model_input.keys():
+                                # need to cycle through all inputs of the DCD files and write them out to the dcd output file
+                                # csv_in = pd.read_csv(config.get('get_parts_from_csv'), parse_dates=[0], index_col=[0])
+                                mod_file = os.path.join(subout_dir, f'{comp["model_input"]}_{comp["method"]}_{crange[0]}-{crange[1]}.csv') 
+                                in_df = pd.read_csv(mod_file, parse_dates=[0], index_col=[0])
 
-                            paths_out = update_DSS(comp, subout_dir, crange, in_dss, out_dss, pathname, 
-                                                paths_out, f_part_out, d_part_replace, unit_part)
+                                for cpath in in_df.columns:
+                                    path_parts = cpath.split("/")
+                                    primary_part = path_parts[2]
+                                    in_dss = locals()[model_input.get('dss_file')]
+                                    pathname = get_pathname(in_dss, primary_part, path_parts[3])[0]
+                                    unit_part = model_input.get('unit_part')
+                                    ts_df = in_df[[cpath]].copy()
+                                    ts_df.columns = ['Modified']
+
+                                    paths_out = update_DSS(comp, subout_dir, crange, in_dss, out_dss, pathname, 
+                                                    paths_out, f_part_out, d_part_replace, unit_part, ts_df=ts_df)
+
+                            else:
+                                b_part = model_input['primary_part']
+                                in_dss = primary_pathname_part_dss_filename_dict[b_part]
+                                pathname = get_pathname(in_dss, b_part, primary_part_c_part_dict[b_part])[0]
+                                unit_part = unit_part_dict[b_part]
+
+                                paths_out = update_DSS(comp, subout_dir, crange, in_dss, out_dss, pathname, 
+                                                    paths_out, f_part_out, d_part_replace, unit_part)
                     else:
                         model_input = configs[pdict['model_input']]
                         b_part = model_input['primary_part']
@@ -234,12 +262,11 @@ def create_dsm2_bcs(in_fname, dsm2_config_fname):
 
                         paths_out = update_DSS(pdict, case_dir, crange, in_dss, out_dss, pathname, 
                                                paths_out, f_part_out, d_part_replace, unit_part)
-                        print('hi')
 
         ###### Copy Remaining paths into modified DSS files
 
         for dss_in in out_dss:
-            with pyhecdss.DSSFile(os.path.join(in_dss_dir, dss_in)) as d_in:
+            with pyhecdss.DSSFile(dss_in) as d_in:
                 with pyhecdss.DSSFile(out_dss[dss_in]) as d_out:
                     incat = d_in.read_catalog() # all the pathnames in the DSS file
                     paths_in = d_in.get_pathnames(incat)
@@ -265,10 +292,10 @@ if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
     # model_dir = r"D:\projects\delta_salinity\model\schism\dsp_202311_baseline"
-    in_fname = "../../data/lathypcub_v1_setup.yaml"
+    in_fname = "../../data/lathypcub_v2_setup.yaml"
     
     # cases = create_cases()
-    dsm2_config_fname = "../../data/lathypcub_v1_dsm2_config.yaml"
+    dsm2_config_fname = "../../data/lathypcub_v2_dsm2_config.yaml"
     # in_fname = "../../../../model/schism/dsp_202311_baseline/dsp_baseline_bay_delta.yaml"
 
     # args = Namespace(main_inputfile=in_fname)
