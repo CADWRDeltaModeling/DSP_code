@@ -270,7 +270,7 @@ if __name__ == '__main__':
     from schimpy import schism_yaml
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
-    in_fname = "../../data/lathypcub_v1_dsm2-ann_config.yaml"
+    in_fname = "./input/lathypcub_v1_dsm2-ann_config.yaml"
     # in_fname = "../../data/historical_dsm2-ann_config.yaml"
     
     with open(in_fname, 'r') as f:

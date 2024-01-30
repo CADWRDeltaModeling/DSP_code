@@ -465,7 +465,7 @@ if __name__ == '__main__':
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
     # in_fname = "../../data/lathypcub_v1p1_ann_config.yaml"
-    in_fname = "../../data/lathypcub_v1p1_ann_config.yaml"
+    in_fname = "./input/lathypcub_v1p1_ann_config.yaml"
     
     with open(in_fname, 'r') as f:
         # loader = RawLoader(stream)
