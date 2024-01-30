@@ -82,7 +82,7 @@ def adjust_src_sink(src,sink,perturb,sinkfrac=0.001):
 
 
 
-def dcd_from_dss(dcd_dss_file, out_dir, version, pvar1, pvar2, ptvar1, ptvar2):
+def dcd_from_dss(dcd_dss_file, out_dir, version, pvar1, pvar2, ptvar1, ptvar2, omg=0):
     start=pd.Timestamp(1980,1,1)
     end=pd.Timestamp(2022,10,1)        
     div_seep_dcd_c_part_dss_filename_dict = {'DIV-FLOW': dcd_dss_file, 'SEEP-FLOW': dcd_dss_file}
@@ -104,7 +104,7 @@ def dcd_from_dss(dcd_dss_file, out_dir, version, pvar1, pvar2, ptvar1, ptvar2):
     serieslen = len(src0)
 
     net0 = src0 - sink0
-    perturb = pvar1*np.sin(2.*np.pi*np.arange(serieslen)/ptvar1) +  pvar2*np.sin(2.*np.pi*np.arange(serieslen)/ptvar1)
+    perturb = pvar1*np.sin(2.*np.pi*np.arange(serieslen)/ptvar1) +  pvar2*np.sin((2.*np.pi*np.arange(serieslen)/ptvar2)+omg)
 
     perturb = net0*0.+perturb # convert to dataframe
     src,sink=adjust_src_sink(df_drain_dcd,df_div_seep_dcd,perturb)
@@ -191,15 +191,16 @@ if __name__ == "__main__":
     ptvar1 = 100.
     ptvar2 = 16.
 
-    dcd_from_dss(hist_fn, out_dir, version, pvar1, pvar2, ptvar1, ptvar2)
+    dcd_from_dss(hist_fn, out_dir, version, pvar1, pvar2, ptvar1, ptvar2, omg=np.pi)
     
     version = 'v2'
     pvar1 = 1200.
     pvar2 = 500.
     ptvar1 = 200.
     ptvar2 = 30.
-
-    dcd_from_dss(hist_fn, out_dir, version, pvar1, pvar2, ptvar1, ptvar2)
+    
+    # perturb = pvar1*np.sin(2.*np.pi*np.arange(serieslen)/ptvar1) +  pvar2*np.sin(2.*np.pi*np.arange(serieslen)/ptvar1)
+    dcd_from_dss(hist_fn, out_dir, version, pvar1, pvar2, ptvar1, ptvar2, omg=np.pi)
 
 
 
