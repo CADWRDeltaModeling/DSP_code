@@ -15,7 +15,7 @@ GATE_EXPERIMENT			 DSP_LHC_3
 FLOW_EXPERIMENT			 ${HISTFLOWVERSION}
 SAC_EXPERIMENT			 DSP_LHC_3
 EXPORT_EXPERIMENT	     ${HISTFLOWVERSION}
-DCD_EXPERIMENT			 DWR_BDO
+DCD_EXPERIMENT			 DWR-BDO
 SUIS_GATE_EXPERIMENT	 DWR-ESO
 
 #runtime
@@ -32,7 +32,7 @@ STUDYDIR                 .
 TSINPUTDIR               ../../2021DSM2FP_202301/timeseries
 BNDRYINPUT               ./timeseries/${DSM2MODIFIER}_hist.dss
 GATEFILE                 ./timeseries/${DSM2MODIFIER}_gates.dss
-DICUFILE                 ${TSINPUTDIR}/DCD_hist_Lch5.dss #202209
+DICUFILE                 ./timeseries/${DSM2MODIFIER}_dcd.dss
 SSCDFILE                 ${TSINPUTDIR}/SMCD_hist.dss     #202309
 QUALBNDINP               ${BNDRYINPUT}
 DICUFILE_ECE             ${TSINPUTDIR}/dicuwq_3vals_extended.dss

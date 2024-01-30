@@ -777,9 +777,9 @@ END
 
 SOURCE_FLOW_RESERVOIR
 NAME            RES_NAME      SIGN FILLIN FILE        PATH                                          
-dicu_div_bbid   clifton_court   -1 last   ${DICUFILE} /DICU-HIST+RSVR/BBID/DIV-FLOW//1DAY/${DCD_EXPERIMENT}/   
-dicu_drain_bbid clifton_court    1 last   ${DICUFILE} /DICU-HIST+RSVR/BBID/DRAIN-FLOW//1DAY/${DCD_EXPERIMENT}/ 
-dicu_seep_bbid  clifton_court   -1 last   ${DICUFILE} /DICU-HIST+RSVR/BBID/SEEP-FLOW//1DAY/${DCD_EXPERIMENT}/  
+dicu_div_bbid   clifton_court   -1 last   ${DICUFILE} /DICU-HIST+RSVR/BBID/DIV-FLOW//1DAY/DWR-BDO/   
+dicu_drain_bbid clifton_court    1 last   ${DICUFILE} /DICU-HIST+RSVR/BBID/DRAIN-FLOW//1DAY/DWR-BDO/ 
+dicu_seep_bbid  clifton_court   -1 last   ${DICUFILE} /DICU-HIST+RSVR/BBID/SEEP-FLOW//1DAY/DWR-BDO/  
 END
 
 
