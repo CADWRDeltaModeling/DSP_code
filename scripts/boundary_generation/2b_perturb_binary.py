@@ -119,6 +119,7 @@ if __name__ == "__main__":
 
             # v1
             out_ts = perturb_binary(in_ts,P00=P00,P11=P11)
+            out_ts[out_ts==1] = -10
             # Save to output
             out_ts.to_csv(os.path.join(output_dir,f"{gate}_markov_pert_v1.csv"), 
                         index=True,
@@ -126,6 +127,7 @@ if __name__ == "__main__":
             
             # v2
             out_ts = perturb_binary(in_ts,P00=P00,P11=P11)
+            out_ts[out_ts==1] = -10
             # Save to output
             out_ts.to_csv(os.path.join(output_dir,f"{gate}_markov_pert_v2.csv"), 
                         index=True,
