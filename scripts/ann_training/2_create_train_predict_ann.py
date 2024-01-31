@@ -465,7 +465,7 @@ if __name__ == '__main__':
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
     # in_fname = "../../data/lathypcub_v1p1_ann_config.yaml"
-    in_fname = "./input/lathypcub_v1p1_ann_config.yaml"
+    in_fname = "./input/lathypcub_v2_ann_config.yaml"
     
     with open(in_fname, 'r') as f:
         # loader = RawLoader(stream)
@@ -512,18 +512,18 @@ if __name__ == '__main__':
 
 
     # run compile (if already ran and you want to save time comment out): 
-    # ann_mod.compile_inputs(experiment, train_files, train_windows, test_files, test_windows, 
-    #                        vars_include=vars_include)
+    ann_mod.compile_inputs(experiment, train_files, train_windows, test_files, test_windows, 
+                           vars_include=vars_include)
     
     # (if already ran and you want to save time uncomment out): 
-    ann_mod.window_size = 0
-    ann_mod.nwindows = 0
-    ann_mod.experiment = experiment
-    ann_mod.vars_include = vars_include
-    ann_mod.train_X = pd.read_csv(os.path.join("Experiments", experiment, "train_X.csv"), index_col=0, compression=ann_mod.compression_opts)
-    ann_mod.train_Y = pd.read_csv(os.path.join("Experiments", experiment, "train_Y.csv"), index_col=0, compression=ann_mod.compression_opts)
-    ann_mod.test_X = pd.read_csv(os.path.join("Experiments", experiment, "test_X.csv"), index_col=0, compression=ann_mod.compression_opts)
-    ann_mod.test_Y = pd.read_csv(os.path.join("Experiments", experiment, "test_Y.csv"), index_col=0, compression=ann_mod.compression_opts)
+    # ann_mod.window_size = 0
+    # ann_mod.nwindows = 0
+    # ann_mod.experiment = experiment
+    # ann_mod.vars_include = vars_include
+    # ann_mod.train_X = pd.read_csv(os.path.join("Experiments", experiment, "train_X.csv"), index_col=0, compression=ann_mod.compression_opts)
+    # ann_mod.train_Y = pd.read_csv(os.path.join("Experiments", experiment, "train_Y.csv"), index_col=0, compression=ann_mod.compression_opts)
+    # ann_mod.test_X = pd.read_csv(os.path.join("Experiments", experiment, "test_X.csv"), index_col=0, compression=ann_mod.compression_opts)
+    # ann_mod.test_Y = pd.read_csv(os.path.join("Experiments", experiment, "test_Y.csv"), index_col=0, compression=ann_mod.compression_opts)
     
     # Train Model ##############################
     models = {m.get('name'):[p for p in m.get('params')] for m in inputs.get('models')}
