@@ -5,36 +5,34 @@ import os
 
 from pydelmod.create_ann_inputs import get_dss_data
 
-def process_gate_data(dss_filename, output_file, b_part, c_part, map_zero_one=['df==0','df==1']):
+
+def process_gate_data(dss_filename, output_file, b_part, c_part, map_zero_one=['df==0','df==1'], startDateStr=None, endDateStr=None):
     '''
     Read delta cross-channel gate operation data
     Create daily time series indicating fraction of maximum gate opening (100% means both gates open all day).
     '''
+    
     with pyhecdss.DSSFile(dss_filename) as d:
-        catdf = d.read_catalog()
+        fdname, generated = d._check_condensed_catalog_file_and_recatalog(condensed=True)
+        catdf = pyhecdss.DSSFile._read_catalog_dsd(fdname)
+
         filtered_df = catdf[(catdf.B == b_part) & (catdf.C == c_part)]
-        path_list = d.get_pathnames(filtered_df)
-        for p in path_list:
-            df = None
-            units = None
-            ptype = None
+        p = d.get_pathnames(filtered_df)[0]
 
-            if d.parse_pathname_epart(p).startswith('IR-'):
-                df, units, ptype = d.read_its(p)
-            else:
-                df,units,ptype=d.read_rts(p)
-            print('path='+p)
+        if d.parse_pathname_epart(p).startswith('IR-'):
+            df, units, ptype = d.read_its(p, startDateStr=startDateStr, endDateStr=endDateStr)
+        else:
+            df,units,ptype=d.read_rts(p)
 
-            df[eval(map_zero_one[0])] = 0
-            df[eval(map_zero_one[1])] = 1
+    df[eval(map_zero_one[0])] = 0
+    df[eval(map_zero_one[1])] = 1
 
-            # resample to 1 minute, then fill forward (with last value)
-            df_1min = df.resample('T', closed='right').ffill()
-            # now find daily averages of one minute data
-            df_daily_avg = df_1min.resample('D', closed='right').mean()
-            df_daily_avg = df_daily_avg.rename(columns={p:'gate_pos'})
-            df_daily_avg.to_csv(output_file)
-        d.close()
+    # resample to 1 minute, then fill forward (with last value)
+    df_1min = df.resample('T', closed='right').ffill()
+    # now find daily averages of one minute data
+    df_daily_avg = df_1min.resample('D', closed='right').mean()
+    df_daily_avg = df_daily_avg.rename(columns={df_daily_avg.columns[0]:'gate_pos'})
+    df_daily_avg.to_csv(output_file)
 
 def create_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file, model_ec_file, output_folder):
     '''
@@ -104,8 +102,7 @@ def create_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file,
     b_part = 'MTZSL'
     c_part = 'RADIAL_OP'
     gate_output_file = output_folder+'/suisun_gate_op.csv'
-    #TODO: update suisun so -10 maps to 1 and everyother value maps to 0
-    process_gate_data(gate_dss_file, gate_output_file, b_part, c_part, map_zero_one = ['df!=-10','df==-10'])
+    process_gate_data(gate_dss_file, gate_output_file, b_part, c_part, map_zero_one = ['df!=-10','df==-10'], startDateStr='01JAN1953', endDateStr='01JAN2030')
 
     ############################################################
     # 6. Net Delta CU, daily (DIV+SEEP-DRAIN) for DCD and SMCD #
@@ -270,7 +267,7 @@ if __name__ == '__main__':
     from schimpy import schism_yaml
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
-    in_fname = "./input/lathypcub_v1_dsm2-ann_config.yaml"
+    in_fname = "./input/lathypcub_v2_dsm2-ann_config.yaml"
     # in_fname = "../../data/historical_dsm2-ann_config.yaml"
     
     with open(in_fname, 'r') as f:
