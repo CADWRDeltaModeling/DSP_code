@@ -237,7 +237,7 @@ def create_dsm2_bcs(in_fname, dsm2_config_fname):
                                     path_parts = cpath.split("/")
                                     primary_part = path_parts[2]
                                     in_dss = locals()[model_input.get('dss_file')]
-                                    pathname = get_pathname(in_dss, primary_part, path_parts[3])[0]
+                                    pathname = get_pathname(in_dss, primary_part, path_parts[3], e_part=path_parts[5], f_part=path_parts[6])[0]
                                     unit_part = model_input.get('unit_part')
                                     ts_df = in_df[[cpath]].copy()
                                     ts_df.columns = ['Modified']
