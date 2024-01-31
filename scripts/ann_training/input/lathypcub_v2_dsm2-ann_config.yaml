@@ -7,9 +7,9 @@ model_input_folder: '{base_study_folder}/timeseries'
 model_folder: '{dsp_home}/model/dsm2/DSP_DSM2_202307/{experiment}'
 model_output_folder: '{model_folder}/output'
 
-dcd_dss_file: '{model_input_folder}/DCD_hist_Lch5.dss'
 smcd_dss_file: '{model_input_folder}/SMCD_hist.dss'
 
+dcd_dss_file: '{model_folder}/timeseries/lhc_{case_num}_dcd.dss'
 hist_dss_file: '{model_folder}/timeseries/lhc_{case_num}_hist.dss'
 gate_dss_file: '{model_folder}/timeseries/lhc_{case_num}_gates.dss'
 model_ec_file: '{model_output_folder}/lhc_{case_num}_EC.dss'

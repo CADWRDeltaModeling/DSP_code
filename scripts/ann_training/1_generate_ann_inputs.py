@@ -289,7 +289,6 @@ if __name__ == '__main__':
     model_input_folder = fmt_str(inputs.get('model_input_folder'))
     model_folder = fmt_str(inputs.get('model_folder'))
     model_output_folder = fmt_str(inputs.get('model_output_folder'))
-    dcd_dss_file = fmt_str(inputs.get('dcd_dss_file'))
     smcd_dss_file = fmt_str(inputs.get('smcd_dss_file'))
     
     if 'cases' in inputs.keys():
@@ -301,6 +300,7 @@ if __name__ == '__main__':
             model_ec_file = fmt_str(inputs.get('model_ec_file'))
             output_folder = fmt_str(inputs.get('output_folder'))
             xlsx_filepath = fmt_str(inputs.get('xlsx_filepath'))
+            dcd_dss_file = fmt_str(inputs.get('dcd_dss_file'))
 
             # generate aggregated ANN inputs from DSM2 outputs
             create_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file, model_ec_file, output_folder)
@@ -314,6 +314,7 @@ if __name__ == '__main__':
         model_ec_file = fmt_str(inputs.get('model_ec_file'))
         output_folder = fmt_str(inputs.get('output_folder'))
         xlsx_filepath = fmt_str(inputs.get('xlsx_filepath'))
+        dcd_dss_file = fmt_str(inputs.get('dcd_dss_file'))
         
         # generate aggregated ANN inputs from DSM2 outputs
         create_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file, model_ec_file, output_folder)
