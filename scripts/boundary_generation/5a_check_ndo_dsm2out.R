@@ -205,11 +205,16 @@ plt <- ggplot(data=ds.df) +
   xlab('') +
   scale_color_manual(values=var.cols, breaks=plt.vars)
 
-plt
+# plt
 
 pltl <- ggplotly(plt, dynamicTicks=TRUE)
-pltl
+# pltl
 
+
+pltl_name <- "DSM2_Input_Check.html"
+
+saveWidget(pltl, pltl_name, selfcontained=TRUE)
+file.rename(pltl_name, paste0("plots/",pltl_name))
 
 # Plot EC results ---------------------------------------------------------
 
@@ -225,9 +230,13 @@ plt <- ggplot(data=plt.ec) +
   xlab('') +
   scale_color_manual(values=var.cols, breaks=plt.vars)
 
-plt
+# plt
 
 pltl <- ggplotly(plt, dynamicTicks=TRUE)
-pltl
+# pltl
 
 
+pltl_name <- "DSM2_Output_Check.html"
+
+saveWidget(pltl, pltl_name, selfcontained=TRUE)
+file.rename(pltl_name, paste0("plots/",pltl_name))
