@@ -59,8 +59,8 @@ train_config: # a dictinoary to take the place of train_files and train_windows
 - num: 3
   year: 2014
   file: '{dsp_home}/model/dsm2/DSP_DSM2_202307/{experiment}/anninputs/dsm2_ann_inputs_lhc_3.xlsx'
-  start: 1997-5-1
-  end: 1997-9-1
+  start: 2014-1-1
+  end: 2014-5-31
 - num: 4
   year: 2008
   file: '{dsp_home}/model/dsm2/DSP_DSM2_202307/{experiment}/anninputs/dsm2_ann_inputs_lhc_4.xlsx'
