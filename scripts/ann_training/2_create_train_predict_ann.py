@@ -392,8 +392,8 @@ class ModelANN(object):
         print(f"Finished training model for {self.experiment}")
 
     def make_predictions(self, excel_files):
-        print("Experiment: %s" % experiment)
-        experiment_dir = os.path.join(local_root_path, "Experiments", experiment)
+        print("Experiment: %s" % self.experiment)
+        experiment_dir = os.path.join(local_root_path, "Experiments", self.experiment)
 
         model_dir = os.path.join(experiment_dir, "models")
         model_files = [f for f in os.listdir(model_dir) if f.endswith(".h5")]
@@ -416,14 +416,14 @@ class ModelANN(object):
 
             dirs = ["input", "target", "prediction"]
             for dir in dirs:
-                os.makedirs(os.path.join("Experiments", experiment, "results", dir), exist_ok=True)
+                os.makedirs(os.path.join("Experiments", self.experiment, "results", dir), exist_ok=True)
 
-            input_file = os.path.join("Experiments", experiment, "results", "input", file_name + ".csv")
+            input_file = os.path.join("Experiments", self.experiment, "results", "input", file_name + ".csv")
             dfinps.to_csv(input_file, compression=self.compression_opts)
 
             # read_in = pd.read_csv(input_file, compression=compression_opts, index_col=0)
 
-            target_file = os.path.join("Experiments", experiment, "results", "target", file_name + "_target.csv")
+            target_file = os.path.join("Experiments", self.experiment, "results", "target", file_name + "_target.csv")
             dfouts.to_csv(target_file, compression=self.compression_opts)
 
             for model_file in tqdm(model_files):
@@ -456,17 +456,12 @@ class ModelANN(object):
                 print(f"Writing to {prediction_file}")
                 prediction.to_csv(prediction_file, compression=self.compression_opts)
 
-        print(f"Finished making predictions for {experiment}")
+        print(f"Finished making predictions for {self.experiment}")
 
-if __name__ == '__main__':
-
-    from schimpy import schism_yaml
-    import numpy as np
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    
-    # in_fname = "../../data/lathypcub_v1p1_ann_config.yaml"
-    in_fname = "./input/lathypcub_v2_ann_config.yaml"
-    
+def run_mod_ann(in_fname, train_ran=False):
+    # train_ran is to test if the training datasets have already been compiled
+    global dsp_home
+    global experiment
     with open(in_fname, 'r') as f:
         # loader = RawLoader(stream)
         inputs = schism_yaml.load(f)
@@ -490,18 +485,18 @@ if __name__ == '__main__':
     experiment = inputs.get('experiment') # name of folder where outputs are etc.
     
     if 'train_config' in inputs.keys():
-        train_files = [tc.get('file').format(**globals(), **locals()) for tc in inputs.get('train_config')]
+        train_files = [tc.get('file').format(**globals(),**locals()) for tc in inputs.get('train_config')]
         train_windows = [[(tc.get('start'),tc.get('end'))] for tc in inputs.get('train_config')] # windows to use to extract training data from
     else:
-        train_files = [t.format(**globals(), **locals()) for t in inputs.get('train_files')]
+        train_files = [t.format(**globals(),**locals()) for t in inputs.get('train_files')]
         train_windows = [[(s,e)] for s,e in zip(inputs.get('train_windows')[0].get('start'), 
                                               inputs.get('train_windows')[1].get('end'))] # windows to use to extract train data from
   
     if 'test_config' in inputs.keys():
-        test_files = [tc.get('file').format(**globals(), **locals()) for tc in inputs.get('test_config')]
+        test_files = [tc.get('file').format(**globals(),**locals()) for tc in inputs.get('test_config')]
         test_windows = [[(tc.get('start'),tc.get('end'))] for tc in inputs.get('test_config')] # windows to use to extract training data from
     else:
-        test_files = [t.format(**globals(), **locals()) for t in inputs.get('test_files')] # files to be used to test/train the model
+        test_files = [t.format(**globals(),**locals()) for t in inputs.get('test_files')] # files to be used to test/train the model
         test_windows = [[(s,e)] for s,e in zip(inputs.get('test_windows')[0].get('start'), 
                                              inputs.get('test_windows')[1].get('end'))] # windows to use to extract test data from
         # fill any missing files or windows
@@ -510,20 +505,22 @@ if __name__ == '__main__':
         elif len(test_files)>1 and len(test_windows)==1:
             test_windows = np.repeat(test_windows, len(test_files))
 
+    if train_ran:
+        # saves time if training datasets already compiled
+        ann_mod.window_size = 0
+        ann_mod.nwindows = 0
+        ann_mod.experiment = experiment
+        ann_mod.vars_include = vars_include
+        ann_mod.train_X = pd.read_csv(os.path.join("Experiments", experiment, "train_X.csv"), index_col=0, compression=ann_mod.compression_opts)
+        ann_mod.train_Y = pd.read_csv(os.path.join("Experiments", experiment, "train_Y.csv"), index_col=0, compression=ann_mod.compression_opts)
+        ann_mod.test_X = pd.read_csv(os.path.join("Experiments", experiment, "test_X.csv"), index_col=0, compression=ann_mod.compression_opts)
+        ann_mod.test_Y = pd.read_csv(os.path.join("Experiments", experiment, "test_Y.csv"), index_col=0, compression=ann_mod.compression_opts)
 
-    # run compile (if already ran and you want to save time comment out): 
-    ann_mod.compile_inputs(experiment, train_files, train_windows, test_files, test_windows, 
-                           vars_include=vars_include)
+    else:
+        # run compile 
+        ann_mod.compile_inputs(experiment, train_files, train_windows, test_files, test_windows, 
+                            vars_include=vars_include)
     
-    # (if already ran and you want to save time uncomment out): 
-    # ann_mod.window_size = 0
-    # ann_mod.nwindows = 0
-    # ann_mod.experiment = experiment
-    # ann_mod.vars_include = vars_include
-    # ann_mod.train_X = pd.read_csv(os.path.join("Experiments", experiment, "train_X.csv"), index_col=0, compression=ann_mod.compression_opts)
-    # ann_mod.train_Y = pd.read_csv(os.path.join("Experiments", experiment, "train_Y.csv"), index_col=0, compression=ann_mod.compression_opts)
-    # ann_mod.test_X = pd.read_csv(os.path.join("Experiments", experiment, "test_X.csv"), index_col=0, compression=ann_mod.compression_opts)
-    # ann_mod.test_Y = pd.read_csv(os.path.join("Experiments", experiment, "test_Y.csv"), index_col=0, compression=ann_mod.compression_opts)
     
     # Train Model ##############################
     models = {m.get('name'):[p for p in m.get('params')] for m in inputs.get('models')}
@@ -532,7 +529,17 @@ if __name__ == '__main__':
     ann_mod.train_models(models)
 
     # Make Predictions #########################
-    excel_files = [e.format(**globals(),**locals()) for e in inputs.get('excel_files')] 
+    excel_files = [fmt_str(e) for e in inputs.get('excel_files')] 
     
     # run predcit
     ann_mod.make_predictions(excel_files)
+
+if __name__ == '__main__':
+
+    from schimpy import schism_yaml
+    import numpy as np
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    
+    in_fname = "./input/colab_simple_ann_config.yaml"
+
+    run_mod_ann(in_fname, train_ran=False)

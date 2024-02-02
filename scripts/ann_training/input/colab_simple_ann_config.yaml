@@ -1,0 +1,76 @@
+dsp_home: D:/projects/delta_salinity/scripts/DSP_code # where the main folder of this project is
+
+experiment: colab_simple # name of folder to look inside of test_file dir
+
+test_files:
+- '{dsp_home}/model/dsm2/DSP_DSM2_202307/historical/anninputs/dsm2_ann_inputs_historical.xlsx'
+
+test_windows:
+- start:
+  - 2007-10-1
+  - 2009-10-1
+  - 2011-10-1
+  - 2013-10-1
+- end:
+  - 2008-9-30
+  - 2010-9-30
+  - 2012-9-30
+  - 2014-9-30
+
+vars_include:
+- northern_flow
+- sjr_flow
+- exports
+- dxc_gate_fraction
+- suisun_gate_fraction
+- net_delta_cu
+- mtz_tidal_nrg
+- base_ec_output
+
+stas_include:
+- CHDMC006
+- CHSWP003
+- CHVCT000
+- ROLD024
+- RSAC075
+- RSAC081
+- RSAC092
+- RSAN018
+- SLMZU011
+- SLRCK005
+- RSAN032
+
+train_files: 
+- '{dsp_home}/model/dsm2/DSP_DSM2_202307/historical/anninputs/dsm2_ann_inputs_historical.xlsx'
+- '{dsp_home}/model/dsm2/DSP_DSM2_202307/historical/anninputs/dsm2_ann_inputs_rsacminus20pct.xlsx'
+- '{dsp_home}/model/dsm2/DSP_DSM2_202307/historical/anninputs/dsm2_ann_inputs_rsacplus20pct.xlsx'
+
+train_windows:
+- start:
+  - 1990-10-1
+  - 1992-10-1
+  - 1996-10-1
+  - 1999-10-1
+  - 2004-10-1
+  - 2007-10-1
+  - 2011-10-1
+  - 2014-10-1
+  - 2017-10-1
+- end:
+  - 1991-9-30
+  - 1995-9-30
+  - 1998-9-30
+  - 2003-9-30
+  - 2006-9-30
+  - 2010-9-30
+  - 2013-9-30
+  - 2016-9-30
+  - 2019-9-30
+
+models: 
+- name: lstm
+  params:
+    - 14
+
+excel_files:
+- '{dsp_home}/model/dsm2/DSP_DSM2_202307/historical/anninputs/dsm2_ann_inputs_historical.xlsx'
