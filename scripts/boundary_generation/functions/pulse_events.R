@@ -1,5 +1,6 @@
 # function: pulse_events -------------------------------------------------
 
+source('./functions/plot_pulse_events.R')
 
 ## Debugging
 # key <- 'Northern Flow'
@@ -78,19 +79,20 @@ pulse_events <- function(ts.df, nstep=365, rescale=0.015, sh.mean=500, sh.sd=150
     # print(ibase)
   }
   if (plotshow) {ts.plot(rshift)}
-  # ts.plot(rshift+z)
   
+  # Stochastic cycles
   if (stochit) {
-    # print('Running stochify')
     log <- capture.output({
       stoch <- stochify(nstep, scale=stochscale);
     })
     if (plotshow) {ts.plot(stoch)}
-    if (min(stoch)/min(rshift)>1.1) {
-      stochscale <- stochscale * min(rshift)/min(stoch)
-    }
     
-    if (plotshow) {ts.plot(rshift+z+stoch)}
+    if (plotshow) {
+      ts.plot(rshift+z+stoch)
+      # plt <- plot_pulses(ts.df,u,z,rshift,stoch)
+      # ggsave('./plots/example_perturb.png',plt, width=12.5, height=7)
+      }
+    
     ts.df$Edit <- ts.df$Value + z + rshift + stoch
   } else {
     ts.df$Edit <- ts.df$Value + z + rshift

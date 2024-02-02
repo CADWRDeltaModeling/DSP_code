@@ -37,7 +37,8 @@ sheetlist <- c("northern_flow","sjr_flow","exports","dxc_gate_fraction",
 sheetnames <- c('Northern Flow', 'SJR Flow','Exports','DCC Gate',
                 'Suisun Gate','Consump Use','Tidal Nrg')
 
-in_yml <- '../ann_training/input/lathypcub_v2_ann_config.yaml' 
+lhc_yml <-'../boundary_generation/input/lathypcub_v2_setup.yaml' 
+ann_yml <- '../ann_training/input/lathypcub_v2_ann_config.yaml' 
 
 plt.vars <- append('hist', cases)
 qual_col_pals = brewer.pal.info[brewer.pal.info$category == 'qual',]
@@ -51,26 +52,45 @@ pie(rep(1,length(var.cols)), col=var.cols)
 
 # ``` load yaml defs of case periods --------------------------------------
 
-lhc_setup <- suppressWarnings(yaml.load_file(in_yml))
+lhc_setup <- suppressWarnings(yaml.load_file(lhc_yml))
+ann_setup <- suppressWarnings(yaml.load_file(ann_yml))
+train_setup <- ann_setup$train_config
 
-case.dts <- data.frame(matrix(NA,
+lhc.dts <- data.frame(matrix(NA,
                               nrow <- length(cases),
                               ncol <- 3))
-names(case.dts) <- c('case','dt.min','dt.max')
-# case.dts$case <- cases
-train_setup <- lhc_setup$train_config
+names(lhc.dts) <- c('case','dt.min','dt.max')
+ann.dts <- lhc.dts
 
-for (trs in train_setup) {
-  c <- trs[['num']]
-  if (c==0) {
+
+print("LHC Date Setup------")
+for (trs in lhc_setup$cases) {
+  name <- trs[['name']]
+  if ('0' %in% name) {
+    print(paste0("Empty Case: ",name))
     NULL
   } else {
-    case.dts[c,'case'] <- c
-    case.dts[c,'dt.min'] <- trs[['start']]
-    case.dts[c,'dt.max'] <- trs[['end']]
+    c <- as.numeric(gsub(".*?([0-9]+).*", "\\1", name))   
+    print(paste0("case: ",c," Start: ",trs[['case_start']]," End: ",trs[['case_end']]))
+    lhc.dts[c,'case'] <- c
+    lhc.dts[c,'dt.min'] <- trs[['case_start']]
+    lhc.dts[c,'dt.max'] <- trs[['case_end']]
   }
 }
 
+print("ANN Date Setup------")
+for (trs in train_setup) {
+  c <- trs[['num']]
+  if (c==0) {
+    print(paste0("Empty Case: ",c," Year: ", trs[['year']]))
+    NULL
+  } else {
+    print(paste0("case: ",c," Year: ",trs[['year']]," Start: ",trs[['start']]," End: ",trs[['end']]))
+    ann.dts[c,'case'] <- c
+    ann.dts[c,'dt.min'] <- trs[['start']]
+    ann.dts[c,'dt.max'] <- trs[['end']]
+  }
+}
 
 # ``` load historical data ----------------------------------------------------
 
@@ -125,7 +145,8 @@ for (c in cases) {
   names(base_ec_output) <- append(c('Time'),names(base_ec_output)[2:ncol(base_ec_output)])
   
   # trim to case
-  delta_state <- delta_state[delta_state$Time>=case.dts$dt.min[c] & delta_state$Time<=case.dts$dt.max[c],]
+  delta_state <- delta_state[delta_state$Time>=lhc.dts$dt.min[c] & delta_state$Time<=lhc.dts$dt.max[c],]
+  base_ec_output <- base_ec_output[base_ec_output$Time>=ann.dts$dt.min[c] & base_ec_output$Time<=ann.dts$dt.max[c],]
   
   delta_state$`Net Delta Outflow` <- delta_state$`Northern Flow` + delta_state$`SJR Flow` - delta_state$Exports - 
     delta_state$`Consump Use`
@@ -139,7 +160,7 @@ for (c in cases) {
   ec.df <- rbind(ec.df, ecdum)
   
   rm(list=(append(sheetlist, c('dsdum','ecdum'))))
-  # rm(list=setdiff(ls(),c("ds.df","ec.df","experiment","dsm2.dir","cases","c","sheetlist","sheetnames","load_delta_vars","case.dts")))
+  # rm(list=setdiff(ls(),c("ds.df","ec.df","experiment","dsm2.dir","cases","c","sheetlist","sheetnames","load_delta_vars","ann.dts")))
 }
 
 ds.df$Time <- lubridate::ymd(ds.df$Time)
@@ -147,16 +168,19 @@ ec.df$Time <- lubridate::ymd(ec.df$Time)
 
 ds.df$case <- factor(ds.df$case,
                      levels=plt.vars)
+ec.df$case <- factor(ec.df$case,
+                     levels=plt.vars)
+
+date.lims <- c(min(ec.df$Time[ec.df$case %in% cases]),
+               max(ec.df$Time[ec.df$case %in% cases]))
 
 # Plot inputs -------------------------------------------------------------
 
 
-date.lims <- c(min(ec.df$Time[ec.df$case %in% cases]),
-               max(ec.df$Time[ec.df$case %in% cases]))
 # unique(ds.df$variable)
 
 plt <- ggplot(data=ds.df) + 
-  geom_line(aes(x=Time, y=value, color=case, linewidth=case)) +
+  geom_line(aes(x=Time, y=value, color=case)) +
   facet_wrap(~variable, ncol=1, scales='free_y') +
   scale_x_date(limits=date.lims) + 
   ggh4x::scale_y_facet(
@@ -177,8 +201,9 @@ plt <- ggplot(data=ds.df) +
     breaks = breaks_log(),
     labels = label_log()
   ) +
-  scale_color_manual(values=var.cols, breaks=plt.vars) +
-  scale_linewidth_manual(values=append(1.5,rep(1,length(cases))), breaks=plt.vars)
+  ylab('') +
+  xlab('') +
+  scale_color_manual(values=var.cols, breaks=plt.vars)
 
 plt
 
@@ -186,5 +211,23 @@ pltl <- ggplotly(plt, dynamicTicks=TRUE)
 pltl
 
 
+# Plot EC results ---------------------------------------------------------
+
+ec.yml <- ann_setup$stas_include
+
+plt.ec <- ec.df[grepl(paste(ec.yml, collapse="|"),ec.df$variable),]
+
+plt <- ggplot(data=plt.ec) + 
+  geom_line(aes(x=Time, y=value, color=case)) +
+  facet_wrap(~variable, ncol=1, scales='free_y') +
+  scale_x_date(limits=date.lims) + 
+  ylab('') +
+  xlab('') +
+  scale_color_manual(values=var.cols, breaks=plt.vars)
+
+plt
+
+pltl <- ggplotly(plt, dynamicTicks=TRUE)
+pltl
 
 
