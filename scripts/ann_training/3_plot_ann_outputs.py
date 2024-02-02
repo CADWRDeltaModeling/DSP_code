@@ -32,7 +32,9 @@ class PlotANN(object):
         self.stations = stations
         self.model_file = model_file
         self.compression_opts =  compression_opts
-        self.model_file = model_file
+        self.local_root_path = local_root_path
+
+        self.col_num = len(self.stations)
         
         self.model_name = os.path.splitext(model_file)[0]
 
