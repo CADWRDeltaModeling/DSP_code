@@ -458,7 +458,7 @@ class ModelANN(object):
 
         print(f"Finished making predictions for {self.experiment}")
 
-def run_mod_ann(in_fname, train_ran=False):
+def run_mod_ann(in_fname, inputs_compiled=False, trained=False):
     # train_ran is to test if the training datasets have already been compiled
     global dsp_home
     global experiment
@@ -505,8 +505,9 @@ def run_mod_ann(in_fname, train_ran=False):
         elif len(test_files)>1 and len(test_windows)==1:
             test_windows = np.repeat(test_windows, len(test_files))
 
-    if train_ran:
+    if inputs_compiled:
         # saves time if training datasets already compiled
+        print('Model inputs have already been compiled, using existing inputs')
         ann_mod.window_size = 0
         ann_mod.nwindows = 0
         ann_mod.experiment = experiment
@@ -525,11 +526,15 @@ def run_mod_ann(in_fname, train_ran=False):
     # Train Model ##############################
     models = {m.get('name'):[p for p in m.get('params')] for m in inputs.get('models')}
 
-    # run train  (if already ran and you want to save time comment out): 
-    ann_mod.train_models(models)
+    if trained:
+        # model has already been trained
+        print('Model has already been trained, using existing framework')
+    else:
+        # run train  (if already ran and you want to save time comment out): 
+        ann_mod.train_models(models)
 
     # Make Predictions #########################
-    excel_files = [fmt_str(e) for e in inputs.get('excel_files')] 
+    excel_files = [e.format(**globals(),**locals()) for e in inputs.get('excel_files')] 
     
     # run predcit
     ann_mod.make_predictions(excel_files)
@@ -542,4 +547,4 @@ if __name__ == '__main__':
     
     in_fname = "./input/colab_simple_ann_config.yaml"
 
-    run_mod_ann(in_fname, train_ran=False)
+    run_mod_ann(in_fname, inputs_compiled=True, trained=True)

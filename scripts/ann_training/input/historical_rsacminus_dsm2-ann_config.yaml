@@ -1,0 +1,17 @@
+dsp_home: D:/projects/delta_salinity/scripts/DSP_code # where the main folder of this project is
+
+experiment: rsacminus20p # name of folder to look inside of test_file dir
+
+base_study_folder: '{dsp_home}/model/dsm2/2021DSM2FP_202301'
+model_input_folder: '{base_study_folder}/timeseries'
+model_folder: '{dsp_home}/model/dsm2/DSP_DSM2_202307/historical'
+model_output_folder: '{model_folder}/output'
+
+dcd_dss_file: '{model_input_folder}/DCD_hist_Lch5.dss'
+smcd_dss_file: '{model_input_folder}/SMCD_hist.dss'
+
+hist_dss_file: '{dsp_home}/model/dsm2/DSP_DSM2_202307/historical/3_augment_rsacminus20p_20220506/boundary_augmented.dss'
+gate_dss_file: '{model_input_folder}/gates-v8.dss'
+model_ec_file: '{dsp_home}/model/dsm2/DSP_DSM2_202307/historical/3_augment_rsacminus20p_20220506/output/SACMINUS20PCT.dss'
+output_folder: '{model_folder}/anninputs'
+xlsx_filepath: '{model_folder}/anninputs/dsm2_ann_inputs_{experiment}.xlsx'

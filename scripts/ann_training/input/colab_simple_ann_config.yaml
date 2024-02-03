@@ -42,8 +42,8 @@ stas_include:
 
 train_files: 
 - '{dsp_home}/model/dsm2/DSP_DSM2_202307/historical/anninputs/dsm2_ann_inputs_historical.xlsx'
-- '{dsp_home}/model/dsm2/DSP_DSM2_202307/historical/anninputs/dsm2_ann_inputs_rsacminus20pct.xlsx'
-- '{dsp_home}/model/dsm2/DSP_DSM2_202307/historical/anninputs/dsm2_ann_inputs_rsacplus20pct.xlsx'
+- '{dsp_home}/model/dsm2/DSP_DSM2_202307/historical/anninputs/dsm2_ann_inputs_rsacminus20p.xlsx'
+- '{dsp_home}/model/dsm2/DSP_DSM2_202307/historical/anninputs/dsm2_ann_inputs_rsacplus20p.xlsx'
 
 train_windows:
 - start:
