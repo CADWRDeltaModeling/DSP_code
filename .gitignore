@@ -12,7 +12,9 @@ scripts/boundary_generation/data_out/*bundles*
 **/__pycache__/*
 **/src
 **/.vscode/*
+**/*.pickle
 
 # ignore ANN experiment output
 **/ann_training/Experiments/*
 **/ann_training/tf_training_logs/*
+**/ann_training/plots/*

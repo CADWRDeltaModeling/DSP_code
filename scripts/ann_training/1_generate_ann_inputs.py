@@ -34,7 +34,8 @@ def process_gate_data(dss_filename, output_file, b_part, c_part, map_zero_one=['
     df_daily_avg = df_daily_avg.rename(columns={df_daily_avg.columns[0]:'gate_pos'})
     df_daily_avg.to_csv(output_file)
 
-def create_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file, model_ec_file, output_folder):
+def generate_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file, model_ec_file, output_folder,
+                        b_part_e_part_dict = None):
     '''
     1. Northern flow = Sum(Sac, Yolo, Moke, CSMR, Calaveras, -NBA)
     2. San Joaquin River flow (the model input time series)
@@ -184,15 +185,16 @@ def create_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file,
         'RSMKL008': 'EC', 'SLCBN002': 'EC', 'SLDUT007': 'EC',
         'SLMZU011': 'EC', 'SLMZU025': 'EC', 'SLSUS012': 'EC',
         'SLTRM004': 'EC', 'SSS': 'EC', 'RSAC054': 'EC'}
-    b_part_e_part_dict = {'CHDMC006': '15MIN', 'CHSWP003': '15MIN',\
-        'CHVCT000': '15MIN', 'OLD_MID': '15MIN', 'ROLD024': '15MIN',
-        'ROLD059': '15MIN', 'RSAC064': '15MIN', 'RSAC075': '15MIN',
-        'RSAC081': '15MIN', 'RSAC092': '15MIN', 'RSAC101': '15MIN',
-        'RSAN007': '15MIN', 'RSAN018': '15MIN', 'RSAN032': '15MIN',
-        'RSAN037': '15MIN', 'RSAN058': '15MIN', 'RSAN072': '15MIN',
-        'RSMKL008': '15MIN', 'SLCBN002': '15MIN', 'SLDUT007': '15MIN',
-        'SLMZU011': '15MIN', 'SLMZU025': '15MIN', 'SLSUS012': '15MIN',
-        'SLTRM004': '15MIN', 'SSS': '15MIN', 'RSAC054': '1HOUR'}
+    if b_part_e_part_dict == None:
+        b_part_e_part_dict = {'CHDMC006': '15MIN', 'CHSWP003': '15MIN',\
+            'CHVCT000': '15MIN', 'OLD_MID': '15MIN', 'ROLD024': '15MIN',
+            'ROLD059': '15MIN', 'RSAC064': '15MIN', 'RSAC075': '15MIN',
+            'RSAC081': '15MIN', 'RSAC092': '15MIN', 'RSAC101': '15MIN',
+            'RSAN007': '15MIN', 'RSAN018': '15MIN', 'RSAN032': '15MIN',
+            'RSAN037': '15MIN', 'RSAN058': '15MIN', 'RSAN072': '15MIN',
+            'RSMKL008': '15MIN', 'SLCBN002': '15MIN', 'SLDUT007': '15MIN',
+            'SLMZU011': '15MIN', 'SLMZU025': '15MIN', 'SLSUS012': '15MIN',
+            'SLTRM004': '15MIN', 'SSS': '15MIN', 'RSAC054': '1HOUR'}
     df_model_ec = get_dss_data(b_part_dss_filename_dict, 'b_part', \
         primary_part_c_part_dict=b_part_c_part_dict, primary_part_e_part_dict=b_part_e_part_dict)
     # df_model_ec = df_model_ec.resample('D').mean()
@@ -262,14 +264,8 @@ def csv_to_ann_xlsx(csv_dir, xlsx_filepath):
             else:
                 df.to_excel(writer, sheet_name=sheet, index=False)
 
-if __name__ == '__main__':
+def run_ann_input(in_fname, e_part_dict=None):
 
-    from schimpy import schism_yaml
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    
-    in_fname = "./input/lathypcub_v2_dsm2-ann_config.yaml"
-    # in_fname = "../../data/historical_dsm2-ann_config.yaml"
-    
     with open(in_fname, 'r') as f:
         # loader = RawLoader(stream)
         inputs = schism_yaml.load(f)
@@ -277,47 +273,53 @@ if __name__ == '__main__':
     dsp_home = inputs.get('dsp_home')
     experiment = inputs.get('experiment')
 
-    def fmt_str(in_str):
-        try:
-            out_str = in_str.format(**locals())
-        except:
-            out_str = in_str.format(**globals(),**locals())
-
-        return out_str
-
-    base_study_folder = fmt_str(inputs.get('base_study_folder'))
-    model_input_folder = fmt_str(inputs.get('model_input_folder'))
-    model_folder = fmt_str(inputs.get('model_folder'))
-    model_output_folder = fmt_str(inputs.get('model_output_folder'))
-    smcd_dss_file = fmt_str(inputs.get('smcd_dss_file'))
+    base_study_folder = inputs.get('base_study_folder').format(**locals())
+    model_input_folder = inputs.get('model_input_folder').format(**locals())
+    model_folder = inputs.get('model_folder').format(**locals())
+    model_output_folder = inputs.get('model_output_folder').format(**locals())
+    smcd_dss_file = inputs.get('smcd_dss_file').format(**locals())
     
     if 'cases' in inputs.keys():
         cases = inputs.get('cases')
         for case in cases:
             case_num = case.get('case_num')
-            hist_dss_file = fmt_str(inputs.get('hist_dss_file'))
-            gate_dss_file = fmt_str(inputs.get('gate_dss_file'))
-            model_ec_file = fmt_str(inputs.get('model_ec_file'))
-            output_folder = fmt_str(inputs.get('output_folder'))
-            xlsx_filepath = fmt_str(inputs.get('xlsx_filepath'))
-            dcd_dss_file = fmt_str(inputs.get('dcd_dss_file'))
+            hist_dss_file = inputs.get('hist_dss_file').format(**locals())
+            gate_dss_file = inputs.get('gate_dss_file').format(**locals())
+            model_ec_file = inputs.get('model_ec_file').format(**locals())
+            output_folder = inputs.get('output_folder').format(**locals())
+            xlsx_filepath = inputs.get('xlsx_filepath').format(**locals())
+            dcd_dss_file = inputs.get('dcd_dss_file').format(**locals())
 
             # generate aggregated ANN inputs from DSM2 outputs
-            create_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file, model_ec_file, output_folder)
+            generate_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file, model_ec_file, output_folder,
+                                b_part_e_part_dict=e_part_dict)
 
             # combine ANN input csv files into xlsx file (TODO: make this unecessary?)
             csv_to_ann_xlsx(output_folder, xlsx_filepath)
 
     else:
-        hist_dss_file = fmt_str(inputs.get('hist_dss_file'))
-        gate_dss_file = fmt_str(inputs.get('gate_dss_file'))
-        model_ec_file = fmt_str(inputs.get('model_ec_file'))
-        output_folder = fmt_str(inputs.get('output_folder'))
-        xlsx_filepath = fmt_str(inputs.get('xlsx_filepath'))
-        dcd_dss_file = fmt_str(inputs.get('dcd_dss_file'))
+        hist_dss_file = inputs.get('hist_dss_file').format(**locals())
+        gate_dss_file = inputs.get('gate_dss_file').format(**locals())
+        model_ec_file = inputs.get('model_ec_file').format(**locals())
+        output_folder = inputs.get('output_folder').format(**locals())
+        xlsx_filepath = inputs.get('xlsx_filepath').format(**locals())
+        dcd_dss_file = inputs.get('dcd_dss_file').format(**locals())
         
-        # generate aggregated ANN inputs from DSM2 outputs
-        create_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file, model_ec_file, output_folder)
+    # generate aggregated ANN inputs from DSM2 outputs
+    generate_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file, model_ec_file, output_folder,
+                        b_part_e_part_dict=e_part_dict)
 
-        # combine ANN input csv files into xlsx file (TODO: make this unecessary?)
-        csv_to_ann_xlsx(output_folder, xlsx_filepath)
+    # combine ANN input csv files into xlsx file (TODO: make this unecessary?)
+    csv_to_ann_xlsx(output_folder, xlsx_filepath)
+
+if __name__ == '__main__':
+
+    from schimpy import schism_yaml
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    
+    in_fname = "./input/historical_rsacminus_dsm2-ann_config.yaml"
+    e_part_dict={'CHDMC006': '1DAY', 'CHSWP003': '1DAY', 'CHVCT000': '1DAY', 'OLD_MID': '1DAY', 'ROLD024': '1DAY', 'ROLD059': '1DAY', 'RSAC064': '1DAY', 'RSAC075': '1DAY', 'RSAC081': '1DAY', 'RSAC092': '1DAY', 'RSAC101': '1DAY', 'RSAN007': '1DAY', 'RSAN018': '1DAY', 'RSAN032': '1DAY',
+    'RSAN037': '1DAY', 'RSAN058':'1DAY','RSAN072':'1DAY','RSMKL008':'1DAY','SLCBN002':'1DAY','SLDUT007':'1DAY','SLMZU011':'1DAY', 'SLMZU025': '1DAY','SLSUS012': '1DAY', 'SLTRM004': '1DAY', 'SSS': '1DAY', 'RSAC054': '1HOUR'}
+
+
+    run_ann_input(in_fname, e_part_dict=e_part_dict)
