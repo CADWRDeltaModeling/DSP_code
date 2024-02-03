@@ -140,9 +140,6 @@ class PlotANN(object):
                 print(f'Checking that {exp+"_RMSE"} corresponds to {self.exp_keys[e]}')
                 out_df[exp+"_RMSE"] = self.rmse_win_tup[station][self.exp_keys[e]]
 
-            # print(f'writing {station} out to csv in {self.save_dir}')
-            # out_df.to_csv(f'{self.save_dir}/{station}.csv')
-
             plt_rmse_tup[station] = out_df
 
         # Store the RMSE plot tuple
