@@ -18,6 +18,9 @@
 *zsmoothsave.txt
 *echo.yaml
 *.dss
+*.dsc
+*.dsd
+*.dsk
 *.lnk
 *.exe
 

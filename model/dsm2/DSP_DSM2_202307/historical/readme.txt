@@ -1,0 +1,1 @@
+studies dss files copied from \\cnrastore-bdo\Delta_Mod\Share\ucdAnnContract\data\DSM2v821\studies
