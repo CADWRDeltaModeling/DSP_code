@@ -3,6 +3,8 @@ import os
 import numpy as np
 import pandas as pd
 
+import pickle
+
 # %matplotlib inline
 from bokeh.io import show
 from bokeh.layouts import column
@@ -22,7 +24,7 @@ class PlotANN(object):
     """
     def __init__(self, dsp_home, experiments, save_dir,
 				 stations = ['ROLD024', 'RSAN018', 'RSAC092', 'RSAC081', 'RSAC075', 'RSAN032'],
-				 model_file = "mtl_i118_lstm8_f_o1.h5",
+				 model_file = "mtl_i118_lstm14_lstm14_f_o1.h5",
                  compression_opts=None, #or dict(method='zip', archive_name='out.csv')
 				 local_root_path =  './'):
                  
@@ -40,12 +42,8 @@ class PlotANN(object):
 
         if not os.path.exists(self.save_dir): os.makedirs(self.save_dir)
 
-        self.exp_keys = [exp+"_mtl_i118_lstm8_f_o1" for exp in self.experiments]
-        # self.exp_keys[self.experiments.index('latinhypercube_v1')] = 'latinhypercube_v1_mtl_i118_lstm14_lstm14_f_o1'
-        self.col_names = [e + "_" + self.model_name for e in experiments]
-        # col_names[experiments.index('latinhypercube_v1')] = 'latinhypercube_v1_mtl_i118_lstm14_lstm14_f_o1'
-        
-
+        self.exp_keys = [exp+f"_{self.model_name}" for exp in self.experiments]
+        self.col_names = [e+"_EC" for e in self.experiments]
     
     def store_tuples(self,
                      file_name = "dsm2_ann_inputs_historical.csv"):
@@ -64,23 +62,26 @@ class PlotANN(object):
         for experiment in self.experiments:
             experiment_dir = os.path.join(self.local_root_path, "Experiments", experiment)
 
-            if experiment=='latinhypercube_v1':
-                model_prediction_dir = os.path.join(experiment_dir, "results", "prediction", 'mtl_i118_lstm14_lstm14_f_o1')
-            else:
-                model_prediction_dir = os.path.join(experiment_dir, "results", "prediction", self.model_name)
+            model_prediction_dir = os.path.join(experiment_dir, "results", "prediction", self.model_name)
             prediction_file = os.path.join(model_prediction_dir, file_name)
             if not os.path.exists(prediction_file):
-                print(f"prediction_file {prediction_file} does not exist")
+                raise(f"prediction_file {prediction_file} does not exist")
             else:
                 prediction = read_df(prediction_file, self.compression_opts)
-                if experiment=='latinhypercube_v1':
-                    plot_tuples.append((prediction, prediction.columns[11], experiment + "_" + 'mtl_i118_lstm14_lstm14_f_o1'))
-                else:
-                    plot_tuples.append((prediction, prediction.columns[11], experiment + "_" + self.model_name))
+                plot_tuples.append((prediction, prediction.columns[self.col_num], experiment + "_" + self.model_name))
 
         self.plot_tuples = plot_tuples
 			
             # Create roving RMSE windows to compare RMSE from colab versus 6years.
+
+    def load_RMSE(self,rmse_win_len=10,rmse_calced=False):
+        if rmse_calced:
+            print('Reading RMSE')
+            with open(f'rmse_{".".join(self.exp_keys)}.pickle', 'rb') as handle:
+                self.plt_rmse_tup = pickle.load(handle)
+
+        else:
+            self.RMSE_window(rmse_win_len=rmse_win_len)
 
     def RMSE_window(self,
                     rmse_win_len=10):
@@ -89,6 +90,8 @@ class PlotANN(object):
         # rmse_win_len is the window length (default 10 days) within which to create a roving RMSE value
 
         target_tup = self.plot_tuples[0]
+        if 'target' not in target_tup[2]:
+            raise(f'First tuple element needs to be "target", not {target_tup[2]}')
         
         experiment_names = [d[2] for d in self.plot_tuples]
 
@@ -102,8 +105,6 @@ class PlotANN(object):
 
                 for t, tuple in enumerate(self.plot_tuples[1:]):
                     exper_tup = tuple
-                    if 'target' not in tuple[2]:
-                        raise(f'First tuple element needs to be "target", not {tuple[2]}')
                     print(f'Experiment to be compared is {exper_tup[2]}')
                     print(f'Experiment {exper_tup[2]} first s of station {s}: {exper_tup[0][s][0:3].values}')
 
@@ -139,13 +140,15 @@ class PlotANN(object):
                 print(f'Checking that {exp+"_RMSE"} corresponds to {self.exp_keys[e]}')
                 out_df[exp+"_RMSE"] = self.rmse_win_tup[station][self.exp_keys[e]]
 
-            print(f'writing {station} out to csv in {self.save_dir}')
-            out_df.to_csv(f'{self.save_dir}/{station}.csv')
+            # print(f'writing {station} out to csv in {self.save_dir}')
+            # out_df.to_csv(f'{self.save_dir}/{station}.csv')
 
             plt_rmse_tup[station] = out_df
 
         # Store the RMSE plot tuple
         self.plt_rmse_tup = plt_rmse_tup
+        with open(f'rmse_{".".join(self.exp_keys)}.pickle', 'wb') as handle:
+            pickle.dump(plt_rmse_tup, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     def store_plot(self,
                   sta_name,
@@ -166,14 +169,14 @@ class PlotANN(object):
 
         p.line(plt_df.index, plt_df['target_EC'], color='black', legend_label='Target')
 
-        for i, col_name in enumerate(self.col_names):
-            p.line(plt_df.index, plt_df[col_name+"_EC"], color=colors[i], legend_label=col_name)
+        for i, exp in enumerate(self.experiments):
+            p.line(plt_df.index, plt_df[exp+"_EC"], color=colors[i], legend_label=exp)
 
         r = figure(height=250, width=900, tools = "xpan,wheel_zoom,box_zoom,reset,save,hover",
                 x_axis_type="datetime", x_axis_location="above", x_range=p.x_range,
                 background_fill_color="#efefef", title=f'{sta_name} RMSE')
 
-        for i, col_name in enumerate(self.col_names):
+        for i, col_name in enumerate(self.experiments):
             r.line(plt_df.index, plt_df[col_name+"_RMSE"], color=colors[i], legend_label=col_name)
 
         select = figure(title="Drag the middle and edges of the selection box to change the range",
@@ -185,7 +188,7 @@ class PlotANN(object):
         range_tool.overlay.fill_color = "navy"
         range_tool.overlay.fill_alpha = 0.2
 
-        for i, col_name in enumerate(self.col_names):
+        for i, col_name in enumerate(self.experiments):
             select.line(plt_df.index, plt_df[col_name+"_EC"], color=colors[i])
 
         select.ygrid.grid_line_color = None
@@ -197,8 +200,8 @@ class PlotANN(object):
                     tools="", toolbar_location=None, background_fill_color="#efefef")
         diff.line(plt_df.index, 0, color='black')
         
-        for i, col_name in enumerate(self.col_names[1:]):
-            diff.line(plt_df.index, plt_df[col_name+"_EC"] - plt_df[self.col_names[0]+"_EC"], color=colors[1+i])
+        for i, col_name in enumerate(self.experiments[1:]):
+            diff.line(plt_df.index, plt_df[col_name+"_EC"] - plt_df[self.experiments[0]+"_EC"], color=colors[1+i])
         
         diff_rmse = figure(title="RMSE Difference (6year* - colab)",
                     height=200, width=900,
@@ -206,8 +209,8 @@ class PlotANN(object):
                     tools="", toolbar_location=None, background_fill_color="#efefef")
         diff_rmse.line(plt_df.index, 0, color='black')
 
-        for i, col_name in enumerate(self.col_names[1:]):
-            diff_rmse.line(plt_df.index, plt_df[col_name+"_RMSE"] - plt_df[self.col_names[0]+"_RMSE"], color=colors[1+i])
+        for i, col_name in enumerate(self.experiments[1:]):
+            diff_rmse.line(plt_df.index, plt_df[col_name+"_RMSE"] - plt_df[self.experiments[0]+"_RMSE"], color=colors[1+i])
 
         plot_final = column(p,r, select, diff, diff_rmse)
         if self.save_dir is not None:
@@ -232,7 +235,7 @@ if __name__ == '__main__':
     annplt.store_tuples()
 
     # create roving RMSE tuples
-    annplt.RMSE_window()
+    annplt.load_RMSE(rmse_calced=True)
 
     # create plots 
     for station in annplt.stations:
