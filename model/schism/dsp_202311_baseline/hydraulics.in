@@ -1,0 +1,201 @@
+15 !# of structures
+0.050000  !Nudging factor
+1 delta_cross_channel
+3 136983 138318 !  # of node-pairs, 2 ref.nodes (global indices) for 2 faces
+136984 137437
+137436 137877
+137876 138319
+radial ! struct type
+2 ! n_duplicates
+-3.420000 18.290000 10.000000 ! elevation, width, height or radius
+1.000000 1.000000 1.000000 ! coef, op_downstream, op_upstream
+1 ! time series enabled
+2 ccfb_gate
+3 322152 321886 !  # of node-pairs, 2 ref.nodes (global indices) for 2 faces
+322058 321968
+322060 321969
+322057 321967
+radial_relheight ! struct type
+5 ! n_duplicates
+-4.004400 6.096000 5.000000 ! elevation, width, height
+0.750000 0.800000 ! coef, coef_height
+1.000000 0.000000 ! op_downstream, op_upstream
+1 ! time series enabled
+3 montezuma_radial
+4 151526 150462 !  # of node-pairs, 2 ref.nodes (global indices) for 2 faces
+151519 151161
+151520 151162
+151167 150808
+151168 150809
+weir ! struct type
+3 ! n_duplicates
+-6.860000 10.970000 ! elevation, width or radius
+0.400000 1.000000 1.000000 ! coef, op_downstream, op_upstream
+1 ! time series enabled
+4 montezuma_flash
+3 151526 150462 !  # of node-pairs, 2 ref.nodes (global indices) for 2 faces
+151525 151166
+151521 151163
+151518 151160
+weir ! struct type
+1 ! n_duplicates
+-5.340000 20.730000 ! elevation, width or radius
+0.400000 1.000000 1.000000 ! coef, op_downstream, op_upstream
+1 ! time series enabled
+5 montezuma_boat_lock
+2 151526 150462 !  # of node-pairs, 2 ref.nodes (global indices) for 2 faces
+151169 150810
+151173 150814
+weir ! struct type
+1 ! n_duplicates
+-2.290000 6.100000 ! elevation, width or radius
+0.050000 1.000000 1.000000 ! coef, op_downstream, op_upstream
+1 ! time series enabled
+6 grantline_barrier
+10 333847 333725 !  # of node-pairs, 2 ref.nodes (global indices) for 2 faces
+333843 333803
+333844 333804
+333845 333805
+333809 333768
+333808 333767
+333807 333766
+333806 333765
+333840 333800
+333801 333760
+333761 333720
+weir_culvert ! struct type
+1 ! n_duplicates
+1.000000 54.900000 ! elevation and width for weir
+0.800000 1.000000 1.000000 ! coef, op_downstream, op_upstream for weirs
+6 ! n_duplicates for culverts
+-1.280000 0.610000
+0.400000 0.000000 1.000000 ! coef, op_downstream, op_upstream for culverts
+1 ! time series enabled
+7 midr_weir
+3 300989 301265 !  # of node-pairs, 2 ref.nodes (global indices) for 2 faces
+300990 301081
+301080 301173
+301076 301169
+weir ! struct type
+1 ! n_duplicates
+1.000000 42.700000 ! elevation, width or radius
+0.800000 1.000000 1.000000 ! coef, op_downstream, op_upstream
+1 ! time series enabled
+8 midr_culvert_l
+2 300989 301265 !  # of node-pairs, 2 ref.nodes (global indices) for 2 faces
+300830 300909
+300908 300991
+culvert ! struct type
+3 ! n_duplicates
+-0.530000 0.610000 ! elevation, width or radius
+0.400000 0.000000 1.000000 ! coef, op_downstream, op_upstream
+1 ! time series enabled
+9 midr_culvert_r
+2 300989 301265 !  # of node-pairs, 2 ref.nodes (global indices) for 2 faces
+300987 301077
+300905 300988
+culvert ! struct type
+3 ! n_duplicates
+-0.530000 0.610000 ! elevation, width or radius
+0.400000 0.000000 1.000000 ! coef, op_downstream, op_upstream
+1 ! time series enabled
+10 oldr_tracy_weir
+4 318718 319034 !  # of node-pairs, 2 ref.nodes (global indices) for 2 faces
+318714 318817
+318717 318820
+318821 318929
+318930 319035
+weir ! struct type
+1 ! n_duplicates
+1.330000 22.900000 ! elevation, width or radius
+0.800000 1.000000 1.000000 ! coef, op_downstream, op_upstream
+1 ! time series enabled
+11 oldr_tracy_culvert
+3 318718 319034 !  # of node-pairs, 2 ref.nodes (global indices) for 2 faces
+318515 318616
+318615 318715
+318713 318816
+culvert ! struct type
+9 ! n_duplicates
+-1.110000 0.610000 ! elevation, width or radius
+0.600000 1.000000 1.000000 ! coef, op_downstream, op_upstream
+1 ! time series enabled
+12 tom_paine
+4 334465 334585 !  # of node-pairs, 2 ref.nodes (global indices) for 2 faces
+334587 334625
+334547 334586
+334506 334546
+334464 334505
+culvert ! struct type
+6 ! n_duplicates
+-0.350000 0.570000 ! elevation, width or radius
+0.400000 0.000000 1.000000 ! coef, op_downstream, op_upstream
+0 ! time series enabled
+13 oldr_head_barrier
+6 343263 343193 !  # of node-pairs, 2 ref.nodes (global indices) for 2 faces
+343295 343277
+343278 343258
+343259 343238
+343243 343219
+343242 343217
+343218 343191
+weir_culvert ! struct type
+1 ! n_duplicates
+-0.700000 9.750000 ! elevation and width for weir
+0.800000 1.000000 1.000000 ! coef, op_downstream, op_upstream for weirs
+8 ! n_duplicates for culverts
+0.000000 0.000000
+1.000000 1.000000 1.000000 ! coef, op_downstream, op_upstream for culverts
+1 ! time series enabled
+14 sandmound
+5 253119 252895 !  # of node-pairs, 2 ref.nodes (global indices) for 2 faces
+252893 252661
+253120 252894
+253339 253121
+253559 253340
+253771 253560
+culvert ! struct type
+2 ! n_duplicates
+-0.200000 0.760000 ! elevation, width or radius
+0.400000 1.000000 0.000000 ! coef, op_downstream, op_upstream
+0 ! time series enabled
+15 west_false_river_barrier_leakage
+30 228106 228535 !  # of node-pairs, 2 ref.nodes (global indices) for 2 faces
+226997 227139
+227140 227279
+227280 227417
+227418 227550
+227551 227686
+227676 227812
+227677 227813
+227678 227814
+227679 227815
+227680 227816
+227681 227817
+227687 227823
+227824 227963
+227964 228104
+228105 228245
+228246 228392
+228393 228536
+228537 228686
+228538 228687
+228539 228688
+228540 228689
+228541 228690
+228542 228691
+228543 228692
+228693 228844
+228845 228988
+228989 229133
+228848 228991
+228847 228990
+228849 228992
+weir_culvert ! struct type
+1 ! n_duplicates
+-2.440000 210.000000 ! elevation and width for weir
+0.800000 1.000000 1.000000 ! coef, op_downstream, op_upstream for weirs
+10 ! n_duplicates for culverts
+-1.500000 4.000000
+0.030000 0.030000 1.000000 ! coef, op_downstream, op_upstream for culverts
+1 ! time series enabled

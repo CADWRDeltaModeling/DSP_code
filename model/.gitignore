@@ -26,3 +26,19 @@
 
 # DSM2 download
 *2021DSM2FP_202301
+
+# SCHISM shapefiles
+*.shp
+*.sbx
+*.sbn
+*.shp.xml
+*.shx
+*.dbf
+*.cpg
+*.prj
+*.qpj
+
+# SCHISM hotstart stuff
+schism/*/hotstart/*
+!schism/*/hotstart/*.yaml
+!schism/*/hotstart/*.py

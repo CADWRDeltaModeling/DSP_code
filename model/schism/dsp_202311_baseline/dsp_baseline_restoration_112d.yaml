@@ -1,0 +1,15 @@
+dem_list:
+  # This is adopted from the "official" 4.2 used for the 10 year hindcast and has 
+  # restoration areas added in an ad hoc way to create a cc mesh
+
+  # Restoration for DSP baseline sites
+  - ./restoration_dem/arnold_bradmoor_bathy_clip.tif
+  - ./restoration_dem/DEM_LindseySlough_mUTM_mNAVD_Combined.tif
+  - ./restoration_dem/DEM_DeckerIsland_1m_UTM_mNAVD-2022-12-30.tif
+  - ./restoration_dem/DEM_YoloFlyway_1m_UTM_mNAVD-2022-12-30.tif
+  - ./restoration_dem/DEM_TuleRed_1m_UTM_mNAVD-2022-12-30.tif
+  - ./restoration_dem/winter_clip.tif
+  - ./restoration_dem/DEM_LowerYolo_1m_UTM_mNAVD-2022-06-15.tif
+  - ./restoration_dem/wings_clip.tif
+  - ./restoration_dem/DEM_DutchSlough_1m_UTM_mNAVD-2022-06-15.tif
+  - ./restoration_dem/DEM_HillSlough_1m_UTM_mNAVD-2022-06-15.tif
