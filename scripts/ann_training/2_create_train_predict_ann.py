@@ -457,8 +457,25 @@ class ModelANN(object):
                 prediction.to_csv(prediction_file, compression=self.compression_opts)
 
         print(f"Finished making predictions for {self.experiment}")
+    
+    def load_save_ann(self, model_file, out_dir):
+        print("Model file: %s" % model_file)
+        model_name = os.path.splitext(model_file)[0]
+        experiment_dir = os.path.join(local_root_path, "Experiments", self.experiment)
+        model_dir = os.path.join(experiment_dir, "models")
 
-def run_mod_ann(in_fname, inputs_compiled=False, trained=False):
+        model_prediction_dir = os.path.join(experiment_dir, "results", "prediction", model_name)
+        os.makedirs(model_prediction_dir, exist_ok=True)
+
+        location = os.path.join(model_dir, model_name)
+        print("Location: %s" % location)
+        #prediction = predict(location, dfinps, dfouts.columns)
+        model=keras.models.load_model('%s.h5'%location,custom_objects={"mse_loss_masked": mse_loss_masked})
+
+        print(f"Saving model at {pd.Timestamp.now()}")
+        tf.keras.models.save_model(model, out_dir)
+
+def run_mod_ann(in_fname, inputs_compiled=False, trained=False, make_pred=True):
     # train_ran is to test if the training datasets have already been compiled
     global dsp_home
     global experiment
@@ -499,11 +516,11 @@ def run_mod_ann(in_fname, inputs_compiled=False, trained=False):
         test_files = [t.format(**globals(),**locals()) for t in inputs.get('test_files')] # files to be used to test/train the model
         test_windows = [[(s,e)] for s,e in zip(inputs.get('test_windows')[0].get('start'), 
                                              inputs.get('test_windows')[1].get('end'))] # windows to use to extract test data from
-        # fill any missing files or windows
-        if len(test_files)==1 and len(test_windows)>1:
-            test_files = np.repeat(test_files, len(test_windows))
-        elif len(test_files)>1 and len(test_windows)==1:
-            test_windows = np.repeat(test_windows, len(test_files))
+    # fill any missing files or windows
+    if len(test_files)==1 and len(test_windows)>1:
+        test_files = np.repeat(test_files, len(test_windows))
+    elif len(test_files)>1 and len(test_windows)==1:
+        test_windows = np.repeat(test_windows, len(test_files))
 
     if inputs_compiled:
         # saves time if training datasets already compiled
@@ -537,7 +554,13 @@ def run_mod_ann(in_fname, inputs_compiled=False, trained=False):
     excel_files = [e.format(**globals(),**locals()) for e in inputs.get('excel_files')] 
     
     # run predcit
-    ann_mod.make_predictions(excel_files)
+    if make_pred:
+        ann_mod.make_predictions(excel_files)
+
+    return ann_mod
+
+
+
 
 if __name__ == '__main__':
 
@@ -545,6 +568,9 @@ if __name__ == '__main__':
     import numpy as np
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
-    in_fname = "./input/colab_simple_ann_config.yaml"
+    in_fname = "./input/lathypcub_v2_ann_config.yaml"
 
-    run_mod_ann(in_fname, inputs_compiled=True, trained=True)
+    ann_mod = run_mod_ann(in_fname, inputs_compiled=True, trained=True, make_pred=False)
+
+    ann_mod.load_save_ann('mtl_i118_lstm14_lstm14_f_o1.h5', 
+                          r'D:\projects\delta_salinity\scripts\DSP_code\scripts\ann_training\Experiments\latinhypercube_v2\models\bundle')
