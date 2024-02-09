@@ -1,0 +1,73 @@
+# Description
+# Historical study
+# 202103
+ENVVAR
+NAME                     VALUE
+VERSIONDATE              201912
+HISTFLOWVERSION          DWR-DMS-${VERSIONDATE}
+DSM2INPUTDIR             ../../common_input
+HISTSTAGEVERSION         ${HISTFLOWVERSION}
+HISTQUALVERSION          DWR-DMS-${VERSIONDATE}
+
+#Augmentation/Sensitivity Analysis Specifications
+FPTAUGMENTSPEC           PLUS20PCT
+SJRAUGMENTSPEC           ${HISTFLOWVERSION}
+EXPAUGMENTSPEC           ${HISTFLOWVERSION}
+MTZBOUNDARY              SAC_PLUS20PCT
+
+DSM2MODIFIER             SACPLUS20PCT                       #Study name used for DSM2 output                  
+
+#runtime
+START_DATE               31Dec1989
+QUAL_START_DATE          02Jan1990
+PTM_START_DATE           ${QUAL_START_DATE}
+END_DATE                 31DEC2019
+START_TIME               0000
+END_TIME                 2400
+TEMPDIR                  z:/temp                                #Spacious directory for scratch files
+
+#Input envvars
+STUDYDIR                 .
+TSINPUTDIR               ../../timeseries
+TSINPUTDIR1               ../../timeseries2019
+BNDRYINPUT               boundary_augmented.dss
+GATEFILE                 ${TSINPUTDIR1}/gates-v8-201912.dss
+DICUFILE                 ${TSINPUTDIR}/DCD_hist_Sep2020_Lch5.dss  #202008
+SSCDFILE                 ${TSINPUTDIR}/SMCD_hist_Sep2020.dss      #SMCD 20210428
+QUALBNDINP               ${BNDRYINPUT}
+DICUFILE_ECE             ${TSINPUTDIR}/dicuwq_3vals_extended.dss
+SMCDFILEEC               ${TSINPUTDIR}/SMCD_hist_wq_ec.dss
+STOCKTON_FLOW_FILE       constant
+STOCKTON_EFF_FLOW        0.0                                    #needed for DO runs, if not available use 0.0
+
+#Output
+DSM2OUTPUTDIR            ${STUDYDIR}/output
+OUTPUTFILE               ${DSM2MODIFIER}.dss
+#hydro
+FLOWPATTERN              ./output/FLOWPATTERN.dss
+HYDROOUTDSSFILE          ${DSM2OUTPUTDIR}/${OUTPUTFILE}
+HYDROOUTFILE             ${DSM2OUTPUTDIR}/${DSM2MODIFIER}.hof
+HYDRORSTFILE             ${DSM2OUTPUTDIR}/${DSM2MODIFIER}.hrf
+HYDROTIDEFILE            ${DSM2OUTPUTDIR}/${DSM2MODIFIER}.h5
+GATEOUTPUTFILE           ${DSM2OUTPUTDIR}/${DSM2MODIFIER}_GATE.dss
+HYDROOUTDSSFILE_FLOW     ${DSM2OUTPUTDIR}/${DSM2MODIFIER}_FLOW.dss
+HYDROOUTDSSFILE_STAGE    ${DSM2OUTPUTDIR}/${DSM2MODIFIER}_STAGE.dss
+HYDROOUTDSSFILE_VEL      ${DSM2OUTPUTDIR}/${DSM2MODIFIER}_VEL.dss
+#Qual EC
+QUALOUTDSSFILE           ${DSM2OUTPUTDIR}/${DSM2MODIFIER}.dss
+QUALOUTDSSFILE_EC        ${DSM2OUTPUTDIR}/${DSM2MODIFIER}_EC.dss
+QUALOUTDSSFILE_ECX2      ${DSM2OUTPUTDIR}/${DSM2MODIFIER}_EC_X2.dss
+QUALOUTDSSFILE_ECFP      ${DSM2OUTPUTDIR}/${DSM2MODIFIER}_EC_FP.dss
+QUALOUTFILE_EC           ${DSM2OUTPUTDIR}/${DSM2MODIFIER}_EC.qof
+QUALRSTFILE_EC           ${DSM2OUTPUTDIR}/${DSM2MODIFIER}_EC.qrf
+QUALTIDEFILE_EC          ${DSM2OUTPUTDIR}/${DSM2MODIFIER}_EC.h5
+FINE_OUT                 15MIN
+FINE_OUT_DAY             1DAY
+#Jones Tract Levee Break
+EVENTSINPUT              ${TSINPUTDIR}/events.dss
+#PTM
+PTMOUTFILE               ${DSM2OUTPUTDIR}/${DSM2MODIFIER}.pof
+PTMOUTPUTFILE            ${DSM2OUTPUTDIR}/ptmout.dss
+END
+
+
