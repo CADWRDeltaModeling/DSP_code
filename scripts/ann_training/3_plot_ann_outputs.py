@@ -13,7 +13,10 @@ from bokeh.plotting import figure, show, output_file, save
 from bokeh.palettes import Magma, Inferno, Plasma, Viridis, Cividis, Colorblind, Bokeh
 
 def read_df(file_name, compression_opts):
-    df = pd.read_csv(file_name, compression=compression_opts, index_col=0)
+    try:
+        df = pd.read_csv(file_name, compression=dict(method='zip', archive_name='out.csv'), index_col=0)
+    except:
+        df = pd.read_csv(file_name, compression=compression_opts, index_col=0)
     df.index = pd.to_datetime(df.index)
     return df
 
@@ -191,7 +194,7 @@ class PlotANN(object):
         select.ygrid.grid_line_color = None
         select.add_tools(range_tool)
 
-        diff = figure(title="Difference (6year* - colab)",
+        diff = figure(title=f"Difference (Experiment - {self.experiments[0]})",
                     height=200, width=900,
                     x_axis_type="datetime",  x_range=p.x_range,
                     tools="", toolbar_location=None, background_fill_color="#efefef")
@@ -200,7 +203,7 @@ class PlotANN(object):
         for i, col_name in enumerate(self.experiments[1:]):
             diff.line(plt_df.index, plt_df[col_name+"_EC"] - plt_df[self.experiments[0]+"_EC"], color=colors[1+i])
         
-        diff_rmse = figure(title="RMSE Difference (6year* - colab)",
+        diff_rmse = figure(title=f"RMSE Difference (Experiment - {self.experiments[0]})",
                     height=200, width=900,
                     x_axis_type="datetime",  x_range=p.x_range,
                     tools="", toolbar_location=None, background_fill_color="#efefef")
@@ -222,7 +225,7 @@ if __name__ == '__main__':
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
     dsp_home = "./"
-    experiments = ["colab_simple","latinhypercube_v2"]
+    experiments = ["latinhypercube_v1p1","latinhypercube_v2"]
     save_dir = 'plots/lathypcub_v2'
 
     # initialize PlotANN object

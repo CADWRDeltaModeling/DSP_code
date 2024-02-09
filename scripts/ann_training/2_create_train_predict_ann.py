@@ -421,8 +421,6 @@ class ModelANN(object):
             input_file = os.path.join("Experiments", self.experiment, "results", "input", file_name + ".csv")
             dfinps.to_csv(input_file, compression=self.compression_opts)
 
-            # read_in = pd.read_csv(input_file, compression=compression_opts, index_col=0)
-
             target_file = os.path.join("Experiments", self.experiment, "results", "target", file_name + "_target.csv")
             dfouts.to_csv(target_file, compression=self.compression_opts)
 
