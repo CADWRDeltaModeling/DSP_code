@@ -317,9 +317,10 @@ if __name__ == '__main__':
     from schimpy import schism_yaml
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
-    in_fname = "./input/historical_rsacminus_dsm2-ann_config.yaml"
-    e_part_dict={'CHDMC006': '1DAY', 'CHSWP003': '1DAY', 'CHVCT000': '1DAY', 'OLD_MID': '1DAY', 'ROLD024': '1DAY', 'ROLD059': '1DAY', 'RSAC064': '1DAY', 'RSAC075': '1DAY', 'RSAC081': '1DAY', 'RSAC092': '1DAY', 'RSAC101': '1DAY', 'RSAN007': '1DAY', 'RSAN018': '1DAY', 'RSAN032': '1DAY',
-    'RSAN037': '1DAY', 'RSAN058':'1DAY','RSAN072':'1DAY','RSMKL008':'1DAY','SLCBN002':'1DAY','SLDUT007':'1DAY','SLMZU011':'1DAY', 'SLMZU025': '1DAY','SLSUS012': '1DAY', 'SLTRM004': '1DAY', 'SSS': '1DAY', 'RSAC054': '1HOUR'}
+    in_fname = "./input/historical_dsm2-ann_config.yaml"
+    # e_part_dict={'CHDMC006': '1DAY', 'CHSWP003': '1DAY', 'CHVCT000': '1DAY', 'OLD_MID': '1DAY', 'ROLD024': '1DAY', 'ROLD059': '1DAY', 'RSAC064': '1DAY', 'RSAC075': '1DAY', 'RSAC081': '1DAY', 'RSAC092': '1DAY', 'RSAC101': '1DAY', 'RSAN007': '1DAY', 'RSAN018': '1DAY', 'RSAN032': '1DAY',
+    # 'RSAN037': '1DAY', 'RSAN058':'1DAY','RSAN072':'1DAY','RSMKL008':'1DAY','SLCBN002':'1DAY','SLDUT007':'1DAY','SLMZU011':'1DAY', 'SLMZU025': '1DAY','SLSUS012': '1DAY', 'SLTRM004': '1DAY', 'SSS': '1DAY', 'RSAC054': '1HOUR'}
+    e_part_dict = None
 
 
     run_ann_input(in_fname, e_part_dict=e_part_dict)
