@@ -44,9 +44,21 @@ plt.vars <- append('hist', cases)
 qual_col_pals = brewer.pal.info[brewer.pal.info$category == 'qual',]
 col_vector = unlist(mapply(brewer.pal, qual_col_pals$maxcolors, rownames(qual_col_pals)))
 
-var.cols <- append('black',sample(col_vector, length(cases)))
-pie(rep(1,length(var.cols)), col=var.cols)
+# var.cols <- append('black',sample(col_vector, length(cases)))
+var.cols <- c("black","#BC80BD","#E6AB02","#A6D854","#80B1D3","#666666","#E7298A","#FDB462")
+# pie(rep(1,length(var.cols)), col=var.cols)
 
+set.ec.order <- c("SLMZU011-MONTEZUMA SL AT BELDONS LANDING", #-121.97080
+                  "RSAC075-MALLARDISLAND", # -121.92009
+                  "RSAC081-COLLINSVILLE", # -121.85012
+                  "RSAC092-EMMATON", # 	-121.73892
+                  "RSAN018-JERSEYPOINT", # -121.68897
+                  "RSAN032-SACRAMENTO R AT SAN ANDREAS LANDING", #	-121.59131
+                  "CHSWP003-CCFB_INTAKE", # -121.55740,
+                  "ROLD024-OLD RIVER AT BACON ISLAND", # -121.57222
+                  "CHDMC006-CVP INTAKE", # -121.54214
+                  "CHVCT000-VICTORIA INTAKE" #	-121.52830
+                  ) # longitudes
 # Load data ---------------------------------------------------------------
 
 
@@ -155,6 +167,7 @@ for (c in cases) {
   dsdum$case <- c
   ecdum <- melt(base_ec_output, id.vars='Time')
   ecdum$case <- c
+  print(paste0("Min EC time: ", min(ecdum$Time), " Max EC Time: ", max(ecdum$Time)))
   
   ds.df <- rbind(ds.df, dsdum)
   ec.df <- rbind(ec.df, ecdum)
@@ -171,7 +184,9 @@ ds.df$case <- factor(ds.df$case,
 ec.df$case <- factor(ec.df$case,
                      levels=plt.vars)
 
-date.lims <- c(min(ec.df$Time[ec.df$case %in% cases]),
+ds.date.lims <- c(min(ds.df$Time[ds.df$case %in% cases]),
+                  max(ds.df$Time[ds.df$case %in% cases]))
+ec.date.lims <- c(min(ec.df$Time[ec.df$case %in% cases]),
                max(ec.df$Time[ec.df$case %in% cases]))
 
 # Plot inputs -------------------------------------------------------------
@@ -182,7 +197,7 @@ date.lims <- c(min(ec.df$Time[ec.df$case %in% cases]),
 plt <- ggplot(data=ds.df) + 
   geom_line(aes(x=Time, y=value, color=case)) +
   facet_wrap(~variable, ncol=1, scales='free_y') +
-  scale_x_date(limits=date.lims) + 
+  scale_x_date(limits=ds.date.lims) + 
   ggh4x::scale_y_facet(
     variable == "Northern Flow",
     trans  = "log10",
@@ -216,16 +231,39 @@ pltl_name <- "DSM2_Input_Check.html"
 saveWidget(pltl, pltl_name, selfcontained=TRUE)
 file.rename(pltl_name, paste0("plots/",pltl_name))
 
+# Plot EC historical ---------------------------------------------------------
+
+# ec.yml <- ann_setup$stas_include
+# 
+# plt.hist.ec <- ec.df[grepl(paste(ec.yml, collapse="|"),ec.df$variable)&ec.df$case=='hist',]
+# mod.per.ec <- plt.hist.ec
+# mod.per.ec$value[!(plt.hist.ec$Time %in% ds.df$Time[ds.df$case!='hist'])] <- NA
+# 
+# plt <- ggplot() + 
+#   geom_line(data=plt.hist.ec, aes(x=Time, y=value, color='Historical')) +
+#   geom_line(data=mod.per.ec, aes(x=Time, y=value, color='Model Simulation Periods')) +
+#   facet_wrap(~variable, ncol=1, scales='free_y') +
+#   ylab('') +
+#   xlab('') +
+#   scale_color_manual(values=c('black','#E7298A'), breaks=c('Historical','Model Simulation Periods'))
+# 
+# # plt
+# 
+# pltl <- ggplotly(plt, dynamicTicks=TRUE)
+# # pltl
+
 # Plot EC results ---------------------------------------------------------
 
 ec.yml <- ann_setup$stas_include
 
 plt.ec <- ec.df[grepl(paste(ec.yml, collapse="|"),ec.df$variable),]
+plt.ec$variable <- factor(plt.ec$variable,
+                          levels=set.ec.order)
 
 plt <- ggplot(data=plt.ec) + 
   geom_line(aes(x=Time, y=value, color=case)) +
   facet_wrap(~variable, ncol=1, scales='free_y') +
-  scale_x_date(limits=date.lims) + 
+  scale_x_date(limits=ds.date.lims) + 
   ylab('') +
   xlab('') +
   scale_color_manual(values=var.cols, breaks=plt.vars)

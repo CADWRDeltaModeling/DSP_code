@@ -50,7 +50,7 @@ train_config: # a dictinoary to take the place of train_files and train_windows
   year: 2014
   file: '{dsp_home}/model/dsm2/DSP_DSM2_202307/{experiment}/anninputs/dsm2_ann_inputs_lhc_1.xlsx'
   start: 2014-1-1
-  end: 2014-5-31
+  end: 2015-5-31
 - num: 2
   year: 2012
   file: '{dsp_home}/model/dsm2/DSP_DSM2_202307/{experiment}/anninputs/dsm2_ann_inputs_lhc_2.xlsx'
@@ -60,17 +60,17 @@ train_config: # a dictinoary to take the place of train_files and train_windows
   year: 2014
   file: '{dsp_home}/model/dsm2/DSP_DSM2_202307/{experiment}/anninputs/dsm2_ann_inputs_lhc_3.xlsx'
   start: 2014-1-1
-  end: 2014-5-31
+  end: 2015-5-31
 - num: 4
   year: 2008
   file: '{dsp_home}/model/dsm2/DSP_DSM2_202307/{experiment}/anninputs/dsm2_ann_inputs_lhc_4.xlsx'
   start: 2007-2-1
-  end: 2008-8-31
+  end: 2008-5-31
 - num: 5
   year: 2008
   file: '{dsp_home}/model/dsm2/DSP_DSM2_202307/{experiment}/anninputs/dsm2_ann_inputs_lhc_5.xlsx'
   start: 2007-2-1
-  end: 2008-8-31
+  end: 2008-5-31
 - num: 6
   year: 2012
   file: '{dsp_home}/model/dsm2/DSP_DSM2_202307/{experiment}/anninputs/dsm2_ann_inputs_lhc_6.xlsx'
@@ -79,8 +79,8 @@ train_config: # a dictinoary to take the place of train_files and train_windows
 - num: 7
   year: 2010
   file: '{dsp_home}/model/dsm2/DSP_DSM2_202307/{experiment}/anninputs/dsm2_ann_inputs_lhc_7.xlsx'
-  start: 2010-1-1
-  end: 2011-12-31
+  start: 2010-5-1
+  end: 2011-5-31
 
 
 models: 

@@ -568,7 +568,8 @@ if __name__ == '__main__':
     
     in_fname = "./input/lathypcub_v2_ann_config.yaml"
 
-    ann_mod = run_mod_ann(in_fname, inputs_compiled=True, trained=True, make_pred=False)
+    ann_mod = run_mod_ann(in_fname, inputs_compiled=False, trained=False, make_pred=True)
 
-    ann_mod.load_save_ann('mtl_i118_lstm14_lstm14_f_o1.h5', 
-                          r'D:\projects\delta_salinity\scripts\DSP_code\scripts\ann_training\Experiments\latinhypercube_v2\models\bundle')
+    # ann_mod = run_mod_ann(in_fname, inputs_compiled=True, trained=True, make_pred=False)
+    # ann_mod.load_save_ann('mtl_i118_lstm14_lstm14_f_o1.h5', 
+    #                       r'D:\projects\delta_salinity\scripts\DSP_code\scripts\ann_training\Experiments\latinhypercube_v2\models\bundle')
