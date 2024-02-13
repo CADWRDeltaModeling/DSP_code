@@ -20,9 +20,9 @@ tf.config.list_physical_devices('GPU')
 global local_root_path
 local_root_path = "."
 sys.path.append(local_root_path)
-import annutils
+import ann_tools
 import importlib
-importlib.reload(annutils)
+importlib.reload(ann_tools)
 
 # Functions
 def mse_loss_masked(y_true, y_pred):
