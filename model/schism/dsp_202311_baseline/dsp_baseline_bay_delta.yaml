@@ -12,6 +12,7 @@ mesh:
   small_areas:
     warn: 10.
     fail: 4.  
+    write_out_smalls: True
   # includes restoration sites at top of list
   dem_list: 
     include: 

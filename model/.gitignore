@@ -3,6 +3,7 @@
 **/output/*
 **/anninputs*/*
 **/timeseries/*
+schism/*/prepare_schism.log
 
 # large model files
 *.nc # like hotstarts etc
@@ -37,7 +38,6 @@
 *.cpg
 *.prj
 *.qpj
-
 # SCHISM hotstart stuff
 schism/*/hotstart/*
 !schism/*/hotstart/*.yaml
