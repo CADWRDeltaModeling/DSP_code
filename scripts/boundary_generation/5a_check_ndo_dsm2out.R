@@ -45,7 +45,7 @@ qual_col_pals = brewer.pal.info[brewer.pal.info$category == 'qual',]
 col_vector = unlist(mapply(brewer.pal, qual_col_pals$maxcolors, rownames(qual_col_pals)))
 
 # var.cols <- append('black',sample(col_vector, length(cases)))
-var.cols <- c("black","#BC80BD","#E6AB02","#A6D854","#80B1D3","#666666","#E7298A","#FDB462")
+var.cols <- c("black","#BC80BD","#E6AB02","#A6D854","#80B1D3","#984EA3","#E7298A","#4DAF4A")
 # pie(rep(1,length(var.cols)), col=var.cols)
 
 set.ec.order <- c("SLMZU011-MONTEZUMA SL AT BELDONS LANDING", #-121.97080
