@@ -1,6 +1,8 @@
 # model output files
 **/outputs/*
 **/output/*
+**/sflux/*
+! **/sflux/*.txt
 **/anninputs*/*
 **/timeseries/*
 schism/*/prepare_schism.log
@@ -38,6 +40,7 @@ schism/*/prepare_schism.log
 *.cpg
 *.prj
 *.qpj
+
 # SCHISM hotstart stuff
 schism/*/hotstart/*
 !schism/*/hotstart/*.yaml
