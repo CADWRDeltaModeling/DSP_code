@@ -1,3 +1,6 @@
+# SET UP CONFIG TO IGNORE SYMLINKS
+# git config --global core.symlink false
+
 # model output files
 **/outputs/*
 **/output/*
@@ -10,6 +13,7 @@ schism/*/prepare_schism.log
 # large model files
 *.nc # like hotstarts etc
 *.th
+*.th.nc
 *.ic
 *.prop
 **/restoration_dem/*
@@ -41,7 +45,17 @@ schism/*/prepare_schism.log
 *.prj
 *.qpj
 
+# SCHISM symbolic linked files
+**/bctides.in
+**/launch.pbs
+**/param.nml
+**/vgrid.in
+
 # SCHISM hotstart stuff
 schism/*/hotstart/*
 !schism/*/hotstart/*.yaml
 !schism/*/hotstart/*.py
+
+# Linux error/operation messages
+*.e[0-9][0-9][0-9][0-9]
+*.o[0-9][0-9][0-9][0-9]

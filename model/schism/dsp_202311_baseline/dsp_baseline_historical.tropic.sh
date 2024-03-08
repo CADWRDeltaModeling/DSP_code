@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# LOAD CONDA ENVIRONMENT PRIOR TO RUNNING THIS BASH SCRIPT
+# conda activate schism-dms (for LAT HPC4)
+
 # MAKE SFLUX LINKS --------------------------------------
 
 mkdir -p sflux
@@ -35,4 +38,4 @@ mkdir -p outputs
 # RUN MODEL ----------------------------------------------
 
 qsub launch.pbs # HPC4
-sbatch slurm_batch_file.sh # HPC5
+# sbatch slurm_batch_file.sh # HPC5
