@@ -1,0 +1,22 @@
+#!/bin/sh
+## Choose a PBSPro queue. `workq` is only one.
+#PBS -q workq
+## Name of a run.
+#PBS -N DSP_suisun_20240308_clinic
+## Edit the last number to distribute load evenly.
+## For example, if you want to use 180 cores, you need
+## two HB120rs (select=2), and each node has 120 cores (ncpus=120),
+## and you want to use only 90 cores per node (mpiprocs=90).
+#PBS -l select=6:ncpus=24:mpiprocs=24
+## Set an email to get notifications from PBSPro.
+#PBS -M lily.tomkovic@water.ca.gov,tomkovic@localhost
+#PBS -m abe
+
+# Change the number of cores you want to use.
+# This needs to agree with what you are asking above in the PBSPro
+# setting.
+n_cores=144
+cd $PBS_O_WORKDIR
+module load schism/5.10_intel2022.1
+#MV2_DEFAULT_TIME_OUT=20 mpiexec -n $n_cores bash ./schism.sh
+mpiexec --rsh=ssh -n $n_cores bash ./schism.sh

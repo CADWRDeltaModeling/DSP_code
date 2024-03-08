@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 # LOAD CONDA ENVIRONMENT PRIOR TO RUNNING THIS BASH SCRIPT
 # conda activate schism-dms (for LAT HPC4)
@@ -27,7 +28,7 @@ ln -sf base.hist.elev2D.th.nc elev2D.th.nc
 # CREATE OTHER SYMBOLIC LINKS ----------------------------
 ln -sf bctides.in.2d bctides.in
 ln -sf hydraulics_baseline.in hydraulics.in
-ln -sf source_sink_baseline.in sourse_sink.in
+ln -sf source_sink_baseline.in source_sink.in
 ln -sf hgrid_dsp_baseline.gr3 hgrid.gr3
 ln -sf vgrid.in.2d vgrid.in
 ln -sf param.nml.tropic param.nml
