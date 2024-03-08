@@ -22,10 +22,12 @@ cd ..
 
 # generate .th.nc file
 gen_elev2d --outfile base.hist.elev2D.th.nc --hgrid=hgrid_dsp_baseline.gr3 --stime=2009-1-1 --etime=2009-7-1 --slr 0.0 noaa_download/pryc_filled_data.csv noaa_download/noaa_mtyc1_9413450_water_level_2006_2017.csv
-ln -sf base.hist.elev2D.th.nc elev2d.th.nc
+ln -sf base.hist.elev2D.th.nc elev2D.th.nc
 
 # CREATE OTHER SYMBOLIC LINKS ----------------------------
 ln -sf bctides.in.2d bctides.in
+ln -sf hydraulics_baseline.in hydraulics.in
+ln -sf source_sink_baseline.in sourse_sink.in
 ln -sf hgrid_dsp_baseline.gr3 hgrid.gr3
 ln -sf vgrid.in.2d vgrid.in
 ln -sf param.nml.tropic param.nml

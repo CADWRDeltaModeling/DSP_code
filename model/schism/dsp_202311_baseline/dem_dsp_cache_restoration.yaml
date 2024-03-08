@@ -1,0 +1,6 @@
+dem_list:
+
+  # Restoration for DSP baseline sites
+  - ./restoration_dem/DEM-LittleEgbert-1m-UTM-mNAVD-2022-12-30.tif
+  - ./restoration_dem/DEM_ProspectIsland_1m_UTM_mNAVD-2022-12-30.tif
+  - ./restoration_dem/Lookout_mNAD_mNAVD_reproject.tif
