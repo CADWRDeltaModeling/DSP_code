@@ -30,6 +30,8 @@ schism/*/prepare_schism.log
 *.dsk
 *.lnk
 *.exe
+**/hydraulics*.in
+*.ll
 
 # DSM2 download
 *2021DSM2FP_202301
@@ -44,6 +46,10 @@ schism/*/prepare_schism.log
 *.cpg
 *.prj
 *.qpj
+*.CPG
+
+# SCHISM NOAA data
+**/noaa_download/*
 
 # SCHISM symbolic linked files
 **/bctides.in
@@ -59,3 +65,4 @@ schism/*/hotstart/*
 # Linux error/operation messages
 *.e[0-9][0-9][0-9][0-9]
 *.o[0-9][0-9][0-9][0-9]
+itp*.log
