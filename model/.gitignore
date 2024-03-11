@@ -48,6 +48,7 @@ prepare_schism.log
 *.prj
 *.qpj
 *.CPG
+*.sr.lock
 
 # SCHISM NOAA data
 **/noaa_download/*
