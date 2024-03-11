@@ -22,7 +22,7 @@ cd ..
 # download_noaa --syear 2006 --eyear 2016 --param water_level noaa_stations.txt 
 
 # generate .th.nc file
-gen_elev2d --outfile base.hist.elev2D.th.nc --hgrid=hgrid_dsp_baseline.gr3 --stime=2009-1-1 --etime=2009-7-1 --slr 0.0 noaa_download/pryc_filled_data.csv noaa_download/noaa_mtyc1_9413450_water_level_2006_2017.csv
+gen_elev2d --outfile base.hist.elev2D.th.nc --hgrid=hgrid_dsp_baseline.gr3 --stime=2006-11-14 --etime=2008-12-31 --slr 0.0 noaa_download/pryc_filled_data.csv noaa_download/noaa_mtyc1_9413450_water_level_2006_2017.csv
 ln -sf base.hist.elev2D.th.nc elev2D.th.nc
 
 # CREATE OTHER SYMBOLIC LINKS ----------------------------
