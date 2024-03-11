@@ -1,0 +1,105 @@
+env_vars:
+- dsp_home: D:/projects/delta_salinity/scripts/DSP_code # where the main folder of this project is
+- bds_home: D:/schism/repositories/BayDeltaSCHISM # where the BayDeltaSCHISM repository is housed
+- experiment: latinhypercube_v2 # name of folder to look inside of test_file 
+- schism_dir: '{dsp_home}/model/schism'
+- base_dir: '{schism_dir}/dsp_202311_baseline'
+- case_dir: '{schism_dir}/dsp_202402_{experiment}'
+
+# auxiliary yaml files
+case_setup: '{dsp_home}/scripts/boundary_generation/input/lathypcub_v2_setup.yaml'
+
+param_tropic_base: '{base_dir}/param.nml.tropic'
+param_clinic_base: '{base_dir}/param.nml.clinic'
+
+# relevant files
+flux_file_in: 'flux.th'
+bc_tropic_in: 'bctides.in.2d' # number of nodes, elevation type, flow type, temperature, salnity, tracer
+bc_clinic_in: 'bctides.in.3d'
+tropic_ocean_bc: 'elev2D.th.nc'
+# clinic_ocean_bc: 'uv3D.th.nc'
+
+# source locations
+th_repo: '{bds_home}data/time_history/*.th'
+dcd_daily:
+- '{bds_home}/data/channel_depletion/vsink_dated.th'
+- '{bds_home}/data/channel_depletion/vsource_dated.th'
+- '{bds_home}/data/channel_depletion/msource_dated.th'
+
+
+# download_noaa --syear 2009 --eyear 2009 --param water_level noaa_stations.txt 
+# Adjust start and end year based on simulation period
+
+# gen_elev2d --outfile elev2D.th.nc --hgrid=hgrid.gr3 --stime=2009-5-1 --etime=2009-7-1 --slr 0.0 noaa_download/noaa_pryc1_9415020_water_level_2009_2010.csv noaa_download/noaa_mtyc1_9413450_water_level_2009_2010.csv
+
+
+model_config:
+- model_input: chcc
+  dss_file: hist_dss
+  primary_part: CHCCC006
+  part_c: FLOW-DIVERSION
+  unit_part: CFS
+
+- model_input: chdm
+  dss_file: hist_dss
+  primary_part: CHDMC004
+  part_c: FLOW-EXPORT
+  unit_part: CFS
+
+- model_input: swp
+  dss_file: hist_dss
+  primary_part: CHSWP003
+  part_c: FLOW-EXPORT
+  unit_part: CFS
+
+- model_input: ccvct
+  dss_file: hist_dss
+  primary_part: CHVCT001
+  part_c: FLOW-EXPORT
+  unit_part: CFS
+
+- model_input: rold
+  dss_file: hist_dss
+  primary_part: ROLD034
+  part_c: FLOW-EXPORT
+  unit_part: CFS
+
+- model_input: dcc
+  dss_file: gates_dss
+  primary_part: RSAC128
+  part_c: POS
+  unit_part: UNSPECIF
+  
+- model_input: suisgate
+  dss_file: gates_dss
+  primary_part: MTZSL
+  part_c: RADIAL_OP
+  unit_part: UNSPECIF
+
+- model_input: tide
+  dss_file: hist_dss
+  primary_part: RSAC054
+  part_c: STAGE
+  unit_part: FEET
+
+- model_input: sac
+  dss_file: hist_dss
+  primary_part: RSAC155
+  part_c: FLOW
+  unit_part: CFS
+
+- model_input: sjr
+  dss_file: hist_dss
+  primary_part: RSAN112
+  part_c: FLOW
+  unit_part: CFS
+  
+- model_input: dcdsink
+  dss_file: dcd_dss
+  unit_part: CFS
+  get_parts_from_csv: data_out/DCD_hist_Lch5_v1_sink.csv
+    
+- model_input: dcdsource
+  dss_file: dcd_dss
+  unit_part: CFS
+  get_parts_from_csv: data_out/DCD_hist_Lch5_v1_source.csv
