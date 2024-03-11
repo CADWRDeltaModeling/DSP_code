@@ -12,6 +12,14 @@ case_setup: '{dsp_home}/scripts/boundary_generation/input/lathypcub_v2_setup.yam
 param_tropic_base: '{base_dir}/param.nml.tropic'
 param_clinic_base: '{base_dir}/param.nml.clinic'
 
+bash_tropic: '{case_dir}/dsp_MESHNAME_CASENAME.tropic.sh' # needs replacing of meshname and casename when copied into case dir
+bash_clinic: '{base_dir}/dsp_MESHNAME_CASENAME.clinic.sh'
+
+meshes:
+- baseline
+- suisun
+# - cache
+
 # relevant files
 flux_file_in: 'flux.th'
 bc_tropic_in: 'bctides.in.2d' # number of nodes, elevation type, flow type, temperature, salnity, tracer

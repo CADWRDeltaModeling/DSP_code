@@ -101,8 +101,11 @@ class ModelBCGen(object):
                 self.setup_schism_case(case_dir, crange, case_perts)
 
     def set_schism_vars(self):
+        self.meshes = self.inputs.get('meshes').format(**self.env_vars)
         self.param_tropic_base = self.inputs.get('param_tropic_base').format(**self.env_vars)
         self.param_clinic_base = self.inputs.get('param_clinic_base').format(**self.env_vars)
+        self.bash_tropic = self.inputs.get('bash_tropic').format(**self.env_vars)
+        self.bash_clinic = self.inputs.get('bash_clinic').format(**self.env_vars)
         self.flux_file_in = self.inputs.get('flux_file_in').format(**self.env_vars)
         self.bc_tropic_in = self.inputs.get('bc_tropic_in').format(**self.env_vars)
         self.bc_clinic_in = self.inputs.get('bc_clinic_in').format(**self.env_vars)
@@ -110,11 +113,30 @@ class ModelBCGen(object):
         self.th_repo = self.inputs.get('th_repo').format(**self.env_vars) 
         self.dcd_daily = [dcd.format(**self.env_vars) for dcd in self.inputs.get('dcd_daily')]
         
-    def setup_schism_case(self, case_dir, crange, case_perts):
+    def setup_schism_case(self, casename, case_dir, crange, case_perts):
 
         self.set_schism_vars()
 
-        # get param.nmls
+        for meshname in self.meshes:
+
+            print(f"{meshname.upper()}-------------------")
+            meshcase_dir = os.path.join(case_dir,meshname)
+            if not os.path.exists(meshcase_dir):
+                os.mkdir(meshcase_dir)
+
+            # TROPIC ----------------------------------------------
+            print(f"Handling the tropic inputs")
+            
+            print(f"\t param.nml: {self.param_tropic_base}")
+            with open(self.param_tropic_base, 'r') as f:
+                self.tropic_param = schism_yaml.load(f)
+
+            print(f"\t tropic.sh: {self.bash_tropic}")
+
+            # print(f"Handling the clinic inputs")
+            # with open(self.param_clinic_base, 'r') as f:
+            #     self.clinic_param = schism_yaml.load(f)
+        
 
 
     
