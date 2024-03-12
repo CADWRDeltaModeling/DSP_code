@@ -3,6 +3,7 @@
 import pandas as pd
 import numpy as np
 import os
+import datetime as dt
 import matplotlib.pyplot as plt
 from pydelmod.create_ann_inputs import *
 
@@ -54,7 +55,11 @@ def adjust_src_sink(src,sink,perturb,sinkfrac=0.001):
     src_total = src.sum(axis=1)
     sink_total = sink.sum(axis=1)
     dcd_total = src_total + sink_total
-    pert = perturb.reindex(dcd_total.index)
+
+    if 'Timestamp' not in str(type(perturb.index[0])):
+        perturb.index = perturb.index.to_timestamp()
+    pert = perturb.reindex(dcd_total.index) # using only the indices in dcd_total (from the src/sink inputs)
+    pert
     neg = pert <= 0.
     pos = ~neg
 
@@ -106,30 +111,26 @@ def get_net_srcsnk(dcd_dss_file):
 
 def dcd_from_dsm2_pert(dcd_dss_file, dsm2_dcd_dss_file, schism_in, out_dir, version):
     
-    src0, sink0 = get_net_srcsnk(dcd_dss_file)
-    psrc0, psink0 = get_net_srcsnk(dsm2_dcd_dss_file)
+    src0, sink0 = get_net_srcsnk(dcd_dss_file) # source and sink for historical data
+    psrc0, psink0 = get_net_srcsnk(dsm2_dcd_dss_file) # perturbed source and sink for this version
 
-    net = src0 - sink0
-    pnet = psrc0 - psink0
+    net = src0 - sink0 # net flow for source/sink for historical
+    pnet = psrc0 - psink0 # net flow for source/sink for perturbed data for this version
 
-    perturb = pnet - net
+    perturb = pnet - net # the difference in net flows to be applied to the schism input/output data
 
-    sch_src = pd.read_csv(os.path.join(schism_in,'vsource_dated.th'), skiprows=5)
-    sch_sink = pd.read_csv(os.path.join(schism_in,'vsink_dated.th'), skiprows=5)
-    # TODO: handle datetime index?
+    sch_src = pd.read_csv(os.path.join(schism_in,'vsource_dated.th'), sep=' ', header=3, index_col=0, parse_dates=['datetime'], dtype=np.float64)
+    sch_sink = pd.read_csv(os.path.join(schism_in,'vsink_dated.th'), sep=' ', header=5, index_col=0, parse_dates=['datetime'], dtype=np.float64)
 
-
-    # net0 = src0 - sink0
-    # perturb = pvar1*np.sin(2.*np.pi*np.arange(serieslen)/ptvar1) +  pvar2*np.sin((2.*np.pi*np.arange(serieslen)/ptvar2)+omg)
-
-    # perturb = net0*0.+perturb # convert to dataframe
-    src,sink=adjust_src_sink(sch_sink, sch_src, perturb)
+    src,sink = adjust_src_sink(sch_sink, sch_src, perturb) # create the adjusted source/sink values to be used for this version in SCHISM
+    src.index = src.index.strftime('%Y-%m-%dT00:00')
+    sink.index = sink.index.strftime('%Y-%m-%dT00:00')
 
     fn_src = os.path.join(out_dir, f'vsource_{version}_dated.th')
     fn_sink = os.path.join(out_dir, f'vsink_{version}_dated.th')
     
-    # src.to_csv(os.path.join(out_dir,os.path.basename(dcd_dss_file).replace('.dss',f'_{version}_source.csv')))
-    # sink.to_csv(os.path.join(out_dir,os.path.basename(dcd_dss_file).replace('.dss',f'_{version}_sink.csv')))
+    src.to_csv(fn_src, sep=' ')
+    sink.to_csv(fn_sink, sep=' ')
 
 
 def strip_dpart(colname):
@@ -145,14 +146,12 @@ if __name__ == "__main__":
     dsm2_dcd_dss_file = "../../model/dsm2/DSP_DSM2_202307/latinhypercube_v2/timeseries/lhc_1_dcd.dss"
     version = 'v1'
 
-    schism_in = "D:/schism/repositories/BayDeltaSCHISM/data/channel_depletion"
-    out_dir = ".data_out/schism_dcd/" 
+    schism_in = "/home/tomkovic/schism_repos/BayDeltaSCHISM/data/channel_depletion"
+    out_dir = "./data_out/schism_dcd/" 
 
-    dcd_from_dss(dcd_dss_file, dsm2_dcd_dss_file, schism_in, out_dir, version)
+    dcd_from_dsm2_pert(dcd_dss_file, dsm2_dcd_dss_file, schism_in, out_dir, version)
     
-    
-    dsm2_dcd_dss_file = "../../dsm2/DSP_DSM2_202307/latinhypercube_v2/timeseries/lhc_2_dcd.dss"
+    dsm2_dcd_dss_file = "../../model/dsm2/DSP_DSM2_202307/latinhypercube_v2/timeseries/lhc_2_dcd.dss"
     version = 'v2'
     
-    # perturb = pvar1*np.sin(2.*np.pi*np.arange(serieslen)/ptvar1) +  pvar2*np.sin(2.*np.pi*np.arange(serieslen)/ptvar1)
-    dcd_from_dss(hist_fn, out_dir, version)
+    dcd_from_dsm2_pert(dcd_dss_file, dsm2_dcd_dss_file, schism_in, out_dir, version)
