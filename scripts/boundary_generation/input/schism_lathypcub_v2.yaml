@@ -9,8 +9,8 @@ env_vars:
 # auxiliary yaml files
 case_setup: '{dsp_home}/scripts/boundary_generation/input/lathypcub_v2_setup.yaml'
 
-param_tropic_base: '{base_dir}/param.nml.tropic'
-param_clinic_base: '{base_dir}/param.nml.clinic'
+param_tropic_base: '{case_dir}/param.nml.tropic'
+param_clinic_base: '{case_dir}/param.nml.clinic'
 
 bash_tropic: '{case_dir}/dsp_MESHNAME_CASENAME.tropic.sh' # needs replacing of meshname and casename when copied into case dir
 bash_clinic: '{base_dir}/dsp_MESHNAME_CASENAME.clinic.sh'
@@ -28,7 +28,7 @@ tropic_ocean_bc: 'elev2D.th.nc'
 # clinic_ocean_bc: 'uv3D.th.nc'
 
 # source locations
-th_repo: '{bds_home}data/time_history/*.th'
+th_repo: '{bds_home}data/time_history'
 dcd_daily:
 - '{bds_home}/data/channel_depletion/vsink_dated.th'
 - '{bds_home}/data/channel_depletion/vsource_dated.th'
@@ -40,74 +40,58 @@ dcd_daily:
 
 # gen_elev2d --outfile elev2D.th.nc --hgrid=hgrid.gr3 --stime=2009-5-1 --etime=2009-7-1 --slr 0.0 noaa_download/noaa_pryc1_9415020_water_level_2009_2010.csv noaa_download/noaa_mtyc1_9413450_water_level_2009_2010.csv
 
-
 model_config:
 - model_input: chcc
-  dss_file: hist_dss
-  primary_part: CHCCC006
-  part_c: FLOW-DIVERSION
-  unit_part: CFS
+  th_file: '{th_repo}/flux.th'
+  flux_col: ccc_rock
+  method: read
 
 - model_input: chdm
-  dss_file: hist_dss
-  primary_part: CHDMC004
-  part_c: FLOW-EXPORT
-  unit_part: CFS
+  th_file: '{th_repo}/flux.th'
+  flux_col: cvp
+  method: read
 
 - model_input: swp
-  dss_file: hist_dss
-  primary_part: CHSWP003
-  part_c: FLOW-EXPORT
-  unit_part: CFS
+  th_file: '{th_repo}/flux.th'
+  flux_col: swp
+  method: read
 
 - model_input: ccvct
-  dss_file: hist_dss
-  primary_part: CHVCT001
-  part_c: FLOW-EXPORT
-  unit_part: CFS
+  th_file: '{th_repo}/flux.th'
+  flux_col: ccc_victoria
+  method: read
 
 - model_input: rold
-  dss_file: hist_dss
-  primary_part: ROLD034
-  part_c: FLOW-EXPORT
-  unit_part: CFS
+  th_file: '{th_repo}/flux.th'
+  flux_col: ccc_old
+  method: read
 
 - model_input: dcc
-  dss_file: gates_dss
-  primary_part: RSAC128
-  part_c: POS
-  unit_part: UNSPECIF
+  th_file: '{th_repo}/delta_cross_channel.th'
+  method: read
   
 - model_input: suisgate
-  dss_file: gates_dss
-  primary_part: MTZSL
-  part_c: RADIAL_OP
-  unit_part: UNSPECIF
+  th_file: '{th_repo}/montezuma_radial.th'
+  method: read
 
 - model_input: tide
-  dss_file: hist_dss
-  primary_part: RSAC054
-  part_c: STAGE
-  unit_part: FEET
+  th_file: none
+  method: modify_elev2d
 
 - model_input: sac
-  dss_file: hist_dss
-  primary_part: RSAC155
-  part_c: FLOW
-  unit_part: CFS
+  th_file: '{th_repo}/flux.th'
+  flux_col: sac
+  method: read
 
 - model_input: sjr
-  dss_file: hist_dss
-  primary_part: RSAN112
-  part_c: FLOW
-  unit_part: CFS
+  th_file: '{th_repo}/flux.th'
+  flux_col: sjr
+  method: read
   
 - model_input: dcdsink
-  dss_file: dcd_dss
-  unit_part: CFS
-  get_parts_from_csv: data_out/DCD_hist_Lch5_v1_sink.csv
+  th_file: '{dsp_home}/scripts/boundary_generation/data_out/schism_dcd/vsink_{version}.th'
+  method: read_sourcesink
     
 - model_input: dcdsource
-  dss_file: dcd_dss
-  unit_part: CFS
-  get_parts_from_csv: data_out/DCD_hist_Lch5_v1_source.csv
+  th_file: '{dsp_home}/scripts/boundary_generation/data_out/schism_dcd/vsource_{version}.th'
+  method: read_sourcesink

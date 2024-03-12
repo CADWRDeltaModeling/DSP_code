@@ -48,6 +48,16 @@ def get_pathname(dss_filename, b_part, c_part, e_part=None, f_part=None, filter_
 
     return path_list
 
+# Format file
+def fmt_string_file(fn_in, fn_out, str_dict):
+    with open(fn_in, 'r') as f:
+            fdata = f.read()
+            
+    fdata.format(str_dict)
+
+    with open(fn_out, 'w') as fout:
+        fout.write(fdata)
+
 #### class definition
 # TODO make the ModelBCGen object able to take in DSM2 input yamls and output DSM2 BCs
 class ModelBCGen(object):
@@ -82,6 +92,9 @@ class ModelBCGen(object):
         ## update cases
         self.case_items = self.case_inputs.get('cases')
 
+        ## get model configurations
+        self.model_config = self.inputs.get('model_config')
+
         # retrieve and write out cases
         print('Handling cases:')
         for case in self.case_items:
@@ -90,15 +103,17 @@ class ModelBCGen(object):
             print(f'\t- {cname}')
             # create output folder
             case_dir = os.path.join(self.case_data_dir, cname)
+            if not os.path.exists(case_dir):
+                os.mkdir(case_dir)
 
             crange = [dt.datetime.strftime(case.get('case_start'), format='%Y%m%d0000'),
                     dt.datetime.strftime(case.get('case_end')+dt.timedelta(days=1), format='%Y%m%d0000')]
             
-            case_perts = case_dir['perturbations']
+            case_perts = case['perturbations']
             
             if model_type.lower() == 'schism':
 
-                self.setup_schism_case(case_dir, crange, case_perts)
+                self.setup_schism_case(cname, case_dir, crange, case_perts)
 
     def set_schism_vars(self):
         self.meshes = self.inputs.get('meshes').format(**self.env_vars)
@@ -113,9 +128,44 @@ class ModelBCGen(object):
         self.th_repo = self.inputs.get('th_repo').format(**self.env_vars) 
         self.dcd_daily = [dcd.format(**self.env_vars) for dcd in self.inputs.get('dcd_daily')]
         
-    def setup_schism_case(self, casename, case_dir, crange, case_perts):
+    def setup_schism_case(self, cname, case_dir, crange, cperts):
 
         self.set_schism_vars()
+
+        # DEAL WITH TH BOUNDARIES ===========================================================================
+
+        case_start = crange[0]
+        case_end = crange[1]
+        runtimedays = (case_end, case_start).days
+    
+        # setup model configurations
+        configs = {}
+        for config in self.model_config:
+            mname = config.get('model_input')
+            print(f'\t- {mname}')
+
+            configs[mname] = build_dict({k: config[k] for k in set(list(config.keys())) - set(['name'])})
+
+        for cp in cperts:
+            try:
+                pdict = self.perturbs[cp]
+            except:
+                raise ValueError(f"The perturbation {cp} needs to be defined in the perturbations section of the yaml file")
+
+            if 'components' in pdict.keys():
+                cdict = pdict.get('components')
+                subout_dir = os.path.join(case_dir, cp)
+                for comp in cdict:
+                    model_input = configs[comp['model_input']]
+                    
+                    if 
+            else:
+                model_input = configs[pdict['model_input']]
+
+            # if cpert == 'dcc_mark_pert':
+            #     sdfsd
+
+        # DEAL WITH SPATIAL SETUP ===========================================================================
 
         for meshname in self.meshes:
 
@@ -127,9 +177,14 @@ class ModelBCGen(object):
             # TROPIC ----------------------------------------------
             print(f"Handling the tropic inputs")
             
+            run_time_dict = {'runtimedays':runtimedays,
+                             'year_start':case_start.year,
+                             'month_start':case_start.month,
+                             'day_start':case_start.day}
             print(f"\t param.nml: {self.param_tropic_base}")
-            with open(self.param_tropic_base, 'r') as f:
-                self.tropic_param = schism_yaml.load(f)
+            fmt_string_file(self.param_tropic_base, os.path.join(meshcase_dir,'param.nml.tropic'), run_time_dict)
+                
+
 
             print(f"\t tropic.sh: {self.bash_tropic}")
 
