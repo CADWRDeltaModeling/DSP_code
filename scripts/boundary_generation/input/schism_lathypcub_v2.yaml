@@ -1,10 +1,11 @@
 env_vars:
-- dsp_home: D:/projects/delta_salinity/scripts/DSP_code # where the main folder of this project is
-- bds_home: D:/schism/repositories/BayDeltaSCHISM # where the BayDeltaSCHISM repository is housed
+- dsp_home: /scratch/dms/tomkovic/DSP_code # where the main folder of this project is (HPC4)
+- bds_home: /home/tomkovic/schism_repos/BayDeltaSCHISM # where the BayDeltaSCHISM repository is housed
 - experiment: latinhypercube_v2 # name of folder to look inside of test_file 
 - schism_dir: '{dsp_home}/model/schism'
 - base_dir: '{schism_dir}/dsp_202311_baseline'
 - case_dir: '{schism_dir}/dsp_202402_{experiment}'
+- th_repo: '{bds_home}/data/time_history'
 
 # auxiliary yaml files
 case_setup: '{dsp_home}/scripts/boundary_generation/input/lathypcub_v2_setup.yaml'
@@ -24,21 +25,13 @@ meshes:
 flux_file_in: 'flux.th'
 bc_tropic_in: 'bctides.in.2d' # number of nodes, elevation type, flow type, temperature, salnity, tracer
 bc_clinic_in: 'bctides.in.3d'
+noaa_download:
+  - pt_reyes: '{base_dir}/noaa_download/pryc_filled_data.csv'
+  - monterey: '{base_dir}/noaa_download/noaa_mtyc1_9413450_water_level_2006_2017.csv'
 tropic_ocean_bc: 'elev2D.th.nc'
 # clinic_ocean_bc: 'uv3D.th.nc'
 
 # source locations
-th_repo: '{bds_home}data/time_history'
-dcd_daily:
-- '{bds_home}/data/channel_depletion/vsink_dated.th'
-- '{bds_home}/data/channel_depletion/vsource_dated.th'
-- '{bds_home}/data/channel_depletion/msource_dated.th'
-
-
-# download_noaa --syear 2009 --eyear 2009 --param water_level noaa_stations.txt 
-# Adjust start and end year based on simulation period
-
-# gen_elev2d --outfile elev2D.th.nc --hgrid=hgrid.gr3 --stime=2009-5-1 --etime=2009-7-1 --slr 0.0 noaa_download/noaa_pryc1_9415020_water_level_2009_2010.csv noaa_download/noaa_mtyc1_9413450_water_level_2009_2010.csv
 
 model_config:
 - model_input: chcc
@@ -89,9 +82,9 @@ model_config:
   method: read
   
 - model_input: dcdsink
-  th_file: '{dsp_home}/scripts/boundary_generation/data_out/schism_dcd/vsink_{version}.th'
+  th_file: '{dsp_home}/scripts/boundary_generation/data_out/schism_dcd/vsink_{version}_dated.th'
   method: read_sourcesink
     
 - model_input: dcdsource
-  th_file: '{dsp_home}/scripts/boundary_generation/data_out/schism_dcd/vsource_{version}.th'
+  th_file: '{dsp_home}/scripts/boundary_generation/data_out/schism_dcd/vsource_{version}_dated.th'
   method: read_sourcesink
