@@ -16,7 +16,7 @@
   ibc = 1 !Baroclinic option
   ibtp = 0
 
-  rnday = 1143 !total run time in days
+  rnday = {runtimedays} !total run time in days
   dt = 120. !Time step in sec
 
 ! Grid for WWM (USE_WWM)
@@ -39,9 +39,9 @@
 ! Optional parameters. The values shown below are default unless otherwise noted
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ! Starting time
-  start_year = 2006 !int
-  start_month = 11 !int
-  start_day = 14 !int
+  start_year = {year_start} !int
+  start_month = {month_start} !int
+  start_day = {day_start} !int
   start_hour = 0 !double
   utc_start = 8 !double
 

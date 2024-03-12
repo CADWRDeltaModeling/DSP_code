@@ -12,9 +12,9 @@ mkdir -p sflux
 find ./sflux/ -name '*.nc' -delete
 
 # make new links
-cd sflux
-python ../../make_links_{casename}.py
-cd ..
+# cd sflux
+# python ../../make_links_{cname}.py
+# cd ..
 
 # CREATE OCEAN BOUNDARY ----------------------------------
 
@@ -22,12 +22,12 @@ cd ..
 # download_noaa --syear 2006 --eyear 2016 --param water_level noaa_stations.txt 
 
 # generate .th.nc file
-gen_elev2d --outfile {meshname}.{casename}.elev2D.th.nc --hgrid=hgrid_dsp_{meshname}.gr3 --stime=2006-11-14 --etime=2008-12-31 --slr 0.0 ../../dsp_202311_baseline/noaa_download/pryc_filled_data.csv ../../dsp_202311_baseline/noaa_download/noaa_mtyc1_9413450_water_level_2006_2017.csv
-ln -sf {meshname}.{casename}.elev2D.th.nc elev2D.th.nc
+gen_elev2d --outfile {meshname}.{cname}.elev2D.th.nc --hgrid=hgrid_dsp_{meshname}.gr3 --stime=2006-11-14 --etime=2008-12-31 --slr 0.0 ../../../dsp_202311_baseline/noaa_download/pryc_filled_data.csv ../../../dsp_202311_baseline/noaa_download/noaa_mtyc1_9413450_water_level_2006_2017.csv
+ln -sf {meshname}.{cname}.elev2D.th.nc elev2D.th.nc
 
 # CREATE OTHER SYMBOLIC LINKS ----------------------------
 # shared inputs
-ln -sf ../../sflux/sflux_inputs.txt ./sflux/sflux_inputs.txt
+ln -sf ../../sflux_inputs.txt ./sflux/sflux_inputs.txt
 ln -sf ../schism.sh schism.sh
 ln -sf ../station.in station.in
 
