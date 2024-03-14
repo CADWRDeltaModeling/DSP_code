@@ -4,21 +4,38 @@ env_vars:
 - experiment: latinhypercube_v2 # name of folder to look inside of test_file 
 - schism_dir: '{dsp_home}/model/schism'
 - base_dir: '{schism_dir}/dsp_202311_baseline'
-- case_dir: '{schism_dir}/dsp_202402_{experiment}'
+- exp_dir: '{schism_dir}/dsp_202402_{experiment}'
 - th_repo: '{bds_home}/data/time_history'
+- dcd_repo: '{bds_home}/data/channel_depletion'
+- sflux_src_dir: /scratch/dms/BayDeltaSCHISM/Data/atmos/baydelta_sflux_v20220916
+- sflux_narr_dir: /scratch/dms/BayDeltaSCHISM/Data/atmos/NARR
 
 # auxiliary yaml files
 case_setup: '{dsp_home}/scripts/boundary_generation/input/lathypcub_v2_setup.yaml'
 
-param_tropic_base: '{case_dir}/param.nml.tropic'
-param_clinic_base: '{case_dir}/param.nml.clinic'
+param_tropic_base: '{exp_dir}/param.nml.tropic'
+param_clinic_base: '{exp_dir}/param.nml.clinic'
 
-bash_tropic: '{case_dir}/dsp_MESHNAME_CASENAME.tropic.sh' # needs replacing of meshname and casename when copied into case dir
+bash_tropic: '{exp_dir}/dsp_MESHNAME_CASENAME.tropic.sh' # needs replacing of meshname and casename when copied into case dir
 bash_clinic: '{base_dir}/dsp_MESHNAME_CASENAME.clinic.sh'
 
 meshes:
-- baseline
-- suisun
+- name: baseline
+  indir: '{exp_dir}/baseline_inputs'
+  spatial_files:
+  - hgrid.gr3
+  - hgrid.ll
+  - hydraulics.in
+  - source_sink.in
+  - fluxflag.prop
+- name: suisun
+  indir: '{exp_dir}/suisun_inputs'
+  spatial_files:
+  - hgrid.gr3
+  - hgrid.ll
+  - hydraulics.in
+  - source_sink.in
+  - fluxflag.prop
 # - cache
 
 # relevant files
@@ -88,3 +105,33 @@ model_config:
 - model_input: dcdsource
   th_file: '{dsp_home}/scripts/boundary_generation/data_out/schism_dcd/vsource_{version}_dated.th'
   method: read_sourcesink
+
+linked_th_files:
+  - ccfb_gate.th
+  - delta_cross_channel.th
+  - flux.th
+  - grantline_barrier.th
+  - grantline_culvert.th
+  - grantline_weir.th
+  - midr_culvert_l.th
+  - midr_culvert_r.th
+  - midr_weir.th
+  - montezuma_boat_lock.th
+  - montezuma_flash.th
+  - montezuma_radial.th
+  - oldr_head_barrier.th
+  - oldr_tracy_culvert.th
+  - oldr_tracy_weir.th
+  - tom_paine_sl_culvert.th
+  - west_false_river_barrier_leakage.th
+
+linked_tracer_th_files:
+  - in: salt.th
+    out: SAL_1.th
+  - in: temp.th
+    out: TEM_1.th
+
+linked_ss_th_files:
+  - msource.th
+  - vsink.th
+  - vsource.th

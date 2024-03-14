@@ -3,6 +3,7 @@
 
 # model output files
 **/outputs/*
+**/*outputs*/*
 **/output/*
 **/sflux/*
 ! **/sflux/*.txt
