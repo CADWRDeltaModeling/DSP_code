@@ -17,7 +17,17 @@ import numpy as np
 import re
 import os
 
+import contextlib
+import io
+import sys
+
+
 # functions ================================================================
+
+def clip_file_to_start(infile, outpath, start):
+    with contextlib.redirect_stdout(io.StringIO()):
+        file_to_elapsed(infile, outpath=outpath, start=start)
+        sys.stdout.close()
 
 def build_dict(node):
     od = {}
@@ -86,17 +96,17 @@ def make_links(start_date, end_date, src_dir, src_dir_narr, link_dir):
         link_str_air = os.path.join(link_dir, "sflux_air_1.%04d.nc" % (nfile))
         link_str_rad = os.path.join(link_dir, "sflux_rad_1.%04d.nc" % (nfile))
         link_str_prc = os.path.join(link_dir, "sflux_prc_1.%04d.nc" % (nfile))
-        if not os.path.exists(link_str_air):
+        if not os.path.islink(link_str_air):
             os.symlink(src_str_air, link_str_air)
         else:
             os.remove(link_str_air)
             os.symlink(src_str_air, link_str_air)
-        if not os.path.exists(link_str_rad):
+        if not os.path.islink(link_str_rad):
             os.symlink(src_str_rad, link_str_rad)
         else:
             os.remove(link_str_rad)
             os.symlink(src_str_rad, link_str_rad)
-        if not os.path.exists(link_str_prc):
+        if not os.path.islink(link_str_prc):
             os.symlink(src_str_prc, link_str_prc)
         else:
             os.remove(link_str_prc)
@@ -152,7 +162,7 @@ class ModelBCGen(object):
         for case in self.case_items:
 
             cname = case.get('name')
-            print(f'\t- {cname}')
+            print(f'CASE: {cname} ==================================================================')
             # define bundle output dir
             case_data_dir = os.path.join(self.case_data_dir, cname)
             if not os.path.exists(case_data_dir):
@@ -161,7 +171,10 @@ class ModelBCGen(object):
             crange = [case.get('case_start'),
                       case.get('case_end')]
             
-            case_perts = case['perturbations']
+            if 'perturbations' in case.keys():
+                case_perts = case['perturbations']
+            else:
+                case_perts = {}
             
             if model_type.lower() == 'schism':
 
@@ -201,7 +214,7 @@ class ModelBCGen(object):
             except:
                 raise ValueError(f"The perturbation {cp} needs to be defined in the perturbations section of the yaml file")
 
-            print(f'\t\t - {cp}')
+            print(f'\t - {cp}')
             if 'components' in pdict.keys(): #perturbation is comprised of multiple inputs
                 cdict = pdict.get('components')
                 subout_dir = os.path.join(modcase_dir, cp)
@@ -238,19 +251,20 @@ class ModelBCGen(object):
         
         # creating and writing out flux file
         if write_flux:
+            print('\t Writing modified flux file out....')
             flux_in = pd.read_csv(flux_file, delim_whitespace=True, header=0, index_col='datetime')
             
             for fcol in fluxes_out.keys():
                 fdf = fluxes_out[fcol]
-                flux_in[fcol] = None
+                flux_in[fcol] = np.NaN
                 fdf.columns = [fcol]
-                flux_in.loc[flux_in.index.isin(fdf.index), fcol] = fdf
+                flux_in.loc[flux_in.index.isin(fdf.index), fcol] = fdf[fcol]
             flux_in = flux_in.interpolate(axis=0, limit_direction='both')
             
             mod_fn = os.path.join(modcase_dir, 'flux_modified_dated.th')
-            flux_in.to_csv(mod_fn, sep=' ', index=False)
+            flux_in.to_csv(mod_fn, sep=' ')
             clip_fn = mod_fn.replace('_dated.th' ,'.th')
-            file_to_elapsed(mod_fn, 
+            clip_file_to_start(mod_fn, 
                             outpath=clip_fn,
                             start=dt.datetime(year=crange[0].year,
                                               month=crange[0].month,
@@ -279,21 +293,21 @@ class ModelBCGen(object):
 
         for fn in list(set(self.linked_th_files) - set(self.perturbed_th.keys())):
             clip_fn = os.path.join(modcase_dir,fn)
-            file_to_elapsed(f'{self.th_repo}/{fn}', outpath=clip_fn, start=dt.datetime(year=crange[0].year,
+            clip_file_to_start(f'{self.th_repo}/{fn}', outpath=clip_fn, start=dt.datetime(year=crange[0].year,
                                                                                        month=crange[0].month,
                                                                                        day=crange[0].day))
             linked_th_file_strings += f'ln -sf ../{fn} {fn}\n' # link any th files from the base directory
             
         for fn in list(set(self.linked_ss_th_files) - set(self.perturbed_th.keys())):
             clip_fn = os.path.join(modcase_dir,fn)
-            file_to_elapsed(f'{self.dcd_repo}/{fn.replace(".th","_dated.th")}',  outpath=clip_fn, start=dt.datetime(year=crange[0].year,
+            clip_file_to_start(f'{self.dcd_repo}/{fn.replace(".th","_dated.th")}',  outpath=clip_fn, start=dt.datetime(year=crange[0].year,
                                                                                          month=crange[0].month,
                                                                                          day=crange[0].day))
             linked_th_file_strings += f'ln -sf ../{fn} {fn}\n'
 
         for tr in self.linked_tracer_th_files:
             clip_fn = os.path.join(modcase_dir, tr['out'])
-            file_to_elapsed(f'{self.th_repo}/{tr["in"]}',  outpath=clip_fn, start=dt.datetime(year=crange[0].year,
+            clip_file_to_start(f'{self.th_repo}/{tr["in"]}',  outpath=clip_fn, start=dt.datetime(year=crange[0].year,
                                                                                               month=crange[0].month,
                                                                                               day=crange[0].day))
             linked_th_file_strings += f'ln -sf ../{tr["out"]} {tr["out"]}\n'
@@ -321,7 +335,7 @@ class ModelBCGen(object):
         for mesh_info in self.meshes:
             meshname = mesh_info['name']
 
-            print(f"{meshname.upper()}-------------------")
+            print(f"Mesh: {meshname.upper()}-------------------")
             meshcase_dir = os.path.join(modcase_dir,meshname)
             if not os.path.exists(meshcase_dir):
                 os.mkdir(meshcase_dir)
@@ -366,7 +380,7 @@ class ModelBCGen(object):
 
         # Handle the different cases
         if 'tide' in cp:
-            print('\t\t\t Modifying tidal boundary')
+            print('\t\t Modifying tidal boundary')
             if pdict['method'] == 'shift':
                 if 'shift_forward' in pdict['args'].keys():
                     timedelt = pdict['args']['shift_forward']
@@ -384,7 +398,7 @@ class ModelBCGen(object):
                 raise ValueError(f"Unknown method to modify tidal boundary: {method}")
             
         elif any(gate in cp for gate in ['dcc','suisun']):
-            print('\t\t\t Modifying Gate Operations')
+            print('\t\t Modifying Gate Operations')
             # get modified operation. th_file is the model/framework to go off of. mod_file is the data to draw from
             mod_file = os.path.join(case_data_dir, 
                                     f"{pdict['model_input']}_{pdict['method']}_{dt.datetime.strftime(crange[0], format='%Y%m%d0000')}-{dt.datetime.strftime(crange[1]+dt.timedelta(days=1), format='%Y%m%d0000')}.csv")
@@ -417,7 +431,7 @@ class ModelBCGen(object):
 
             # clip to model period
             clip_fn = dated_fn.replace('_dated.th' ,'.th')
-            file_to_elapsed(dated_fn, 
+            clip_file_to_start(dated_fn, 
                             outpath=clip_fn,
                             start=dt.datetime(year=crange[0].year,
                                                         month=crange[0].month,
@@ -425,10 +439,10 @@ class ModelBCGen(object):
             self.perturbed_th[os.path.basename(th_file)] = os.path.basename(clip_fn)
 
         elif 'dcd' in cp:
-            print(f'\t\t\t Copying condumptive use file: {os.path.basename(th_file)}')
+            print(f'\t\t Copying consumptive use file: {os.path.basename(th_file)}')
             shutil.copyfile(th_file, os.path.join(modcase_dir, os.path.basename(th_file)))
             clip_fn = os.path.join(modcase_dir,f'{os.path.basename(th_file).split("_")[0]}_modified.th')
-            file_to_elapsed(th_file, 
+            clip_file_to_start(th_file, 
                             outpath=clip_fn,
                             start=dt.datetime(year=crange[0].year,
                                                         month=crange[0].month,
