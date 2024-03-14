@@ -39,13 +39,13 @@ meshes:
 # - cache
 
 # relevant files
-flux_file_in: 'flux.th'
-bc_tropic_in: 'bctides.in.2d' # number of nodes, elevation type, flow type, temperature, salnity, tracer
-bc_clinic_in: 'bctides.in.3d'
+flux_file_in: '{th_repo}/flux.th'
+# bc_tropic_in: 'bctides.in.2d' # number of nodes, elevation type, flow type, temperature, salnity, tracer
+# bc_clinic_in: 'bctides.in.3d'
 noaa_download:
   - pt_reyes: '{base_dir}/noaa_download/pryc_filled_data.csv'
   - monterey: '{base_dir}/noaa_download/noaa_mtyc1_9413450_water_level_2006_2017.csv'
-tropic_ocean_bc: 'elev2D.th.nc'
+# tropic_ocean_bc: 'elev2D.th.nc'
 # clinic_ocean_bc: 'uv3D.th.nc'
 
 # source locations

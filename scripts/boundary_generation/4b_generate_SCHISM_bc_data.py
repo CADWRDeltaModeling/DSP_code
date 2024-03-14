@@ -217,7 +217,7 @@ class ModelBCGen(object):
             print(f'\t - {cp}')
             if 'components' in pdict.keys(): #perturbation is comprised of multiple inputs
                 cdict = pdict.get('components')
-                subout_dir = os.path.join(modcase_dir, cp)
+                subout_dir = os.path.join(case_data_dir, cp)
                 for comp in cdict:
                     model_setup = self.configs[comp['model_input']]
                     has_version = re.search(r'v\d',cp)
@@ -227,8 +227,12 @@ class ModelBCGen(object):
                     else:
                         th_file = model_setup.get('th_file').format(**self.env_vars)
                     method = model_setup.get('method')
-                    
-                    self.handle_schism_model_input(case_data_dir, comp['model_input'], modcase_dir, crange, cdict, method, th_file)
+                    if 'flux_col' in model_setup.keys():
+                        write_flux=True
+                        fluxes_out = self.format_schism_th(subout_dir, comp['model_input'], modcase_dir, crange, comp, method, th_file, 
+                                                           fluxes_out=fluxes_out, fcol=model_setup['flux_col'])
+                    else:
+                        self.format_schism_th(subout_dir, comp['model_input'], modcase_dir, crange, cdict, method, th_file)
 
             else: # Single-element perturbation
                 model_setup = self.configs[pdict['model_input']]
@@ -238,21 +242,16 @@ class ModelBCGen(object):
                 if 'flux_col' in model_setup.keys():
                     # need to handle this differently since it's all flux inputs in one file
                     write_flux=True
-                    flux_file = th_file.format(**self.env_vars)
-                    mod_file = os.path.join(case_data_dir, 
-                                f"{pdict['model_input']}_{pdict['method']}_{dt.datetime.strftime(crange[0], format='%Y%m%d0000')}-{dt.datetime.strftime(crange[1]+dt.timedelta(days=1), format='%Y%m%d0000')}.csv")
-                    dat_in = pd.read_csv(mod_file, parse_dates=[0], index_col=[0], header=None)
-                    dat_in.index = dat_in.index.strftime('%Y-%m-%dT%H:%M')
-                    dat_in.index.name = 'datetime'
-                    fluxes_out[model_setup['flux_col']] = dat_in
+                    fluxes_out = self.format_schism_th(case_data_dir, cp, modcase_dir, crange, pdict, method, th_file,
+                                                       fluxes_out=fluxes_out, fcol=model_setup['flux_col'])
 
                 else:
-                    self.handle_schism_model_input(case_data_dir, cp, modcase_dir, crange, pdict, method, th_file)
+                    self.format_schism_th(case_data_dir, cp, modcase_dir, crange, pdict, method, th_file)
         
         # creating and writing out flux file
         if write_flux:
             print('\t Writing modified flux file out....')
-            flux_in = pd.read_csv(flux_file, delim_whitespace=True, header=0, index_col='datetime')
+            flux_in = pd.read_csv(self.flux_file_in, delim_whitespace=True, header=0, index_col='datetime')
             
             for fcol in fluxes_out.keys():
                 fdf = fluxes_out[fcol]
@@ -270,7 +269,7 @@ class ModelBCGen(object):
                                               month=crange[0].month,
                                               day=crange[0].day))
 
-        print("Updating input files -----")
+        print("Updating input files -----------------------------------------------")
 
         # Create param.nml files ------------------------------------------------------------------------------
         
@@ -286,7 +285,8 @@ class ModelBCGen(object):
         fmt_string_file(self.param_clinic_base, os.path.join(modcase_dir,'param.nml.clinic'), run_time_dict, method='replace')
 
         # Create bash files ------------------------------------------------------------------------------------
-
+        
+        print('\t writing bash files')
         linked_th_file_strings = ''
         for th in self.perturbed_th.keys():
             linked_th_file_strings += f'ln -sf ../{self.perturbed_th[th]} {th}\n' # link any modified files
@@ -323,8 +323,10 @@ class ModelBCGen(object):
                         case_tropic, 
                         bash_tropic_dict, 
                         method='replace')
+        print(f'\t\t tropic bash: {case_tropic}')
         
         # make sflux links
+        print('\t making sflux links')
         sflux_dir = os.path.join(modcase_dir,'sflux')
         if not os.path.exists(sflux_dir):
             os.mkdir(sflux_dir)
@@ -335,13 +337,13 @@ class ModelBCGen(object):
         for mesh_info in self.meshes:
             meshname = mesh_info['name']
 
-            print(f"Mesh: {meshname.upper()}-------------------")
+            print(f"\tMesh: {meshname.upper()} -------------------------------------")
             meshcase_dir = os.path.join(modcase_dir,meshname)
             if not os.path.exists(meshcase_dir):
                 os.mkdir(meshcase_dir)
 
             # TROPIC ----------------------------------------------
-            print(f"Handling the tropic inputs")
+            print(f"\t\t Handling the tropic inputs")
 
             linked_spatial_strings = ''
             for sf in mesh_info['spatial_files']:
@@ -353,7 +355,7 @@ class ModelBCGen(object):
                             {"{linked_spatial_strings}": linked_spatial_strings}, 
                             method='replace')
             
-            print(f"\t tropic.sh: {meshcase_tropic}")
+            print(f"\t\t\t tropic.sh: {meshcase_tropic}")
 
 
             # print(f"Handling the clinic inputs")
@@ -370,13 +372,13 @@ class ModelBCGen(object):
         self.bash_tropic = self.inputs.get('bash_tropic').format(**self.env_vars)
         self.bash_clinic = self.inputs.get('bash_clinic').format(**self.env_vars)
         self.flux_file_in = self.inputs.get('flux_file_in').format(**self.env_vars)
-        self.bc_tropic_in = self.inputs.get('bc_tropic_in').format(**self.env_vars)
-        self.bc_clinic_in = self.inputs.get('bc_clinic_in').format(**self.env_vars)
-        self.tropic_ocean_bc = self.inputs.get('tropic_ocean_bc').format(**self.env_vars)
+        # self.bc_tropic_in = self.inputs.get('bc_tropic_in').format(**self.env_vars)
+        # self.bc_clinic_in = self.inputs.get('bc_clinic_in').format(**self.env_vars)
+        # self.tropic_ocean_bc = self.inputs.get('tropic_ocean_bc').format(**self.env_vars)
         self.th_repo = self.env_vars['th_repo']
         self.dcd_repo = self.env_vars['dcd_repo']
 
-    def handle_schism_model_input(self, case_data_dir, cp, modcase_dir, crange, pdict, method, th_file):
+    def format_schism_th(self, case_data_dir, cp, modcase_dir, crange, pdict, method, th_file, fluxes_out=None, fcol=None):
 
         # Handle the different cases
         if 'tide' in cp:
@@ -449,6 +451,17 @@ class ModelBCGen(object):
                                                         day=crange[0].day))
             self.perturbed_th[f'{os.path.basename(th_file).split("_")[0]}.th'] = os.path.basename(clip_fn)
 
+        elif fcol:
+            print('\t\t Adding to flux file')
+            mod_file = os.path.join(case_data_dir, 
+                        f"{pdict['model_input']}_{pdict['method']}_{dt.datetime.strftime(crange[0], format='%Y%m%d0000')}-{dt.datetime.strftime(crange[1]+dt.timedelta(days=1), format='%Y%m%d0000')}.csv")
+            dat_in = pd.read_csv(mod_file, parse_dates=[0], index_col=[0], header=None)
+            dat_in.index = dat_in.index.strftime('%Y-%m-%dT%H:%M')
+            dat_in.index.name = 'datetime'
+            fluxes_out[fcol] = dat_in
+
+            return fluxes_out
+
 
 
     
@@ -460,6 +473,3 @@ if __name__ == "__main__":
     yml_fname = "./input/schism_lathypcub_v2.yaml"
 
     mbc = ModelBCGen(yml_fname, 'schism')
-
-
-    print('hi')

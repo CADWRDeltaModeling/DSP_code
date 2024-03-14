@@ -20,9 +20,12 @@ ln -sf ../vgrid.in.2d vgrid.bg
 ln -sf ../vgrid.in.3d vgrid.fg
 
 # run script to create uv3d.th.nc
-interpolate_variables8
+module purge
+module load schism/5.11.0
+ulimit -s unlimited
+interpolate_variables8 # this takes quite a while
 cd ../
-rsync -avz ./outputs_tropic/uv3d.th.nc .
+ln -sf ./outputs_tropic/uv3d.th.nc uv3d.th.nc
 
 # CREATE CLIINIC SYMBOLIC LINKS ----------------------------	
 
