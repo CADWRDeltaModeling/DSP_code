@@ -12,7 +12,7 @@
 prepare_schism.log
 
 # large model files
-*.nc # like hotstarts etc
+**/*.nc # like hotstarts etc
 *.th
 *.th.nc
 *.ic

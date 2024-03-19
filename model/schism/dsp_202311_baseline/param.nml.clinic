@@ -477,7 +477,7 @@
 ! nudging for a tracer is to set its nudged values to -9999
 !-----------------------------------------------------------------------
   inu_tr(1) = 2 !T
-  inu_tr(2) = 1 !S
+  inu_tr(2) = 2 !S
   inu_tr(3) = 0 !GEN
   inu_tr(4) = 0 !Age
   inu_tr(5) = 0 !SED3D
@@ -706,28 +706,28 @@
 ! Specific outputs in SED3D (USE_SED must be on in Makefile;
 ! otherwise these are ignored)
 !-----------------------------------------------------------------------
-  iof_sed(1) = 1 !bottom depth _change_ from init. condition (m) {SED_depth_change}
-  iof_sed(2) = 1 ! Bed median grain size in the active layer (mm) {SED_D50}
-  iof_sed(3) = 1 ! Bottom shear stress (Pa) {SED_bed_stress}
-  iof_sed(4) = 1 ! Bottom roughness lenghth (mm) {SED_bed_roughness}
-  iof_sed(5) = 1 ! total suspended concentration (g/L) {SED_TSC}
-  iof_sed(6) = 1 ! total bed thickness @elem (m) {bed_thickness}
-  iof_sed(7) = 0 ! total bed age over all layers @elem (sec) {bed_age}
-  iof_sed(8) = 0 ! Sediment transport roughness length @elem (m) (z0st_elem) {z0st}
-  iof_sed(9) = 0 !current-ripples roughness length @elem (m) (z0cr_elem) {z0cr}
-  iof_sed(10) = 0 !sand-waves roughness length (m) @elem (z0sw_elem) {z0sw}
-  iof_sed(11) = 0 !wave-ripples roughness length @elem (m) (z0wr_elem) {z0wr}
+!  iof_sed(1) = 1 !bottom depth _change_ from init. condition (m) {SED_depth_change}
+!  iof_sed(2) = 1 ! Bed median grain size in the active layer (mm) {SED_D50}
+!  iof_sed(3) = 1 ! Bottom shear stress (Pa) {SED_bed_stress}
+!  iof_sed(4) = 1 ! Bottom roughness lenghth (mm) {SED_bed_roughness}
+!  iof_sed(5) = 1 ! total suspended concentration (g/L) {SED_TSC}
+!  iof_sed(6) = 1 ! total bed thickness @elem (m) {bed_thickness}
+!  iof_sed(7) = 0 ! total bed age over all layers @elem (sec) {bed_age}
+!  iof_sed(8) = 0 ! Sediment transport roughness length @elem (m) (z0st_elem) {z0st}
+!  iof_sed(9) = 0 !current-ripples roughness length @elem (m) (z0cr_elem) {z0cr}
+!  iof_sed(10) = 0 !sand-waves roughness length (m) @elem (z0sw_elem) {z0sw}
+!  iof_sed(11) = 0 !wave-ripples roughness length @elem (m) (z0wr_elem) {z0wr}
 
 !  Example of using 2 classes
-  iof_sed(12) = 1 !conc. of 1st class (one output need by each class) [g/L] {SED3D_1}
-  iof_sed(13) = 1 !Bedload transport rate vector (kg.m-1.s-1) for 1st tracer (one output need by tracer) {SED_bdld_1}
-  iof_sed(14) = 1 !Bed fraction 1st tracer (one output need by each class) [-] {SED_bedfrac_1}
-  iof_sed(15) = 1 !conc. of 2nd class {SED3D_2}
-  iof_sed(16) = 1 !Bedload transport of 2nd class {SED_bdld_2}
-  iof_sed(17) = 1 !Bed fraction of 2nd class {SED_bedfrac_3}
-  iof_sed(18) = 1
-  iof_sed(19) = 1
-  iof_sed(20) = 1
+!  iof_sed(12) = 1 !conc. of 1st class (one output need by each class) [g/L] {SED3D_1}
+!  iof_sed(13) = 1 !Bedload transport rate vector (kg.m-1.s-1) for 1st tracer (one output need by tracer) {SED_bdld_1}
+!  iof_sed(14) = 1 !Bed fraction 1st tracer (one output need by each class) [-] {SED_bedfrac_1}
+!  iof_sed(15) = 1 !conc. of 2nd class {SED3D_2}
+!  iof_sed(16) = 1 !Bedload transport of 2nd class {SED_bdld_2}
+!  iof_sed(17) = 1 !Bed fraction of 2nd class {SED_bedfrac_3}
+!  iof_sed(18) = 1
+!  iof_sed(19) = 1
+!  iof_sed(20) = 1
 
 !-----------------------------------------------------------------------
 ! EcoSim outputs

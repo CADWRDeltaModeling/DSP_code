@@ -16,16 +16,17 @@ rsync -avz ../interpolate_variables.in .
 # link necessary files
 ln -sf ../hgrid.gr3 bg.gr3
 ln -sf ../hgrid.gr3 fg.gr3
-ln -sf ../vgrid.in.2d vgrid.bg
+ln -sf ../../vgrid.in.2d vgrid.bg
 ln -sf ../vgrid.in.3d vgrid.fg
 
 # run script to create uv3d.th.nc
 module purge
-module load schism/5.11.0
+# module load schism/5.11.0 # HPC4
+module load intel/2024.0 openmpi/5.0.2 hdf5/1.14.3 netcdf-c/4.9.2 netcdf-fortran/4.6.1 schism/5.11.0 # HPC5
 ulimit -s unlimited
 interpolate_variables8 # this takes quite a while
 cd ../
-ln -sf ./outputs_tropic/uv3d.th.nc uv3d.th.nc
+ln -sf ./outputs_tropic/uv3D.th.nc uv3D.th.nc
 
 # CREATE CLIINIC SYMBOLIC LINKS ----------------------------	
 
@@ -46,5 +47,5 @@ ln -sf launch.clinic.pbs launch.pbs
 
 # RUN MODEL ----------------------------------------------
 
-qsub launch.pbs # HPC4
-# sbatch slurm_batch_file.sh # HPC5
+# qsub launch.pbs # HPC4
+sbatch slurm_batch_file.sh # HPC5

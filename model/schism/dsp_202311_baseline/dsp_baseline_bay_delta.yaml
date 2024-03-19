@@ -16,7 +16,7 @@ mesh:
   # includes restoration sites at top of list
   dem_list: 
     include: 
-      - dsp_baseline_restoration_112d.yaml
+      - dem_dsp_baseline_restoration_112d.yaml
       - dem_4.2_cc.yaml
   depth_optimization: !include depth_opt_params.yaml
   open_boundaries: !include open_boundary.yaml
@@ -29,7 +29,7 @@ mesh:
         - .\depth\existing_enforcement_linestrings.yaml
         - .\depth\restoration_enforcement_linestrings.yaml
   ll_outputfile: hgrid.ll
-  gr3_outputfile: hgrid_dsp_baseline.gr3
+  gr3_outputfile: hgrid.gr3
 
 # Note this file is in the /data directory and relative location needs to be set
 # This should come from flow_station_xsects_new.yaml with newer ids.
@@ -50,7 +50,7 @@ gr3:
     default: 1.0
   windrot_geo2proj.gr3:
     default: 0.0
-  windfactor.gr3: !include windfactor.yaml   # Updated 111
+  windfactor.gr3: !include windfactor_mod.yaml   # Updated for dsp
   manning.gr3:
     default: 0.025
   elev.ic: !include elev.yaml
@@ -84,6 +84,6 @@ sources_sinks:
   outputfile: source_sink.in
 vgrid:
     vgrid_out: vgrid.in.3d
-    minmaxlayerfile: ./depth/minmaxlayer_dsp_baseline_112d_2.shp 
+    minmaxlayerfile: ./minmaxlayer_dsp_baseline_112d_2.shp 
     eta: 1.5
     vgrid_version: '5.10'

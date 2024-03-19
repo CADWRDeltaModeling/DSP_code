@@ -3,14 +3,14 @@
 # You will need to copy station_flow_xsects from the /data directory as well as the 
 # mesh file
 
-output_dir: suisun
+output_dir: .
 
 mesh:
   mesh_inputfile: dsp_112d_3_SS_1.2dm   # cc vs hist requires coordination with dem_list.yaml which has variants of same names
   split_quad:
     minangle: 30.
     maxangle: 140.
-    propfile: ./split_quad_suisun.prop
+    propfile: ./split_quad.prop
   small_areas:
     warn: 10.
     fail: 4.  
@@ -31,14 +31,14 @@ mesh:
       include: 
         - ./depth/existing_enforcement_linestrings.yaml
         - ./depth/restoration_enforcement_linestrings.yaml
-  ll_outputfile: hgrid_suisun.ll
-  gr3_outputfile: hgrid_dsp_suisun.gr3
+  ll_outputfile: hgrid.ll
+  gr3_outputfile: hgrid.gr3
 
 # Note this file is in the /data directory and relative location needs to be set
 # This should come from flow_station_xsects_new.yaml with newer ids.
 flow_outputs:
   include: ./flow_station_xsects.yaml 
-  outputfile: fluxflag_suisun.prop
+  outputfile: fluxflag.prop
 
 gr3:
   xlsc.gr3:
@@ -53,7 +53,7 @@ gr3:
     default: 1.0
   windrot_geo2proj.gr3:
     default: 0.0
-  windfactor.gr3: !include ./windfactor.yaml   # Updated 111
+  windfactor.gr3: !include ./windfactor_mod.yaml   # Updated 111
   manning.gr3:
     default: 0.025
   elev.ic: !include ./elev.yaml
@@ -79,12 +79,12 @@ prop:
   tvd.prop: !include ./tvd.yaml
 hydraulics:
   include: ./hydraulic_structures.yaml    # Includes West False River 2015 installation
-  outputfile: hydraulics_suisun.in
+  outputfile: hydraulics.in
 sources_sinks:
   # Includes Delta and Suisun, including distribution modifications in 2020.
   # See the _2019 variant for older locations  
   include: ./source_sink.yaml  
-  outputfile: source_sink_suisun.in
+  outputfile: source_sink.in
 vgrid:
     vgrid_out: vgrid.suisun.in.3d
     minmaxlayerfile: minmaxlayer_dsp_suisun.shp 

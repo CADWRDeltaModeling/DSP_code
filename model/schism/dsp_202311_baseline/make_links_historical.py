@@ -8,8 +8,8 @@ emonth = 12
 bday = 14
 eday = 31
 
-src_dir = "/scratch/dms/BayDeltaSCHISM/Data/atmos/baydelta_sflux_v20220916"
-src_dir_narr = "/scratch/dms/BayDeltaSCHISM/Data/atmos/NARR"
+src_dir = "/scratch/data/atmos/baydelta_sflux_v20220916"
+src_dir_narr = "/scratch/data/atmos/NARR"
 link_dir = os.getcwd()
 
 def make_links():
