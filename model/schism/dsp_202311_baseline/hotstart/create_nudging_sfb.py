@@ -48,7 +48,7 @@ nct = xr.open_dataset('TEM_nu_%s.nc'%suffix)
 # plt.axis('off')
 # plt.title("nu_temp (top)")
 
-# wd = read_mesh('temperature_nudge.gr3')
+# wd = read_mesh('temperature_nudge_roms.gr3')
 # plt.sca(ax[0,1])
 # v = wd.nodes[nct.map_to_global_node.values-1,2]
 # coll = nudging.plot(nct.map_to_global_node.values-1,nct.tracer_concentration.isel(
@@ -68,7 +68,7 @@ nct = xr.open_dataset('TEM_nu_%s.nc'%suffix)
 # plt.axis('off')
 # plt.title("nu_temp (bottom)")
 
-# wd = read_mesh('temperature_nudge.gr3')
+# wd = read_mesh('temperature_nudge_roms.gr3')
 # plt.sca(ax[1,1])
 # v = wd.nodes[nct.map_to_global_node.values-1,2]
 # coll = nudging.plot(nct.map_to_global_node.values-1,nct.tracer_concentration.isel(
@@ -98,7 +98,7 @@ ncs = xr.open_dataset('SAL_nu_%s.nc'%suffix)
 # plt.title("nu_salt (top)")
 # plt.text(670730,4300600,'psu',style='italic')
 
-# wd = read_mesh('temperature_nudge.gr3')
+# wd = read_mesh('temperature_nudge_roms.gr3')
 # plt.sca(ax[0,1])
 # v = wd.nodes[ncs.map_to_global_node.values-1,2]
 # coll = nudging.plot(ncs.map_to_global_node.values-1,ncs.tracer_concentration.isel(
@@ -119,7 +119,7 @@ ncs = xr.open_dataset('SAL_nu_%s.nc'%suffix)
 # plt.axis('off')
 # plt.title("nu_salt (bottom)")
 
-# wd = read_mesh('temperature_nudge.gr3')
+# wd = read_mesh('temperature_nudge_roms.gr3')
 # plt.sca(ax[1,1])
 # v = wd.nodes[ncs.map_to_global_node.values-1,2]
 # coll = nudging.plot(ncs.map_to_global_node.values-1,ncs.tracer_concentration.isel(
@@ -135,7 +135,7 @@ ncs = xr.open_dataset('SAL_nu_%s.nc'%suffix)
 # plt.savefig('figures/nud_salt.png',dpi=300)
 
 #%% plot a comparison between nudging and hycom for water surface 
-temp_mesh = read_mesh('temperature_nudge.gr3')
+temp_mesh = read_mesh('temperature_nudge_roms.gr3')
 weights_temp = temp_mesh.nodes[:,2]
 weights_elem = np.asarray([weights_temp[el].mean(axis=0) for el in nudging.mesh.elems])
  
@@ -152,14 +152,14 @@ ncfn = path+datestr1+".nc"
 
 ncdata = xr.open_dataset(ncfn)
                   
-rtemp = ncdata.temp.sel(time=date).isel(depth=0).transpose('lon','lat')  # 0 is surface for ROMS
+pwd = ncdata.temp.sel(time=date).isel(depth=0).transpose('lon','lat')  # 0 is surface for ROMS
 rsalt = ncdata.salt.sel(time=date).isel(depth=0).transpose('lon','lat')
 
 t = (pd.to_datetime(date) - pd.to_datetime(nudging.start_date)).total_seconds()
 stemp = nct.tracer_concentration.sel(time=t,nLevels=-1,one=0).values # last is the surface for schism
 ssalt = ncs.tracer_concentration.sel(time=t,nLevels=-1,one=0).values
 
-mesht = read_mesh("temperature_nudge.gr3")
+mesht = read_mesh("temperature_nudge_roms.gr3")
 weights_t = mesht.nodes[:,2]
 lat = rtemp.lat.values
 lon = rtemp.lon.values

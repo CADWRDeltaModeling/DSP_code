@@ -24,7 +24,7 @@ hotstart:
                   - region: estuary
                     initializer: 
                         extrude_casts: 
-                            station: ./USGS_polaris_station_locations_xy.csv
+                            station: ./usgs_cruise_station.csv
                             data: ./SanFranciscoBayWaterQualityData1969-2015v4.csv
                             variable: "Temperature"
                   - region: delta
@@ -55,7 +55,7 @@ hotstart:
                   - region: estuary
                     initializer: 
                         extrude_casts: 
-                            station: ./USGS_polaris_station_locations_xy.csv
+                            station: ./usgs_cruise_station.csv
                             data: ./SanFranciscoBayWaterQualityData1969-2015v4.csv
                             variable: Salinity
                   - region: delta

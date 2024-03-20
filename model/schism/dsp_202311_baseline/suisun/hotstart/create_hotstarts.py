@@ -6,9 +6,10 @@ Hotstart example for a basic schism run with TEMP and SALT as tracers.
 import schimpy.schism_hotstart as sh
 import numpy as np
 import xarray as xr
-import uxarray as ux
-import suxarray as sx
-import suxarray.helper
+# import uxarray as ux
+# import suxarray as sx
+# import suxarray.helper
+import datetime as dt
 
 import os
 
