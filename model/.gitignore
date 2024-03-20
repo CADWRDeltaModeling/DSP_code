@@ -12,7 +12,7 @@
 prepare_schism.log
 
 # large model files
-**/*.nc # like hotstarts etc
+*.nc* # like hotstarts etc
 *.th
 *.th.nc
 *.ic
@@ -33,6 +33,7 @@ prepare_schism.log
 *.exe
 **/hydraulics*.in
 *.ll
+*.log
 
 # latinhypercube model specifics (these get set up with 4b_generate_SCHISM_bc_data.py)
 schism/dsp_202402_latinhypercube_v2/lhc_*/*
@@ -63,11 +64,16 @@ schism/dsp_202402_latinhypercube_v2/lhc_*/*
 **/vgrid.in
 
 # SCHISM hotstart stuff
-schism/*/hotstart/*
-!schism/*/hotstart/*.yaml
-!schism/*/hotstart/*.py
+schism/**/hotstart/*
+!schism/**/hotstart/*.yaml
+!schism/**/hotstart/*.py
 
 # Linux error/operation messages
 *.e[0-9][0-9][0-9][0-9]
 *.o[0-9][0-9][0-9][0-9]
-itp*.log
+*.log
+
+# symlinked files
+schism/**/hotstart.nc
+schism/**/SAL_nu.nc
+schism/**/TEM_nu.nc
