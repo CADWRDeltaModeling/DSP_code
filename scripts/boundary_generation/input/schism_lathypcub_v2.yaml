@@ -16,6 +16,11 @@ case_setup: '{dsp_home}/scripts/boundary_generation/input/lathypcub_v2_setup.yam
 param_tropic_base: '{exp_dir}/param.nml.tropic'
 param_clinic_base: '{exp_dir}/param.nml.clinic'
 
+slurm_base: '{base_dir}/slurm_batch_file.sh'
+job_name: dsp_2024
+# baro: 
+output_log_file_base: dsp_{case}
+
 bash_tropic: '{exp_dir}/dsp_MESHNAME_CASENAME.tropic.sh' # needs replacing of meshname and casename when copied into case dir
 bash_clinic: '{base_dir}/dsp_MESHNAME_CASENAME.clinic.sh'
 
@@ -40,13 +45,9 @@ meshes:
 
 # relevant files
 flux_file_in: '{th_repo}/flux.th'
-# bc_tropic_in: 'bctides.in.2d' # number of nodes, elevation type, flow type, temperature, salnity, tracer
-# bc_clinic_in: 'bctides.in.3d'
 noaa_download:
   - pt_reyes: '{base_dir}/noaa_download/pryc_filled_data.csv'
   - monterey: '{base_dir}/noaa_download/noaa_mtyc1_9413450_water_level_2006_2017.csv'
-# tropic_ocean_bc: 'elev2D.th.nc'
-# clinic_ocean_bc: 'uv3D.th.nc'
 
 # source locations
 

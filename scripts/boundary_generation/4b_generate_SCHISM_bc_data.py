@@ -324,6 +324,10 @@ class ModelBCGen(object):
                         bash_tropic_dict, 
                         method='replace')
         print(f'\t\t tropic bash: {case_tropic}')
+
+        slurm_tropic_dict = {**run_time_dict, **{'{job_name}':self.job_name,
+                                                 '{baro}':'tropic',
+                                                 '{output_log_file_base}':self.output_log_file_base}}
         
         # make sflux links
         print('\t making sflux links')
@@ -377,6 +381,9 @@ class ModelBCGen(object):
         # self.tropic_ocean_bc = self.inputs.get('tropic_ocean_bc').format(**self.env_vars)
         self.th_repo = self.env_vars['th_repo']
         self.dcd_repo = self.env_vars['dcd_repo']
+        self.slurm_base = self.inputs.get('slurm_base').format(**self.env_vars)
+        self.job_name = self.inputs.get('job_name')
+        self.output_log_file_base = self.inputs.get('output_log_file_base')
 
     def format_schism_th(self, case_data_dir, cp, modcase_dir, crange, pdict, method, th_file, fluxes_out=None, fcol=None):
 
