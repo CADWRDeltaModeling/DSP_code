@@ -18,3 +18,6 @@ scripts/boundary_generation/data_out/*bundles*
 **/ann_training/Experiments/*
 **/ann_training/tf_training_logs/*
 **/ann_training/plots/*
+
+# ignore large files
+*.nc
