@@ -1,6 +1,6 @@
 hotstart: 
     date: '{date_start}'
-    hgrid_input_file: ../hgrid.gr3              # hgrid needs to be in utm coordinates. 
+    hgrid_input_file: ../hgrid_2.gr3              # hgrid needs to be in utm coordinates. 
     vgrid_input_file: ../vgrid.in.3d 
     vgrid_version: "5.10"
     elevation:  
