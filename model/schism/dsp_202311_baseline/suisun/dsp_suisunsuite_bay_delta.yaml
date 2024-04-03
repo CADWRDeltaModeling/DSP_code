@@ -6,7 +6,7 @@
 output_dir: .
 
 mesh:
-  mesh_inputfile: dsp_112d_3_SS_1.2dm   # cc vs hist requires coordination with dem_list.yaml which has variants of same names
+  mesh_inputfile: dsp_112d_3_SS_2.2dm   # cc vs hist requires coordination with dem_list.yaml which has variants of same names
   split_quad:
     minangle: 30.
     maxangle: 140.
@@ -32,7 +32,7 @@ mesh:
         - ./depth/existing_enforcement_linestrings.yaml
         - ./depth/restoration_enforcement_linestrings.yaml
   ll_outputfile: hgrid.ll
-  gr3_outputfile: hgrid.gr3
+  gr3_outputfile: hgrid_2.gr3
 
 # Note this file is in the /data directory and relative location needs to be set
 # This should come from flow_station_xsects_new.yaml with newer ids.
@@ -86,7 +86,7 @@ sources_sinks:
   include: ./source_sink.yaml  
   outputfile: source_sink.in
 vgrid:
-    vgrid_out: vgrid.suisun.in.3d
+    vgrid_out: vgrid.in.3d
     minmaxlayerfile: minmaxlayer_dsp_suisun.shp 
     eta: 1.5
     vgrid_version: '5.10'

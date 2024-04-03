@@ -16,7 +16,7 @@
   ibc = 0 !Baroclinic option
   ibtp = 1
 
-  rnday = 1143 !total run time in days
+  rnday = 811 !1143 !total run time in days
   dt = 90. !Time step in sec
 
 ! Grid for WWM (USE_WWM)
@@ -55,7 +55,7 @@
 ! Hotstart option. 0: cold start; 1: hotstart with time reset to 0; 2:
 ! continue from the step in hotstart.nc
 !-----------------------------------------------------------------------
-  ihot = 1
+  ihot = 2
 
 !-----------------------------------------------------------------------
 ! Equation of State type used
