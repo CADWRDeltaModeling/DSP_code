@@ -73,12 +73,20 @@ perturbations:
   method: read
   args:
     file: ./data_out/MTZSL_markov_pert_v1.csv
+    copy_files:
+      - ./data_out/suisun_gates/montezuma_radial_lhc_v1.th
+      - ./data_out/suisun_gates/montezuma_flash_lhc_v1.th
+      - ./data_out/suisun_gates/montezuma_boat_lock_lhc_v1.th
 - name: suisun_mark_pert_v2
   model_input: suisgate
   variable: radial_op
   method: read
   args:
     file: ./data_out/MTZSL_markov_pert_v2.csv
+    copy_files:
+      - ./data_out/suisun_gates/montezuma_radial_lhc_v2.th
+      - ./data_out/suisun_gates/montezuma_flash_lhc_v2.th
+      - ./data_out/suisun_gates/montezuma_boat_lock_lhc_v2.th
 - name: tide_shift_100
   model_input: tide
   variable: stage

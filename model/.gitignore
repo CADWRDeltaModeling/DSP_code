@@ -38,6 +38,9 @@ prepare_schism.log
 # latinhypercube model specifics (these get set up with 4b_generate_SCHISM_bc_data.py)
 schism/dsp_202402_latinhypercube_v2/lhc_*/*
 
+# suxarray data
+**/suxarray
+
 # DSM2 download
 *2021DSM2FP_202301
 

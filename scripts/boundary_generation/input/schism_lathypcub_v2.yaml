@@ -1,14 +1,14 @@
 env_vars:
-- dsp_home: /scratch/dms/tomkovic/DSP_code # where the main folder of this project is (HPC4)
-- bds_home: /home/tomkovic/schism_repos/BayDeltaSCHISM # where the BayDeltaSCHISM repository is housed
+- dsp_home: /scratch/tomkovic/DSP_code # where the main folder of this project is (HPC4)
+- bds_home: /home/tomkovic/BayDeltaSCHISM # where the BayDeltaSCHISM repository is housed
 - experiment: latinhypercube_v2 # name of folder to look inside of test_file 
 - schism_dir: '{dsp_home}/model/schism'
 - base_dir: '{schism_dir}/dsp_202311_baseline'
 - exp_dir: '{schism_dir}/dsp_202402_{experiment}'
 - th_repo: '{bds_home}/data/time_history'
 - dcd_repo: '{bds_home}/data/channel_depletion'
-- sflux_src_dir: /scratch/dms/BayDeltaSCHISM/Data/atmos/baydelta_sflux_v20220916
-- sflux_narr_dir: /scratch/dms/BayDeltaSCHISM/Data/atmos/NARR
+- sflux_src_dir: /scratch/data/atmos/baydelta_sflux_v20220916
+- sflux_narr_dir: /scratch/data/atmos/NARR
 
 # auxiliary yaml files
 case_setup: '{dsp_home}/scripts/boundary_generation/input/lathypcub_v2_setup.yaml'
@@ -82,8 +82,8 @@ model_config:
   method: read
   
 - model_input: suisgate
-  th_file: '{th_repo}/montezuma_radial.th'
-  method: read
+  th_file: '{dsp_home}/scripts/boundary_generation/data_out/suisun_gates/montezuma_{gate}_lhc_v{gate_ver}.th'
+  method: copy
 
 - model_input: tide
   th_file: none

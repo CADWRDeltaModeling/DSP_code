@@ -7,6 +7,7 @@ from schimpy import schism_yaml
 from schimpy.prepare_schism import process_output_dir, check_nested_match, item_exist
 from schimpy.schism_setup import check_and_suggest
 from argparse import Namespace
+import shutil
 import datetime as dt
 import os
 
@@ -137,6 +138,14 @@ def create_cases(in_fname):
                         dat_out = dat_out[dat_out.index.to_series().between(pd.to_datetime(start_date),pd.to_datetime(end_date))]
                         dat_out.to_csv(os.path.join(case_dir, f'{pdict["model_input"]}_{pdict["method"]}_{crange[0]}-{crange[1]}.csv'),
                                            header=header)
+                        
+                        if 'copy_files' in pdict['args'].keys():
+                            for cfile in pdict['args'].get('copy_files'):
+                                # so far this is for SCHISM which used the th files to generate the perturbation 
+                                # so it was simpler to write the SCHISM th files out in 2b_perturb_binary
+                                cbase = os.path.basename(cfile).split('.') # just in case we want to add something to this filename later
+                                shutil.copy2(cfile,os.path.join(case_dir, f'{cbase[0]}.{cbase[1]}'))
+
 
     
 

@@ -20,6 +20,8 @@ import os
 import contextlib
 import io
 import sys
+from collections import defaultdict
+import string
 
 
 # functions ================================================================
@@ -28,6 +30,10 @@ def clip_file_to_start(infile, outpath, start):
     with contextlib.redirect_stdout(io.StringIO()):
         file_to_elapsed(infile, outpath=outpath, start=start)
         sys.stdout.close()
+        
+class SafeDict(dict):
+    def __missing__(self, key):
+        return '{' + key + '}'
 
 def build_dict(node):
     od = {}
@@ -236,7 +242,7 @@ class ModelBCGen(object):
 
             else: # Single-element perturbation
                 model_setup = self.configs[pdict['model_input']]
-                th_file = model_setup.get('th_file').format(**self.env_vars)
+                th_file = string.Formatter().vformat(model_setup.get('th_file'),(),SafeDict((self.env_vars)))
                 method = model_setup.get('method')
 
                 if 'flux_col' in model_setup.keys():
@@ -406,7 +412,7 @@ class ModelBCGen(object):
             else:
                 raise ValueError(f"Unknown method to modify tidal boundary: {method}")
             
-        elif any(gate in cp for gate in ['dcc','suisun']):
+        elif any(gate in cp for gate in ['dcc']):
             print('\t\t Modifying Gate Operations')
             # get modified operation. th_file is the model/framework to go off of. mod_file is the data to draw from
             mod_file = os.path.join(case_data_dir, 
@@ -443,9 +449,25 @@ class ModelBCGen(object):
             clip_file_to_start(dated_fn, 
                             outpath=clip_fn,
                             start=dt.datetime(year=crange[0].year,
-                                                        month=crange[0].month,
-                                                        day=crange[0].day))
-            self.perturbed_th[os.path.basename(th_file)] = os.path.basename(clip_fn)
+                                              month=crange[0].month,
+                                              day=crange[0].day))
+            self.perturbed_th[os.path.basename(th_file)] = os.path.basename(clip_fn) # add to list of files that are perturbed
+
+        elif 'suisun' in cp:
+            print(f'\t\t Copying Suisun gate operations')
+            # Determine version
+            gate_ver = cp[-1]
+            # Suisun needs to copy the three gates (radial, boatlock, and flashboard)
+            for gate in ['radial','boat_lock','flash']:
+                th_file = th_file.format_map(locals()) # uses gate and gate_ver
+                shutil.copyfile(th_file, os.path.join(modcase_dir, os.path.basename(th_file)))
+                clip_fn = os.path.join(modcase_dir,f'{os.path.basename(th_file).split("_")[0]}_{gate}_modified.th')
+                clip_file_to_start(th_file, 
+                                outpath=clip_fn,
+                                start=dt.datetime(year=crange[0].year,
+                                                  month=crange[0].month,
+                                                  day=crange[0].day))
+                self.perturbed_th[f'{os.path.basename(th_file).split("_")[0]}_{gate}.th'] = os.path.basename(clip_fn) # add to list of files that are perturbed
 
         elif 'dcd' in cp:
             print(f'\t\t Copying consumptive use file: {os.path.basename(th_file)}')
@@ -456,7 +478,7 @@ class ModelBCGen(object):
                             start=dt.datetime(year=crange[0].year,
                                                         month=crange[0].month,
                                                         day=crange[0].day))
-            self.perturbed_th[f'{os.path.basename(th_file).split("_")[0]}.th'] = os.path.basename(clip_fn)
+            self.perturbed_th[f'{os.path.basename(th_file).split("_")[0]}.th'] = os.path.basename(clip_fn) # add to list of files that are perturbed
 
         elif fcol:
             print('\t\t Adding to flux file')
