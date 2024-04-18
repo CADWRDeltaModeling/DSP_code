@@ -82,7 +82,7 @@ def sample_binary_ts():
 # plt.legend()
 # plt.show()
 
-def perturb_suisun_ops(radial_df, flash_df, boat_df, P00=0.990,P11=0.990):
+def perturb_suisun_ops(radial_df, flash_df, boat_df, P00=0.990,P11=0.990, column_order=['radial','flashboard','boat_lock']):
     """ Given a series of  ones and zeros, perturb to  the complementary state. "Unperturbed" means original value.
     Parameters 
     ----------
@@ -122,7 +122,7 @@ def perturb_suisun_ops(radial_df, flash_df, boat_df, P00=0.990,P11=0.990):
         ts = [t for t in ts if t<=min(radial_df.index.max(),flash_df.index.max(),boat_df.index.max())]
     print(f"Time series to be perturbed: {ts[0]} - {ts[-1]}")
 
-    all_df = pd.DataFrame(index=ts, columns=['radial','flashboard','boat_lock'])
+    all_df = pd.DataFrame(index=ts, columns=column_order)
     all_df['radial'] = radial_pert_df['op_up']
     all_df['flashboard'] = flash_pert_df['op_up']
     all_df['boat_lock'] = boat_pert_df['op_up']
@@ -202,7 +202,7 @@ if __name__ == "__main__":
 
     # DCC Gates ---------------------------------------------------------------------------------------
 
-    if False:
+    if False: # switches so I can just re-write the necessary component
         bddsm_dir = "D:/dsm2/DSM2v821/timeseries"
         primary_pathname_part_dss_filename_dict = {'RSAC128': os.path.join(bddsm_dir, "gates-v8-201712.dss")}
         primary_part_c_part_dict = {'RSAC128': 'POS'}
@@ -235,37 +235,46 @@ if __name__ == "__main__":
                     header=False)
 
     # Suisun Gates -------------------------------------------------------------------------------------
-    bds_dir = '/home/tomkovic/BayDeltaSCHISM/data/time_history'
-    out_dir = './data_out/suisun_gates/'
-    if not os.path.exists(out_dir): os.mkdir(out_dir)
 
-    smscg_files = {'boat': os.path.join(bds_dir, 'montezuma_boat_lock.th'),
-                   'flash':os.path.join(bds_dir, 'montezuma_flash.th'),
-                   'radial':os.path.join(bds_dir, 'montezuma_radial.th')}
+    if True: # switches so I can just re-write the necessary component
+        bds_dir = '/home/tomkovic/BayDeltaSCHISM/data/time_history'
+        out_dir = './data_out/suisun_gates/'
+        if not os.path.exists(out_dir): os.mkdir(out_dir)
 
-    smscg_dfs = {}
+        smscg_files = {'boat': os.path.join(bds_dir, 'montezuma_boat_lock.th'),
+                    'flash':os.path.join(bds_dir, 'montezuma_flash.th'),
+                    'radial':os.path.join(bds_dir, 'montezuma_radial.th')}
 
-    for gp in smscg_files:
-        smscg_dfs[gp] = read_th(smscg_files[gp])
+        smscg_dfs = {}
 
-    for v in [1,2]:
-        radial_pert_clean, flash_pert_clean, boat_pert_clean, all_clean = perturb_suisun_ops(smscg_dfs['radial'], smscg_dfs['flash'], smscg_dfs['boat'], P00=0.99555,P11=0.99333)
+        # header for all_clean df in perturb_suisun_ops ['radial','flashboard','boat_lock']
+        dsm2_header = ['/HIST+GATE/MTZSL/RADIAL_OP//IR-DECADE/DWR-ESO/',
+                       '/HIST+GATE/MTZSL/FLASHBOARD_OP//IR-DECADE/DWR-ESO/',
+                       '/HIST+GATE/MTZSL/BOATLOCK_OP//IR-DECADE/DWR-ESO/']
 
-        if False:
-            # plot results
-            plt_dr = [datetime.date(2006,1,1), datetime.date(2010,1,1)]
-            f, axs = plt.subplots(2)
-            axs[0] = smscg_dfs['radial'].plot(y='op_up', use_index=True, label='Original')
-            axs[1] = radial_pert_clean.plot(y='op_up', use_index=True, label='Perturbed')
-            axs[0].set_xlim(plt_dr)
-            axs[1].set_xlim(plt_dr)
-            plt.show()
 
-        # Export back to *.th files
-        write_th(radial_pert_clean, os.path.join(out_dir,f'montezuma_radial_lhc_v{v}.th'))
-        write_th(flash_pert_clean, os.path.join(out_dir,f'montezuma_flash_lhc_v{v}.th'))
-        write_th(boat_pert_clean, os.path.join(out_dir,f'montezuma_boat_lock_lhc_v{v}.th'))
 
-        all_clean.to_csv(f'./data_out/MTZSL_markov_pert_v{v}.csv',
-                         header=False, 
-                         index=True)
+        for gp in smscg_files:
+            smscg_dfs[gp] = read_th(smscg_files[gp])
+
+        for v in [1,2]:
+            radial_pert_clean, flash_pert_clean, boat_pert_clean, all_clean = perturb_suisun_ops(smscg_dfs['radial'], smscg_dfs['flash'], smscg_dfs['boat'], P00=0.99555,P11=0.99333)
+
+            if False:
+                # plot results
+                plt_dr = [datetime.date(2006,1,1), datetime.date(2010,1,1)]
+                f, axs = plt.subplots(2)
+                axs[0] = smscg_dfs['radial'].plot(y='op_up', use_index=True, label='Original')
+                axs[1] = radial_pert_clean.plot(y='op_up', use_index=True, label='Perturbed')
+                axs[0].set_xlim(plt_dr)
+                axs[1].set_xlim(plt_dr)
+                plt.show()
+
+            # Export back to *.th files
+            write_th(radial_pert_clean, os.path.join(out_dir,f'montezuma_radial_lhc_v{v}.th'))
+            write_th(flash_pert_clean, os.path.join(out_dir,f'montezuma_flash_lhc_v{v}.th'))
+            write_th(boat_pert_clean, os.path.join(out_dir,f'montezuma_boat_lock_lhc_v{v}.th'))
+
+            all_clean.to_csv(f'./data_out/MTZSL_markov_pert_v{v}.csv',
+                            header=dsm2_header, 
+                            index=True)
