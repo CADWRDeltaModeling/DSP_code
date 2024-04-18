@@ -78,21 +78,21 @@ delta_state$NF_nonSac <- delta_state$`Northern Flow`-delta_state$Sacramento
 scale_denom <- 2476156.199 # through some testing this seems to be the scaling ratio where the first number is the approximate increase in flow on the peaks
 pulse_params <- hash() # flow peak scaling, random shift mean, random shift standard deviation, 
 #                       min criteria, max criteria, number of pulses
-#                       apply stochify, stochCycle scaling
+#                       apply stochify
 
 # pulse_params[['Northern Flow']] <- c(15000/scale_denom, 200, 1500, 5000, NA)
 pulse_params[['Sacramento']] <- c(15000/scale_denom, 200, 1500, 
-                                  5000, NA, 2,
-                                  TRUE, 0.8)
+                                  4000, NA, 2,
+                                  TRUE, 1)
 pulse_params[['SJR Flow']] <- c(2000/scale_denom, 50, 500, 
                                 200, NA, 2,
-                                TRUE, 0.2)
+                                TRUE, .9)
 pulse_params[['Exports']] <- c(100/scale_denom, 1000, 2000, 
                                50, max(delta_state$Exports), 2,
-                               FALSE, 0.1)
+                               FALSE, 0)
 # pulse_params[['Consump Use']] <- c(200/scale_denom, 1000, 2000, 
 #                                     -15000, 5000, 6,
-#                                    FALSE, 1.0)
+#                                    FALSE)
 
 # Create data variability -------------------------------------------------
 
@@ -100,7 +100,7 @@ runyrs <- seq(2006,2016,1)
 runyr <- 2006
 
 for (runyr in runyrs) {
-  print(runyr)
+  print(paste0("  - ",runyr,"  ====="))
   delta_df <- delta_state[lubridate::year(delta_state$Time)==runyr,]
   delta_df$`Net Delta Outflow` <- delta_df$NF_nonSac + delta_df$Sacramento + delta_df$`SJR Flow` - 
     delta_df$Exports - delta_df$`Consump Use`
@@ -137,7 +137,7 @@ plt <- ggplot(data=plt.df) +
   facet_wrap(~variable, ncol=1, scales='free_y') +
   scale_x_date(limits=lubridate::ymd(c(paste0(runyrs[1],'-1-1'),
                                        paste0(max(runyrs),'12-31'))))
-plt
+# plt
 
 pltl <- ggplotly(plt, dynamicTicks=TRUE)
 pltl
@@ -153,10 +153,10 @@ file.rename(pltl_name, paste0("plots/",pltl_name))
 csv_dir <- "./data_out/"
 
 for (name in overwrite) {
-    
+
     out_df <- full.df[,c('Time',name)]
     out_csv <- str_replace_all(name," ","_")
-    write.table(out_df, file=paste0(csv_dir,'/',out_csv,'_',min(runyrs),'-',max(runyrs),'_perturb_historical.csv'), 
+    write.table(out_df, file=paste0(csv_dir,'/',out_csv,'_',min(runyrs),'-',max(runyrs),'_perturb_historical.csv'),
                 sep=',', row.names=FALSE, col.names=FALSE)
-    
+
 }

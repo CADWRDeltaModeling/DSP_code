@@ -12,7 +12,7 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) # Setworking directo
 pert_df <- data.frame(year=c(0,.25,.5,.75,99),
                       tide=c(0,.5,99,99,99),
                       dcc=c(0,.4,.6,.8,99),
-                      flows=c(0,1/3,2/3,99,99),
+                      flows=c(0,0.3,0.8,99,99),
                       dcd=c(0,1/3,2/3,99,99),
                       suis=c(0,1/3,2/3,99,99))
 pert_desc <- data.frame(year=c(2008,2010,2012,2014),
@@ -29,7 +29,7 @@ seed <- 1
 nLHScol <- 15
 nLHSsamples <- 7
 
-version <- 'v2'
+version <- 'v3'
 
 
 # Run ---------------------------------------------------------------------
