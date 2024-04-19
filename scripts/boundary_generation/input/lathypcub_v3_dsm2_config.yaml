@@ -1,0 +1,80 @@
+training_set: latinhypercube_v3
+
+dsp_home: "/scratch/tomkovic/DSP_code" # LAT Computer: D:/projects/delta_salinity, EA computer: f:/projects/ann_dsp HPC5: /scratch/tomkovic
+
+# Define DSS data/parameters
+in_dss_dir: "model/dsm2/2021DSM2FP_202301/timeseries"
+out_dss_dir: "model/dsm2/DSP_DSM2_202307"
+hist_dss: "hist.dss"
+gates_dss: "gates-v8.dss"
+dcd_dss: "DCD_hist_Lch5.dss"
+
+model_config:
+- model_input: chcc
+  dss_file: hist_dss
+  primary_part: CHCCC006
+  part_c: FLOW-DIVERSION
+  unit_part: CFS
+
+- model_input: chdm
+  dss_file: hist_dss
+  primary_part: CHDMC004
+  part_c: FLOW-EXPORT
+  unit_part: CFS
+
+- model_input: swp
+  dss_file: hist_dss
+  primary_part: CHSWP003
+  part_c: FLOW-EXPORT
+  unit_part: CFS
+
+- model_input: ccvct
+  dss_file: hist_dss
+  primary_part: CHVCT001
+  part_c: FLOW-EXPORT
+  unit_part: CFS
+
+- model_input: rold
+  dss_file: hist_dss
+  primary_part: ROLD034
+  part_c: FLOW-EXPORT
+  unit_part: CFS
+
+- model_input: dcc
+  dss_file: gates_dss
+  primary_part: RSAC128
+  part_c: POS
+  unit_part: UNSPECIF
+  
+- model_input: suisgate
+  dss_file: gates_dss
+  unit_part: UNSPECIF
+  get_parts_from_csv: data_out/MTZSL_markov_pert_v1.csv #v2 not necessary this is just for the pathnames in the column headers
+
+- model_input: tide
+  dss_file: hist_dss
+  primary_part: RSAC054
+  part_c: STAGE
+  unit_part: FEET
+
+- model_input: sac
+  dss_file: hist_dss
+  primary_part: RSAC155
+  part_c: FLOW
+  unit_part: CFS
+
+- model_input: sjr
+  dss_file: hist_dss
+  primary_part: RSAN112
+  part_c: FLOW
+  unit_part: CFS
+  
+- model_input: dcdsink
+  dss_file: dcd_dss
+  unit_part: CFS
+  get_parts_from_csv: data_out/DCD_hist_Lch5_v1_sink.csv #v2 not necessary this is just for the pathnames in the column headers
+    
+- model_input: dcdsource
+  dss_file: dcd_dss
+  unit_part: CFS
+  get_parts_from_csv: data_out/DCD_hist_Lch5_v1_source.csv #v2 not necessary this is just for the pathnames in the column headers
