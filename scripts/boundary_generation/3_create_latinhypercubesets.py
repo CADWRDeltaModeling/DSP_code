@@ -27,7 +27,7 @@ def apply_method(pert_dict):
     method = pert_dict['method']
     file_in = pert_dict['args']['file']
     header = None
-    if method == 'read_dcd':
+    if method in ['read_dcd', 'read_suisun']:
         dat_in = pd.read_csv(file_in, parse_dates=[0], index_col=[0])
         dat_out = dat_in.copy()
         header = True
@@ -45,7 +45,7 @@ def apply_method(pert_dict):
     elif method == 'scale':
         dat_out = dat_in.copy()
         dat_out[1] = float(pert_dict['args']['scale_factor'])*dat_out[1]
-    elif method == 'read_dcd':
+    elif method in ['read_dcd', 'read_suisun']:
         pass
     else:
         raise ValueError(f'Perturbation method "{method}" is not defined in the code at the moment.')
@@ -153,7 +153,7 @@ if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
     # model_dir = r"D:\projects\delta_salinity\model\schism\dsp_202311_baseline"
-    in_fname = "./input/lathypcub_v2_setup.yaml"
+    in_fname = "./input/lathypcub_v3_setup.yaml"
     # in_fname = "../../../../model/schism/dsp_202311_baseline/dsp_baseline_bay_delta.yaml"
 
     # args = Namespace(main_inputfile=in_fname)

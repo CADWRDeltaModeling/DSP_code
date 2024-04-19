@@ -275,6 +275,9 @@ if __name__ == "__main__":
             write_th(flash_pert_clean, os.path.join(out_dir,f'montezuma_flash_lhc_v{v}.th'))
             write_th(boat_pert_clean, os.path.join(out_dir,f'montezuma_boat_lock_lhc_v{v}.th'))
 
+            # change radial on/off to match DSM2 operations (-10 is operating tidally (0), !=-10 is open (1))
+            all_clean.loc[all_clean['radial']!=0,'radial'] = 1
+            all_clean.loc[all_clean['radial']==0,'radial'] = -10
             all_clean.to_csv(f'./data_out/MTZSL_markov_pert_v{v}.csv',
                             header=dsm2_header, 
                             index=True)
