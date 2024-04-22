@@ -25,7 +25,8 @@ source("./functions/load_delta_vars.R")
 
 # Define variables ---------------------------------------------------------
 
-experiment <- 'latinhypercube_v2'
+exp.num <- 3
+experiment <- paste0('latinhypercube_v', exp.num)
 
 dsm2.dir <- '../../model/dsm2/DSP_DSM2_202307/'
 
@@ -37,8 +38,8 @@ sheetlist <- c("northern_flow","sjr_flow","exports","dxc_gate_fraction",
 sheetnames <- c('Northern Flow', 'SJR Flow','Exports','DCC Gate',
                 'Suisun Gate','Consump Use','Tidal Nrg')
 
-lhc_yml <-'../boundary_generation/input/lathypcub_v2_setup.yaml' 
-ann_yml <- '../ann_training/input/lathypcub_v2_ann_config.yaml' 
+lhc_yml <-paste0('../boundary_generation/input/lathypcub_v',exp.num,'_setup.yaml')
+ann_yml <- paste0('../ann_training/input/lathypcub_v',exp.num,'_ann_config.yaml') 
 
 plt.vars <- append('hist', cases)
 qual_col_pals = brewer.pal.info[brewer.pal.info$category == 'qual',]
@@ -174,7 +175,7 @@ for (c in cases) {
   
   rm(list=(append(sheetlist, c('dsdum','ecdum'))))
   # rm(list=setdiff(ls(),c("ds.df","ec.df","experiment","dsm2.dir","cases","c","sheetlist","sheetnames","load_delta_vars","ann.dts")))
-}
+} # end case loop for exp data load
 
 ds.df$Time <- lubridate::ymd(ds.df$Time)
 ec.df$Time <- lubridate::ymd(ec.df$Time)
@@ -223,10 +224,10 @@ plt <- ggplot(data=ds.df) +
 # plt
 
 pltl <- ggplotly(plt, dynamicTicks=TRUE)
-# pltl
+pltl
 
 
-pltl_name <- "DSM2_Input_Check.html"
+pltl_name <- paste0("DSM2_Input_Check_v",exp.num,".html")
 
 saveWidget(pltl, pltl_name, selfcontained=TRUE)
 file.rename(pltl_name, paste0("plots/",pltl_name))
@@ -274,7 +275,7 @@ pltl <- ggplotly(plt, dynamicTicks=TRUE)
 # pltl
 
 
-pltl_name <- "DSM2_Output_Check.html"
+pltl_name <- paste0("DSM2_Output_Check_v",exp.num,".html")
 
 saveWidget(pltl, pltl_name, selfcontained=TRUE)
 file.rename(pltl_name, paste0("plots/",pltl_name))
