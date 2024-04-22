@@ -143,7 +143,7 @@ def create_dsm2_bcs(in_fname, dsm2_config_fname):
     # check that the timeseries output folder exists
     dsm2_dir = os.path.join(out_dss_dir, f'{training_set}/timeseries/')
     if not os.path.exists(dsm2_dir):
-        os.mkdir(dsm2_dir)
+        os.makedirs(dsm2_dir)
     
     # update perturbations
     configs = {}
@@ -165,7 +165,6 @@ def create_dsm2_bcs(in_fname, dsm2_config_fname):
                 primary_pathname_part_dss_filename_dict[primary_part] = locals()[config.get('dss_file')]
                 primary_part_c_part_dict[primary_part] = path_parts[3]
                 unit_part_dict[primary_part] = config['unit_part']
-
         else:
             primary_part = config['primary_part']
 
@@ -292,10 +291,10 @@ if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
     # model_dir = r"D:\projects\delta_salinity\model\schism\dsp_202311_baseline"
-    in_fname = "./input/lathypcub_v2_setup.yaml"
+    in_fname = "./input/lathypcub_v3_setup.yaml"
     
     # cases = create_cases()
-    dsm2_config_fname = "./input/lathypcub_v2_dsm2_config.yaml"
+    dsm2_config_fname = "./input/lathypcub_v3_dsm2_config.yaml"
     # in_fname = "../../../../model/schism/dsp_202311_baseline/dsp_baseline_bay_delta.yaml"
 
     # args = Namespace(main_inputfile=in_fname)
