@@ -184,10 +184,10 @@ class ModelBCGen(object):
             
             if model_type.lower() == 'schism':
 
-                self.setup_schism_case(cname, case_data_dir, crange, case_perts)
+                self.setup_schism_case(cname, case_data_dir, crange, case_perts, case.get('model_year'))
 
     
-    def setup_schism_case(self, cname, case_data_dir, crange, cperts):
+    def setup_schism_case(self, cname, case_data_dir, crange, cperts, case_year):
 
         self.set_schism_vars()
         self.linked_th_files = self.inputs.get('linked_th_files') # list of files needed to be linked in .sh file
@@ -229,9 +229,9 @@ class ModelBCGen(object):
                     has_version = re.search(r'v\d',cp)
 
                     if has_version:
-                        th_file = model_setup.get('th_file').format(**self.env_vars, **{'version':has_version.group(0)})
+                        th_file = string.Formatter().vformat(model_setup.get('th_file'),(),SafeDict(({**self.env_vars, **{'version':has_version.group(0)}})))
                     else:
-                        th_file = model_setup.get('th_file').format(**self.env_vars)
+                        th_file = string.Formatter().vformat(model_setup.get('th_file'),(),SafeDict((self.env_vars)))
                     method = model_setup.get('method')
                     if 'flux_col' in model_setup.keys():
                         write_flux=True
@@ -280,15 +280,19 @@ class ModelBCGen(object):
         # Create param.nml files ------------------------------------------------------------------------------
         
         run_time_dict = {'{runtimedays}':str(runtimedays),
-                            '{year_start}':str(case_start.year),
-                            '{month_start}':str(case_start.month),
-                            '{day_start}':str(case_start.day)}
+                         '{year_start}':str(case_start.year),
+                         '{month_start}':str(case_start.month),
+                         '{day_start}':str(case_start.day)}
         
         print(f"\t param.nml.tropic: {self.param_tropic_base}")
         fmt_string_file(self.param_tropic_base, os.path.join(modcase_dir,'param.nml.tropic'), run_time_dict, method='replace')
         
         print(f"\t param.nml.clinic: {self.param_clinic_base}")
         fmt_string_file(self.param_clinic_base, os.path.join(modcase_dir,'param.nml.clinic'), run_time_dict, method='replace')
+
+        # copy interpolate_variables.in
+        print(f"\t interpolate_variables.in")
+        fmt_string_file(self.param_clinic_base, os.path.join(modcase_dir,'interpolate_variables.in'), run_time_dict, method='replace')
 
         # Create bash files ------------------------------------------------------------------------------------
         
@@ -318,22 +322,24 @@ class ModelBCGen(object):
                                                                                               day=crange[0].day))
             linked_th_file_strings += f'ln -sf ../{tr["out"]} {tr["out"]}\n'
 
+        # TROPIC BASH
         bash_tropic_dict = {**run_time_dict, **{'{year_end}':str(case_end.year),
                                                 '{month_end}':str(case_end.month),
                                                 '{day_end}':str(case_end.day),
                                                 '{cname}':cname,
                                                 '{linked_th_file_strings}':linked_th_file_strings}}
 
-        case_tropic = os.path.join(modcase_dir,os.path.basename(self.bash_tropic).replace("CASENAME",cname))
-        fmt_string_file(self.bash_tropic, 
-                        case_tropic, 
-                        bash_tropic_dict, 
-                        method='replace')
-        print(f'\t\t tropic bash: {case_tropic}')
+        bash_case_tropic = os.path.join(modcase_dir,os.path.basename(self.bash_tropic).replace("CASENAME",cname))
+        slurm_case_tropic = os.path.join(modcase_dir,os.path.basename(self.slurm_tropic).replace("CASENAME",cname))
 
-        slurm_tropic_dict = {**run_time_dict, **{'{job_name}':self.job_name,
-                                                 '{baro}':'tropic',
-                                                 '{output_log_file_base}':self.output_log_file_base}}
+        # CLINIC BASH
+        bash_clinic_dict = {**run_time_dict, **{'{year_end}':str(case_end.year),
+                                                '{month_end}':str(case_end.month),
+                                                '{day_end}':str(case_end.day),
+                                                '{cname}':cname,
+                                                '{linked_th_file_strings}':linked_th_file_strings}}
+        bash_case_clinic = os.path.join(modcase_dir,os.path.basename(self.bash_clinic).replace("CASENAME",cname))
+        slurm_case_clinic = os.path.join(modcase_dir,os.path.basename(self.slurm_tropic).replace("CASENAME",cname))
         
         # make sflux links
         print('\t making sflux links')
@@ -346,31 +352,54 @@ class ModelBCGen(object):
 
         for mesh_info in self.meshes:
             meshname = mesh_info['name']
+            mesh_input_dir = mesh_info["indir"]
 
             print(f"\tMesh: {meshname.upper()} -------------------------------------")
             meshcase_dir = os.path.join(modcase_dir,meshname)
             if not os.path.exists(meshcase_dir):
                 os.mkdir(meshcase_dir)
+            if not os.path.exists(os.path.join(meshcase_dir,'outputs')):
+                os.mkdir(os.path.join(meshcase_dir,'outputs'))
 
             # TROPIC ----------------------------------------------
             print(f"\t\t Handling the tropic inputs")
 
             linked_spatial_strings = ''
-            for sf in mesh_info['spatial_files']:
-                linked_spatial_strings += f'ln -sf {os.path.relpath(mesh_info["indir"].format(**self.env_vars), meshcase_dir)}/{sf} {sf}\n'
+            for sf in self.geometry_files:
+                linked_spatial_strings += f'ln -sf {os.path.relpath(mesh_input_dir.format(**self.env_vars), meshcase_dir)}/{sf} {sf}\n'
 
-            meshcase_tropic = os.path.join(meshcase_dir,os.path.basename(case_tropic).replace("MESHNAME",meshname))
-            fmt_string_file(case_tropic, 
-                            meshcase_tropic, 
-                            {"{linked_spatial_strings}": linked_spatial_strings}, 
+            bash_meshcase_tropic = os.path.join(meshcase_dir,os.path.basename(bash_case_tropic).replace("MESHNAME",meshname))
+            fmt_string_file(self.bash_tropic, 
+                            bash_meshcase_tropic, 
+                            {**bash_tropic_dict,**{"{linked_spatial_strings}": linked_spatial_strings}}, 
+                            method='replace')
+            print(f"\t\t\t tropic.sh: {bash_meshcase_tropic}")
+            
+            bash_meshcase_clinic = os.path.join(meshcase_dir,os.path.basename(bash_case_clinic).replace("MESHNAME",meshname))
+            fmt_string_file(self.bash_clinic, 
+                            bash_meshcase_clinic, 
+                            {**bash_clinic_dict,**{"{linked_spatial_strings}": linked_spatial_strings}}, 
+                            method='replace')
+            print(f"\t\t\t clinic.sh: {bash_meshcase_clinic}")
+
+            slurm_tropic_dict = {**locals(),**{'{job_name}':self.job_name,
+                                               '{baro}':'tropic',
+                                               '{output_log_file_base}':self.output_log_file_base.format_map(locals())}}
+            slurm_clinic_dict = {**locals(),**{'{job_name}':self.job_name,
+                                               '{baro}':'clinic',
+                                               '{output_log_file_base}':self.output_log_file_base.format_map(locals())}}
+            
+            slurm_meshcase_tropic = os.path.join(meshcase_dir,os.path.basename(slurm_case_tropic).replace("MESHNAME",meshname))
+            fmt_string_file(self.slurm_tropic, 
+                            slurm_meshcase_tropic, 
+                            slurm_tropic_dict, 
                             method='replace')
             
-            print(f"\t\t\t tropic.sh: {meshcase_tropic}")
-
-
-            # print(f"Handling the clinic inputs")
-            # with open(self.param_clinic_base, 'r') as f:
-            #     self.clinic_param = schism_yaml.load(f)
+            slurm_meshcase_clinic = os.path.join(meshcase_dir,os.path.basename(slurm_case_clinic).replace("MESHNAME",meshname))
+            fmt_string_file(self.slurm_clinic, 
+                            slurm_meshcase_clinic, 
+                            slurm_clinic_dict, 
+                            method='replace')
     
     def set_schism_vars(self):
         self.meshes = self.inputs.get('meshes')
@@ -382,14 +411,13 @@ class ModelBCGen(object):
         self.bash_tropic = self.inputs.get('bash_tropic').format(**self.env_vars)
         self.bash_clinic = self.inputs.get('bash_clinic').format(**self.env_vars)
         self.flux_file_in = self.inputs.get('flux_file_in').format(**self.env_vars)
-        # self.bc_tropic_in = self.inputs.get('bc_tropic_in').format(**self.env_vars)
-        # self.bc_clinic_in = self.inputs.get('bc_clinic_in').format(**self.env_vars)
-        # self.tropic_ocean_bc = self.inputs.get('tropic_ocean_bc').format(**self.env_vars)
         self.th_repo = self.env_vars['th_repo']
         self.dcd_repo = self.env_vars['dcd_repo']
-        self.slurm_base = self.inputs.get('slurm_base').format(**self.env_vars)
+        self.slurm_tropic = self.inputs.get('slurm_tropic').format(**self.env_vars)
+        self.slurm_clinic = self.inputs.get('slurm_clinic').format(**self.env_vars)
         self.job_name = self.inputs.get('job_name')
         self.output_log_file_base = self.inputs.get('output_log_file_base')
+        self.geometry_files = self.inputs.get('geometry_files')
 
     def format_schism_th(self, case_data_dir, cp, modcase_dir, crange, pdict, method, th_file, fluxes_out=None, fcol=None):
 
@@ -499,6 +527,6 @@ if __name__ == "__main__":
 
     ## Read in param.tropic and param.clinic and modify
 
-    yml_fname = "./input/schism_lathypcub_v2.yaml"
+    yml_fname = "./input/schism_lathypcub_v3.yaml"
 
     mbc = ModelBCGen(yml_fname, 'schism')

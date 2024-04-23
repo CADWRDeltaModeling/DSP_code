@@ -36,7 +36,10 @@ prepare_schism.log
 *.log
 
 # latinhypercube model specifics (these get set up with 4b_generate_SCHISM_bc_data.py)
-schism/dsp_202402_latinhypercube_v2/lhc_*/*
+schism/dsp_202402_latinhypercube_v*/lhc_*/*
+
+# previous archived models
+schism/archive/*
 
 # suxarray data
 **/suxarray

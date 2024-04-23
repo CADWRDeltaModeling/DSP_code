@@ -1,0 +1,6 @@
+dem_list:
+
+  # Restoration for DSP Cache sites
+  - ../restoration_dem/little_egbert_clip.tif # from RMA alt 26
+  - ../restoration_dem/Lookout_mNAD_mNAVD_reproject.tif # from ESA RAL
+  - ../restoration_dem/DEM_ProspectIsland_1m_UTM_mNAVD-2022-12-30.tif # from ESA RAL

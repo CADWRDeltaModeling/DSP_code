@@ -126,6 +126,7 @@ cases:
   extends: model_base
   case_start: 2013-10-24
   case_end: 2015-12-31
+  model_year: 2014
   perturbations:
     - tide_shift_100
     - dcc_open
@@ -135,6 +136,7 @@ cases:
   extends: model_base
   case_start: 2011-10-18
   case_end: 2012-12-31
+  model_year: 2012
   perturbations:
     - tide_shift_100
     - sac_scaled_1.1
@@ -145,6 +147,7 @@ cases:
   extends: model_base
   case_start: 2013-10-24
   case_end: 2015-12-31
+  model_year: 2014
   perturbations:
     - tide_shift_100
     - dcc_open
@@ -155,10 +158,12 @@ cases:
   extends: model_base
   case_start: 2006-11-14
   case_end: 2008-12-31
+  model_year: 2008
 - name: lhc_5
   extends: model_base
   case_start: 2006-11-14
   case_end: 2008-12-31
+  model_year: 2008
   perturbations:
     - tide_shift_100
     - dcd_pert_v2
@@ -170,6 +175,7 @@ cases:
   extends: model_base
   case_start: 2011-10-18
   case_end: 2012-12-31
+  model_year: 2012
   perturbations:
     - dcc_mark_pert
     - sac_pert_hist
@@ -181,6 +187,7 @@ cases:
   extends: model_base
   case_start: 2009-10-29
   case_end: 2011-12-31
+  model_year: 2010
   perturbations:
     - dcc_close
     - sac_scaled_1.1
