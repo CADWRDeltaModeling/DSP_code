@@ -1,6 +1,0 @@
-dem_list:
-
-  # Restoration for DSP baseline sites
-  - ./restoration_dem/chipps_xy_dem_clip.tif
-  - ./restoration_dem/grizz_clip.tif
-  - ./restoration_dem/vansickle_clip.tif
