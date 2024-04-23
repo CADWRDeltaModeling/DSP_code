@@ -46,4 +46,4 @@ ln -sf launch.clinic.pbs launch.pbs
 # RUN MODEL ----------------------------------------------
 
 # qsub launch.pbs # HPC4
-sbatch slurm_batch_file.sh # HPC5
+sbatch slurm_{meshname}_{cname}.clinic.sh # HPC5

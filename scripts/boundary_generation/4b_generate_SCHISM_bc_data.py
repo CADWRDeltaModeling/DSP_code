@@ -163,6 +163,11 @@ class ModelBCGen(object):
 
             self.configs[mname] = build_dict({k: config[k] for k in set(list(config.keys())) - set(['name'])})
 
+
+        if model_type.lower() == 'schism':
+            self.setup_schism_model()
+            self.bash_file_dict = defaultdict(list) #{new_list:[] for new_list in ['tropic','clinic']}
+        
         # retrieve and write out cases
         print('Handling cases:')
         for case in self.case_items:
@@ -186,9 +191,19 @@ class ModelBCGen(object):
 
                 self.setup_schism_case(cname, case_data_dir, crange, case_perts, case.get('model_year'))
 
+        if model_type.lower() == 'schism':
+            # write meta-bash files
+            for bash_cat in self.bash_file_dict:
+                meta_bash = ''
+                # create_combined bash output files
+                self.bash_file_dict[bash_cat]
+                for bash_file in self.bash_file_dict[bash_cat]:
+                    bash_line = os.path.relpath(bash_file, self.model_dir)
+                    meta_bash += f'bash {bash_line}\n' # link any th files from the base directory
+                with open(os.path.join(self.model_dir,f'{bash_cat}_meta_bash.sh'),'w') as mbf:
+                    mbf.write(meta_bash)
     
-    def setup_schism_case(self, cname, case_data_dir, crange, cperts, case_year):
-
+    def setup_schism_model(self):
         self.set_schism_vars()
         self.linked_th_files = self.inputs.get('linked_th_files') # list of files needed to be linked in .sh file
         self.linked_ss_th_files = self.inputs.get('linked_ss_th_files') # list of source/sink files needed to be linked in .sh file
@@ -196,7 +211,12 @@ class ModelBCGen(object):
         self.perturbed_th = {}
 
         # specify model output directory
-        modcase_dir = os.path.join(self.env_vars['exp_dir'], cname)
+        self.model_dir = os.path.join(self.env_vars['exp_dir'])
+
+    def setup_schism_case(self, cname, case_data_dir, crange, cperts, case_year):
+
+        # specify model output directory
+        modcase_dir = os.path.join(self.model_dir, cname)
         if not os.path.exists(modcase_dir):
             os.mkdir(modcase_dir)
 
@@ -333,11 +353,6 @@ class ModelBCGen(object):
         slurm_case_tropic = os.path.join(modcase_dir,os.path.basename(self.slurm_tropic).replace("CASENAME",cname))
 
         # CLINIC BASH
-        bash_clinic_dict = {**run_time_dict, **{'{year_end}':str(case_end.year),
-                                                '{month_end}':str(case_end.month),
-                                                '{day_end}':str(case_end.day),
-                                                '{cname}':cname,
-                                                '{linked_th_file_strings}':linked_th_file_strings}}
         bash_case_clinic = os.path.join(modcase_dir,os.path.basename(self.bash_clinic).replace("CASENAME",cname))
         slurm_case_clinic = os.path.join(modcase_dir,os.path.basename(self.slurm_tropic).replace("CASENAME",cname))
         
@@ -352,7 +367,6 @@ class ModelBCGen(object):
 
         for mesh_info in self.meshes:
             meshname = mesh_info['name']
-            mesh_input_dir = mesh_info["indir"]
 
             print(f"\tMesh: {meshname.upper()} -------------------------------------")
             meshcase_dir = os.path.join(modcase_dir,meshname)
@@ -360,6 +374,8 @@ class ModelBCGen(object):
                 os.mkdir(meshcase_dir)
             if not os.path.exists(os.path.join(meshcase_dir,'outputs')):
                 os.mkdir(os.path.join(meshcase_dir,'outputs'))
+                
+            mesh_input_dir = os.path.relpath(string.Formatter().vformat(mesh_info["indir"],(),SafeDict((self.env_vars))),meshcase_dir)
 
             # TROPIC ----------------------------------------------
             print(f"\t\t Handling the tropic inputs")
@@ -371,35 +387,50 @@ class ModelBCGen(object):
             bash_meshcase_tropic = os.path.join(meshcase_dir,os.path.basename(bash_case_tropic).replace("MESHNAME",meshname))
             fmt_string_file(self.bash_tropic, 
                             bash_meshcase_tropic, 
-                            {**bash_tropic_dict,**{"{linked_spatial_strings}": linked_spatial_strings}}, 
+                            {**bash_tropic_dict,**{"{linked_spatial_strings}": linked_spatial_strings,
+                                                   "{meshname}":meshname}}, 
                             method='replace')
             print(f"\t\t\t tropic.sh: {bash_meshcase_tropic}")
+            self.bash_file_dict['tropic'].append(bash_meshcase_tropic)
             
+            slurm_tropic_dict = {**locals(),**{'job_name':self.job_name,
+                                               'baro':'tropic',
+                                               'output_log_file_base':self.output_log_file_base.format_map(locals())}}
+            
+            slurm_meshcase_tropic = os.path.join(meshcase_dir,os.path.basename(slurm_case_tropic).replace("MESHNAME",meshname))
+            fmt_string_file(self.slurm_tropic, 
+                            slurm_meshcase_tropic, 
+                            slurm_tropic_dict, 
+                            method='format_map')
+            
+            # CLINIC ----------------------------------------------
+            print(f"\t\t Handling the clinic inputs")
+
+            bash_clinic_dict = {**run_time_dict, **{'{year_end}':str(case_end.year),
+                                                    '{month_end}':str(case_end.month),
+                                                    '{day_end}':str(case_end.day),
+                                                    '{cname}':cname,
+                                                    '{linked_th_file_strings}':linked_th_file_strings,
+                                                    '{mesh_input_dir}':mesh_input_dir,
+                                                    '{case_year}':str(case_year),
+                                                    '{meshname}':meshname}}
             bash_meshcase_clinic = os.path.join(meshcase_dir,os.path.basename(bash_case_clinic).replace("MESHNAME",meshname))
             fmt_string_file(self.bash_clinic, 
                             bash_meshcase_clinic, 
                             {**bash_clinic_dict,**{"{linked_spatial_strings}": linked_spatial_strings}}, 
                             method='replace')
             print(f"\t\t\t clinic.sh: {bash_meshcase_clinic}")
+            self.bash_file_dict['clinic'].append(bash_meshcase_clinic)
 
-            slurm_tropic_dict = {**locals(),**{'{job_name}':self.job_name,
-                                               '{baro}':'tropic',
-                                               '{output_log_file_base}':self.output_log_file_base.format_map(locals())}}
-            slurm_clinic_dict = {**locals(),**{'{job_name}':self.job_name,
-                                               '{baro}':'clinic',
-                                               '{output_log_file_base}':self.output_log_file_base.format_map(locals())}}
-            
-            slurm_meshcase_tropic = os.path.join(meshcase_dir,os.path.basename(slurm_case_tropic).replace("MESHNAME",meshname))
-            fmt_string_file(self.slurm_tropic, 
-                            slurm_meshcase_tropic, 
-                            slurm_tropic_dict, 
-                            method='replace')
+            slurm_clinic_dict = {**locals(),**{'job_name':self.job_name,
+                                               'baro':'clinic',
+                                               'output_log_file_base':self.output_log_file_base.format_map(locals())}}
             
             slurm_meshcase_clinic = os.path.join(meshcase_dir,os.path.basename(slurm_case_clinic).replace("MESHNAME",meshname))
             fmt_string_file(self.slurm_clinic, 
                             slurm_meshcase_clinic, 
                             slurm_clinic_dict, 
-                            method='replace')
+                            method='format_map')
     
     def set_schism_vars(self):
         self.meshes = self.inputs.get('meshes')

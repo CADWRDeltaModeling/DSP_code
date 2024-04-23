@@ -3,7 +3,6 @@ env_vars:
 - bds_home: /home/tomkovic/BayDeltaSCHISM # where the BayDeltaSCHISM repository is housed
 - experiment: latinhypercube_v3 # name of folder to look inside of test_file 
 - schism_dir: '{dsp_home}/model/schism'
-- base_dir: '{schism_dir}/dsp_202311_baseline'
 - exp_dir: '{schism_dir}/dsp_202402_{experiment}'
 - th_repo: '{bds_home}/data/time_history'
 - dcd_repo: '{bds_home}/data/channel_depletion'
@@ -16,10 +15,10 @@ case_setup: '{dsp_home}/scripts/boundary_generation/input/lathypcub_v3_setup.yam
 param_tropic_base: '{exp_dir}/param.nml.tropic'
 param_clinic_base: '{exp_dir}/param.nml.clinic'
 
-slurm_tropic: '{base_dir}/slurm_MESHNAME_CASENAME.tropic.sh'
-slurm_clinic: '{base_dir}/slurm_MESHNAME_CASENAME.clinic.sh'
+slurm_tropic: '{exp_dir}/slurm_MESHNAME_CASENAME.tropic.sh'
+slurm_clinic: '{exp_dir}/slurm_MESHNAME_CASENAME.clinic.sh'
 job_name: dsp_2024
-output_log_file_base: dsp_{case}
+output_log_file_base: dsp_{cname}
 
 bash_tropic: '{exp_dir}/dsp_MESHNAME_CASENAME.tropic.sh' # needs replacing of meshname and casename when copied into case dir
 bash_clinic: '{exp_dir}/dsp_MESHNAME_CASENAME.clinic.sh'
@@ -68,8 +67,8 @@ geometry_files: # files specific to each geometry
 # relevant files
 flux_file_in: '{th_repo}/flux.th'
 noaa_download:
-  - pt_reyes: '{base_dir}/noaa_download/pryc_filled_data.csv'
-  - monterey: '{base_dir}/noaa_download/noaa_mtyc1_9413450_water_level_2006_2017.csv'
+  - pt_reyes: '{exp_dir}/noaa_download/pryc_filled_data.csv'
+  - monterey: '{exp_dir}/noaa_download/noaa_mtyc1_9413450_water_level_2006_2017.csv'
 
 # source locations
 
