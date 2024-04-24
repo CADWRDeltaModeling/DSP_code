@@ -10,27 +10,22 @@ set -e
 # download_noaa --syear 2006 --eyear 2016 --param water_level noaa_stations.txt 
 
 # generate .th.nc file
-gen_elev2d --outfile {meshname}.{cname}.elev2D.th.nc --hgrid=hgrid_dsp_{meshname}.gr3 --stime={year_start}-{month_start}-{day_start} --etime={year_end}-{month_end}-{day_end} --slr 0.0 ../pt_reyes.csv ../monterey.csv
+gen_elev2d --outfile {meshname}.{cname}.elev2D.th.nc --hgrid=hgrid.gr3 --stime={year_start}-{month_start}-{day_start} --etime={year_end}-{month_end}-{day_end} --slr 0.0 ../pt_reyes{tidal_pert}.csv ../monterey{tidal_pert}.csv
 ln -sf {meshname}.{cname}.elev2D.th.nc elev2D.th.nc
 
 # CREATE OTHER SYMBOLIC LINKS ----------------------------
 # shared inputs
-ln -sf ../../sflux_inputs.txt ./sflux/sflux_inputs.txt
-ln -sf ../../schism.sh schism.sh
-ln -sf ../../station.in station.in
+ln -sf station.in station.in
 
 # shared spatial inputs
-ln -sf ../../bctides.in.2d bctides.in
-ln -sf ../../vgrid.in.2d vgrid.in
+ln -sf bctides.in.2d bctides.in
+ln -sf vgrid.in.2d vgrid.in
 
-# shared TH inputs
+# modified TH inputs
 {linked_th_file_strings}
 
-# inputs specific to this geometry
-{linked_spatial_strings}
-
 # inputs specific to this setup
-ln -sf ../param.nml.tropic param.nml
+ln -sf param.nml.tropic param.nml
 # ln -sf ../launch.tropic.pbs launch.pbs # only necessary with HPC4
 
 # CHECK OUTPUT DIRECTORY IS PRESENT ----------------------

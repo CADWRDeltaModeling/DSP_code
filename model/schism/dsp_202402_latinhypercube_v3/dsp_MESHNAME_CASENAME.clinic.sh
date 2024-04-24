@@ -16,7 +16,7 @@ rsync -avz ../../interpolate_variables.in .
 # link necessary files
 ln -sf ../hgrid.gr3 bg.gr3
 ln -sf ../hgrid.gr3 fg.gr3
-ln -sf ../../vgrid.in.2d vgrid.bg
+ln -sf ../vgrid.in.2d vgrid.bg
 ln -sf ../vgrid.in.3d vgrid.fg
 
 # run script to create uv3d.th.nc
@@ -41,7 +41,7 @@ ln -sf {mesh_input_dir}/hotstart/hotstart_{case_year}.nc hotstart.nc
 ln -sf bctides.in.3d bctides.in
 ln -sf vgrid.in.3d vgrid.in
 ln -sf param.nml.clinic param.nml
-ln -sf launch.clinic.pbs launch.pbs
+# ln -sf launch.clinic.pbs launch.pbs
 
 # RUN MODEL ----------------------------------------------
 

@@ -36,7 +36,8 @@ prepare_schism.log
 *.log
 
 # latinhypercube model specifics (these get set up with 4b_generate_SCHISM_bc_data.py)
-schism/dsp_202402_latinhypercube_v*/lhc_*/*
+schism/dsp_202402_latinhypercube_v*/
+schism/dsp_202402_latinhypercube_v*/simulations/*
 
 # previous archived models
 schism/archive/*

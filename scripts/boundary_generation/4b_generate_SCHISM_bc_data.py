@@ -212,6 +212,9 @@ class ModelBCGen(object):
 
         # specify model output directory
         self.model_dir = os.path.join(self.env_vars['exp_dir'])
+        self.simulations_dir = os.path.join(self.model_dir,'simulations')
+        if not os.path.exists(self.simulations_dir):
+            os.mkdir(self.simulations_dir)
 
     def setup_schism_case(self, cname, case_data_dir, crange, cperts, case_year):
 
@@ -255,10 +258,10 @@ class ModelBCGen(object):
                     method = model_setup.get('method')
                     if 'flux_col' in model_setup.keys():
                         write_flux=True
-                        fluxes_out = self.format_schism_th(subout_dir, comp['model_input'], modcase_dir, crange, comp, method, th_file, 
+                        fluxes_out = self.format_schism_th(subout_dir, comp['model_input'], modcase_dir, crange, comp, method, th_file, cname, 
                                                            fluxes_out=fluxes_out, fcol=model_setup['flux_col'])
                     else:
-                        self.format_schism_th(subout_dir, comp['model_input'], modcase_dir, crange, cdict, method, th_file)
+                        self.format_schism_th(subout_dir, comp['model_input'], modcase_dir, crange, cdict, method, th_file, cname)
 
             else: # Single-element perturbation
                 model_setup = self.configs[pdict['model_input']]
@@ -268,11 +271,11 @@ class ModelBCGen(object):
                 if 'flux_col' in model_setup.keys():
                     # need to handle this differently since it's all flux inputs in one file
                     write_flux=True
-                    fluxes_out = self.format_schism_th(case_data_dir, cp, modcase_dir, crange, pdict, method, th_file,
+                    fluxes_out = self.format_schism_th(case_data_dir, cp, modcase_dir, crange, pdict, method, th_file, cname,
                                                        fluxes_out=fluxes_out, fcol=model_setup['flux_col'])
 
                 else:
-                    self.format_schism_th(case_data_dir, cp, modcase_dir, crange, pdict, method, th_file)
+                    self.format_schism_th(case_data_dir, cp, modcase_dir, crange, pdict, method, th_file, cname)
         
         # creating and writing out flux file
         if write_flux:
@@ -286,9 +289,9 @@ class ModelBCGen(object):
                 flux_in.loc[flux_in.index.isin(fdf.index), fcol] = fdf[fcol]
             flux_in = flux_in.interpolate(axis=0, limit_direction='both')
             
-            mod_fn = os.path.join(modcase_dir, 'flux_modified_dated.th')
+            mod_fn = os.path.join(modcase_dir, f'flux.{cname}.dated.th')
             flux_in.to_csv(mod_fn, sep=' ')
-            clip_fn = mod_fn.replace('_dated.th' ,'.th')
+            clip_fn = mod_fn.replace('.dated.th' ,'.th')
             clip_file_to_start(mod_fn, 
                             outpath=clip_fn,
                             start=dt.datetime(year=crange[0].year,
@@ -316,31 +319,33 @@ class ModelBCGen(object):
 
         # Create bash files ------------------------------------------------------------------------------------
         
-        print('\t writing bash files')
+        print('\t copying th files')
+        th_files = []
         linked_th_file_strings = ''
         for th in self.perturbed_th.keys():
-            linked_th_file_strings += f'ln -sf ../{self.perturbed_th[th]} {th}\n' # link any modified files
+            th_files.append(self.perturbed_th[th]) # account for any modified files 
+            linked_th_file_strings += f'ln -sf {os.path.basename(self.perturbed_th[th])} {th}\n' # link any modified files
 
         for fn in list(set(self.linked_th_files) - set(self.perturbed_th.keys())):
             clip_fn = os.path.join(modcase_dir,fn)
             clip_file_to_start(f'{self.th_repo}/{fn}', outpath=clip_fn, start=dt.datetime(year=crange[0].year,
-                                                                                       month=crange[0].month,
-                                                                                       day=crange[0].day))
-            linked_th_file_strings += f'ln -sf ../{fn} {fn}\n' # link any th files from the base directory
+                                                                                          month=crange[0].month,
+                                                                                          day=crange[0].day))
+            th_files.append(clip_fn) # account for any th files
             
         for fn in list(set(self.linked_ss_th_files) - set(self.perturbed_th.keys())):
             clip_fn = os.path.join(modcase_dir,fn)
             clip_file_to_start(f'{self.dcd_repo}/{fn.replace(".th","_dated.th")}',  outpath=clip_fn, start=dt.datetime(year=crange[0].year,
-                                                                                         month=crange[0].month,
-                                                                                         day=crange[0].day))
-            linked_th_file_strings += f'ln -sf ../{fn} {fn}\n'
+                                                                                                                       month=crange[0].month,
+                                                                                                                       day=crange[0].day))
+            th_files.append(clip_fn) # account for source/sink files
 
         for tr in self.linked_tracer_th_files:
             clip_fn = os.path.join(modcase_dir, tr['out'])
             clip_file_to_start(f'{self.th_repo}/{tr["in"]}',  outpath=clip_fn, start=dt.datetime(year=crange[0].year,
-                                                                                              month=crange[0].month,
-                                                                                              day=crange[0].day))
-            linked_th_file_strings += f'ln -sf ../{tr["out"]} {tr["out"]}\n'
+                                                                                                 month=crange[0].month,
+                                                                                                 day=crange[0].day))
+            th_files.append(clip_fn) # account for tracer files
 
         # TROPIC BASH
         bash_tropic_dict = {**run_time_dict, **{'{year_end}':str(case_end.year),
@@ -355,40 +360,56 @@ class ModelBCGen(object):
         # CLINIC BASH
         bash_case_clinic = os.path.join(modcase_dir,os.path.basename(self.bash_clinic).replace("CASENAME",cname))
         slurm_case_clinic = os.path.join(modcase_dir,os.path.basename(self.slurm_tropic).replace("CASENAME",cname))
-        
-        # make sflux links
-        print('\t making sflux links')
-        sflux_dir = os.path.join(modcase_dir,'sflux')
-        if not os.path.exists(sflux_dir):
-            os.mkdir(sflux_dir)
-        make_links(crange[0], crange[1], self.env_vars['sflux_src_dir'], self.env_vars['sflux_narr_dir'], sflux_dir)
 
-        # DEAL WITH SPATIAL SETUP ===========================================================================
+        # FINAL PACKAGING ===========================================================================
 
         for mesh_info in self.meshes:
             meshname = mesh_info['name']
 
+            # Create the mesh_case directory where the simulations will go
             print(f"\tMesh: {meshname.upper()} -------------------------------------")
-            meshcase_dir = os.path.join(modcase_dir,meshname)
+            meshcase_dir = os.path.join(self.simulations_dir, f'{meshname}_{cname}') # This is where simulations will be run
             if not os.path.exists(meshcase_dir):
                 os.mkdir(meshcase_dir)
             if not os.path.exists(os.path.join(meshcase_dir,'outputs')):
                 os.mkdir(os.path.join(meshcase_dir,'outputs'))
                 
-            mesh_input_dir = os.path.relpath(string.Formatter().vformat(mesh_info["indir"],(),SafeDict((self.env_vars))),meshcase_dir)
+            mesh_input_dir = string.Formatter().vformat(mesh_info["indir"],(),SafeDict((self.env_vars)))
+
+            # make sflux links
+            print('\t making sflux links')
+            sflux_dir = os.path.join(meshcase_dir,'sflux')
+            if not os.path.exists(sflux_dir):
+                os.mkdir(sflux_dir)
+            make_links(crange[0], crange[1], self.env_vars['sflux_src_dir'], self.env_vars['sflux_narr_dir'], sflux_dir)
+            
+            # copy spatial files to this dir
+            print('\t copy spatial files')
+            for gf in self.geometry_files:
+                shutil.copyfile(os.path.join(mesh_input_dir.format(**self.env_vars), gf), os.path.join(meshcase_dir, gf))
+
+            # copy th files to this dir
+            print('\t copy time history files')
+            for th in th_files:
+                shutil.copyfile(th, os.path.join(meshcase_dir, os.path.basename(th)))
+
+            # copy param files
+            print('\t copy param files')
+            shutil.copyfile(os.path.join(modcase_dir, 'param.nml.tropic'), os.path.join(meshcase_dir, 'param.nml.tropic'))
+            shutil.copyfile(os.path.join(modcase_dir, 'param.nml.clinic'), os.path.join(meshcase_dir, 'param.nml.clinic'))
+            
+            # copy common files
+            print('\t copy param files')
+            for cf in self.common_files:
+                shutil.copyfile(th, os.path.join(meshcase_dir, os.path.basename(cf)))
 
             # TROPIC ----------------------------------------------
             print(f"\t\t Handling the tropic inputs")
 
-            linked_spatial_strings = ''
-            for sf in self.geometry_files:
-                linked_spatial_strings += f'ln -sf {os.path.relpath(mesh_input_dir.format(**self.env_vars), meshcase_dir)}/{sf} {sf}\n'
-
             bash_meshcase_tropic = os.path.join(meshcase_dir,os.path.basename(bash_case_tropic).replace("MESHNAME",meshname))
             fmt_string_file(self.bash_tropic, 
                             bash_meshcase_tropic, 
-                            {**bash_tropic_dict,**{"{linked_spatial_strings}": linked_spatial_strings,
-                                                   "{meshname}":meshname}}, 
+                            {**bash_tropic_dict,**{"{meshname}":meshname}}, 
                             method='replace')
             print(f"\t\t\t tropic.sh: {bash_meshcase_tropic}")
             self.bash_file_dict['tropic'].append(bash_meshcase_tropic)
@@ -417,7 +438,7 @@ class ModelBCGen(object):
             bash_meshcase_clinic = os.path.join(meshcase_dir,os.path.basename(bash_case_clinic).replace("MESHNAME",meshname))
             fmt_string_file(self.bash_clinic, 
                             bash_meshcase_clinic, 
-                            {**bash_clinic_dict,**{"{linked_spatial_strings}": linked_spatial_strings}}, 
+                            bash_clinic_dict, 
                             method='replace')
             print(f"\t\t\t clinic.sh: {bash_meshcase_clinic}")
             self.bash_file_dict['clinic'].append(bash_meshcase_clinic)
@@ -449,8 +470,9 @@ class ModelBCGen(object):
         self.job_name = self.inputs.get('job_name')
         self.output_log_file_base = self.inputs.get('output_log_file_base')
         self.geometry_files = self.inputs.get('geometry_files')
+        self.common_files = [cf.format(**self.env_vars) for cf in self.inputs.get('common_files')]
 
-    def format_schism_th(self, case_data_dir, cp, modcase_dir, crange, pdict, method, th_file, fluxes_out=None, fcol=None):
+    def format_schism_th(self, case_data_dir, cp, modcase_dir, crange, pdict, method, th_file, cname, fluxes_out=None, fcol=None):
 
         # Handle the different cases
         if 'tide' in cp:
@@ -500,17 +522,17 @@ class ModelBCGen(object):
             df['height'] = dat_out[1].to_list()
 
             # write out dataframe
-            dated_fn = os.path.join(modcase_dir,os.path.basename(th_file).replace('.th','_modified_dated.th'))
+            dated_fn = os.path.join(modcase_dir,os.path.basename(th_file).replace('.th',f'.{cname}.dated.th'))
             df.to_csv(dated_fn, sep=' ', index=False)
 
             # clip to model period
-            clip_fn = dated_fn.replace('_dated.th' ,'.th')
+            clip_fn = dated_fn.replace('.dated.th' ,'.th')
             clip_file_to_start(dated_fn, 
                             outpath=clip_fn,
                             start=dt.datetime(year=crange[0].year,
                                               month=crange[0].month,
                                               day=crange[0].day))
-            self.perturbed_th[os.path.basename(th_file)] = os.path.basename(clip_fn) # add to list of files that are perturbed
+            self.perturbed_th[os.path.basename(th_file)] = clip_fn # add to list of files that are perturbed
 
         elif 'suisun' in cp:
             print(f'\t\t Copying Suisun gate operations')
@@ -520,24 +542,24 @@ class ModelBCGen(object):
             for gate in ['radial','boat_lock','flash']:
                 th_file = th_file.format_map(locals()) # uses gate and gate_ver
                 shutil.copyfile(th_file, os.path.join(modcase_dir, os.path.basename(th_file)))
-                clip_fn = os.path.join(modcase_dir,f'{os.path.basename(th_file).split("_")[0]}_{gate}_modified.th')
+                clip_fn = os.path.join(modcase_dir,f'{os.path.basename(th_file).split("_")[0]}_{gate}.{cname}.th')
                 clip_file_to_start(th_file, 
                                 outpath=clip_fn,
                                 start=dt.datetime(year=crange[0].year,
                                                   month=crange[0].month,
                                                   day=crange[0].day))
-                self.perturbed_th[f'{os.path.basename(th_file).split("_")[0]}_{gate}.th'] = os.path.basename(clip_fn) # add to list of files that are perturbed
+                self.perturbed_th[f'{os.path.basename(th_file).split("_")[0]}_{gate}.th'] = clip_fn # add to list of files that are perturbed
 
         elif 'dcd' in cp:
             print(f'\t\t Copying consumptive use file: {os.path.basename(th_file)}')
             shutil.copyfile(th_file, os.path.join(modcase_dir, os.path.basename(th_file)))
-            clip_fn = os.path.join(modcase_dir,f'{os.path.basename(th_file).split("_")[0]}_modified.th')
+            clip_fn = os.path.join(modcase_dir,f'{os.path.basename(th_file).split("_")[0]}.{cname}.th')
             clip_file_to_start(th_file, 
                             outpath=clip_fn,
                             start=dt.datetime(year=crange[0].year,
-                                                        month=crange[0].month,
-                                                        day=crange[0].day))
-            self.perturbed_th[f'{os.path.basename(th_file).split("_")[0]}.th'] = os.path.basename(clip_fn) # add to list of files that are perturbed
+                                              month=crange[0].month,
+                                              day=crange[0].day))
+            self.perturbed_th[f'{os.path.basename(th_file).split("_")[0]}.th'] = clip_fn # add to list of files that are perturbed
 
         elif fcol:
             print('\t\t Adding to flux file')
@@ -549,9 +571,6 @@ class ModelBCGen(object):
             fluxes_out[fcol] = dat_in
 
             return fluxes_out
-
-
-
     
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
