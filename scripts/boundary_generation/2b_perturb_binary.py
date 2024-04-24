@@ -130,16 +130,23 @@ def perturb_suisun_ops(radial_df, flash_df, boat_df, P00=0.990,P11=0.990, column
     # Transitions
     rnum = np.random.rand(len(ts))
     for i in range(1,len(ts)):
+        # print(radial_pert_df.loc[radial_pert_df.index[i-1],'op_up'])
         if radial_pert_df.loc[radial_pert_df.index[i-1],'op_up']==0:
             # radial gate is operational
             if rnum[i-1]>=P00:
                 radial_pert_df.loc[radial_pert_df.index[i],['op_up','op_down']] = [1.0,1.0] # change to open if above P00 threshold
                 all_df.loc[radial_pert_df.index[i],'radial'] = 1.0
+            else:
+                radial_pert_df.loc[radial_pert_df.index[i],['op_up','op_down']] = [0.0,0.0] # keep operational if below P00 threshold
+                all_df.loc[radial_pert_df.index[i],'radial'] = 0.0
         else:
             # radial gate is open (op_up!=0)
             if rnum[i-1] >= P11:
                 radial_pert_df.loc[radial_pert_df.index[i],['op_up','op_down']] = [0.0,0.0] # change to operational if above P00 threshold
                 all_df.loc[radial_pert_df.index[i],'radial'] = 0.0
+            else:
+                radial_pert_df.loc[radial_pert_df.index[i],['op_up','op_down']] = [1.0,1.0] # keep operational if below P00 threshold
+                all_df.loc[radial_pert_df.index[i],'radial'] = 1.0
         # Check that boat and flash are operated appropriately
         if radial_pert_df.loc[radial_pert_df.index[i-1],'op_up']==0:
             flash_pert_df.loc[radial_pert_df.index[i],['op_up','op_down']]=[0.0,0.0] # flashboards need to be IN
@@ -159,7 +166,9 @@ def clean_df(in_df):
     keep_rows = [0]
     for r in range(1,len(in_df.index)):
         if not (list(in_df.iloc[r,:])==list(in_df.iloc[r-1,:])):
-            # keep the row where something changes
+            # keep the row where something changes and the row before (for plotting)
+            if not r-1 in keep_rows:
+                keep_rows.append(r-1)
             keep_rows.append(r)
     out_df = in_df.iloc[keep_rows,:]
 
@@ -258,7 +267,7 @@ if __name__ == "__main__":
             smscg_dfs[gp] = read_th(smscg_files[gp])
 
         for v in [1,2]:
-            radial_pert_clean, flash_pert_clean, boat_pert_clean, all_clean = perturb_suisun_ops(smscg_dfs['radial'], smscg_dfs['flash'], smscg_dfs['boat'], P00=0.99555,P11=0.99333)
+            radial_pert_clean, flash_pert_clean, boat_pert_clean, all_clean = perturb_suisun_ops(smscg_dfs['radial'], smscg_dfs['flash'], smscg_dfs['boat'], P00=0.99,P11=0.99)
 
             if False:
                 # plot results
