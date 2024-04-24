@@ -36,8 +36,8 @@ prepare_schism.log
 *.log
 
 # latinhypercube model specifics (these get set up with 4b_generate_SCHISM_bc_data.py)
-schism/dsp_202402_latinhypercube_v*/
 schism/dsp_202402_latinhypercube_v*/simulations/*
+schism/dsp_202402_latinhypercube_v*/lhc_*
 
 # previous archived models
 schism/archive/*
@@ -73,7 +73,14 @@ schism/archive/*
 # SCHISM hotstart stuff
 schism/**/hotstart/*
 !schism/**/hotstart/*.yaml
+!schism/**/hotstart/*.yml
 !schism/**/hotstart/*.py
+
+# SCHISM nudging stuff
+schism/**/nudging/*
+!schism/**/nudging/*.yaml
+!schism/**/nudging/*.yml
+!schism/**/nudging/*.py
 
 # Linux error/operation messages
 *.e[0-9][0-9][0-9][0-9]

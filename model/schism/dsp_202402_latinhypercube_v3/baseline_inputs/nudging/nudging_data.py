@@ -10,12 +10,13 @@ import glob
 import pandas as pd
 import os
 
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 ## Items you may want to change
 
-t0 = pd.Timestamp(2006,11,14)
-nudgelen =days(30)
-
+t0 = pd.Timestamp(2006,11,1)
+tend = pd.Timestamp(2015,1,1)
+nudgelen = days((tend-t0).days)
 
 stations = ['anh','benbr','hsl','bts','snc','ibs','cyg','hun','bdl',
             'fmb','msl','cll','gzl','ryc','hon',
@@ -31,9 +32,6 @@ stations = ['anh','benbr','hsl','bts','snc','ibs','cyg','hun','bdl',
 # Stations where an "upper" and "lower" sublocation occur and we must distinguish the upper
 add_upper = ["anh","cll","mrz","emm","mal","pts"] 
 
-##  
-
-
 station_df=station_dbase()
 
 buf = days(5)
@@ -42,7 +40,7 @@ edata = t0 + nudgelen + buf
 
 station_df = station_df.loc[stations]
 
-repo = "//cnrastore-bdo/Modeling_Data/continuous_station_repo_beta/formatted_1yr"
+repo = "/nasbdo/modeling_data/repo/continuous/formatted"
 no_such_file = []
 tndx = pd.date_range(t0,t0+nudgelen,freq='H')
 all_vars = ["temperature","salinity"]
@@ -99,7 +97,7 @@ for label_var in all_vars:
             # This is the fraction of missing data
             ts = ts.reindex(tndx)
             gap_frac = ts.isnull().sum()/len(ts)
-            print(f"Fraction of mssing data for {ndx} {var} is {gap_frac}")                
+            print(f"Fraction of missing data for {ndx} {var} is {gap_frac}")                
             if gap_frac < 0.25:
                 print(f"Accepted {ndx} {var}")
                 ts.columns=[ndx]
@@ -116,9 +114,6 @@ for label_var in all_vars:
             print(ndx,var)
             print(ts.iloc[0:5])
             print(err)
-    var_df = pd.DataFrame(data = vals,columns=("station","x","y",f"{label_var}"))
-    var_df.set_index("station")
-    var_df.to_csv(f"hotstart_data_{label_var}.csv",sep=",",float_format="%.2f")
   
     nudging_df = pd.concat(accepted,axis=1)
     nudging_df.index.name='datetime'
@@ -130,12 +125,6 @@ print("reindexing and printing")
 
 for label_var in all_vars:
     nudging_dfs[label_var].to_csv(f"nudging_data_{label_var}.csv",sep=",",float_format="%.2f")
-    # Deprecated
-    #nudging_dfs[label_var].reindex(columns=obs_xy.site).to_csv(f"nudging_data_{label_var}_b.csv",sep=",",float_format="%.2f")
-
-
-obs_xy = obs_xy.set_index("site",drop=True)
-obs_xy.to_csv(f"obs_xy.csv",sep=",",float_format="%.2f")
 
 print("No such file")
 for item in no_such_file:
