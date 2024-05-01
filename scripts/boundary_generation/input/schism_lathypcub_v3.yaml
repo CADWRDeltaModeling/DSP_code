@@ -1,3 +1,4 @@
+# env_vars are used to populate the rest of the variables below 
 env_vars:
 - dsp_home: /scratch/tomkovic/DSP_code # where the main folder of this project is (HPC4)
 - bds_home: /home/tomkovic/BayDeltaSCHISM # where the BayDeltaSCHISM repository is housed
@@ -13,6 +14,7 @@ env_vars:
 # auxiliary yaml files
 case_setup: '{dsp_home}/scripts/boundary_generation/input/lathypcub_v3_setup.yaml'
 
+# bash files
 param_tropic_base: '{exp_dir}/param.nml.tropic'
 param_clinic_base: '{exp_dir}/param.nml.clinic'
 
@@ -24,8 +26,11 @@ output_log_file_base: dsp_{cname}
 bash_tropic: '{exp_dir}/dsp_MESHNAME_CASENAME.tropic.sh' # needs replacing of meshname and casename when copied into case dir
 bash_clinic: '{exp_dir}/dsp_MESHNAME_CASENAME.clinic.sh'
 
+# copied files
 int_vars: '{exp_dir}/interpolate_variables.in' # has runtimedays placeholder for each case
 
+
+# mesh parameters
 meshes:
 - name: baseline
   indir: '{exp_dir}/baseline_inputs'
@@ -34,7 +39,8 @@ meshes:
 - name: cache
   indir: '{exp_dir}/cache_inputs'
 
-geometry_files: # files specific to each geometry
+# files specific to each geometry
+geometry_files: 
   # .gr3 files:
   - vgrid.in.3d
   - albedo.gr3
@@ -72,7 +78,6 @@ noaa_download:
   - monterey: '{exp_dir}/noaa_download/noaa_mtyc1_9413450_water_level_2006_2017.csv'
 
 # source locations
-
 model_config:
 - model_input: chcc
   th_file: '{th_repo}/flux.th'
@@ -159,9 +164,11 @@ linked_ss_th_files:
   - vsink.th
   - vsource.th
 
+# common files that get copied to each meshcase directory
 common_files:
-  - '{common_dir}/bctides.in.3d'
+  - '{common_dir}/bctides.in.2d'
   - '{common_dir}/bctides.in.3d'
   - '{common_dir}/vgrid.in.2d'
-  - '{common_dir}/vgrid.in.3d'
+  - '{mesh_input_dir}/vgrid.in.3d'
   - '{common_dir}/station.in'
+  - '{common_dir}/schism.sh'
