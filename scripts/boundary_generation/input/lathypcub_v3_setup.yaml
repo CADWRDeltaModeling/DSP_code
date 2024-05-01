@@ -142,7 +142,6 @@ cases:
     - sac_scaled_1.1
     - dcd_pert_v2
     - suisun_mark_pert_v1
-    - sac_scaled_1.1
 - name: lhc_3
   extends: model_base
   case_start: 2013-10-24
