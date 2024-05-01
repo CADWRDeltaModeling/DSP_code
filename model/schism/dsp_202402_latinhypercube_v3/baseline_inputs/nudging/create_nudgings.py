@@ -18,6 +18,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+import shutil
+
 import os
 
 def make_nudging_nc(yaml_fn, date_range, interp_source, model_dir):
@@ -96,7 +98,6 @@ if __name__ == '__main__':
                 make_nudging_nc(yaml_fn, date_range, interp_source, model_dir)
                 os.chdir('../')
 
-            # TODO: stitch together two nudging netCDF files
             for var in ['TEM','SAL']:
                 nc1 = xr.open_dataset(os.path.join(interp_dirs[0],f'{var}_nu_roms.nc'))
                 nc2 = xr.open_dataset(os.path.join(interp_dirs[1],f'{var}_nu_roms.nc'))
@@ -104,5 +105,8 @@ if __name__ == '__main__':
                 ncout = xr.concat([nc1,nc2], dim='time')
                 ncout.to_netcdf(f'{var}_nu_roms.nc')
                 print(f"Wrote combined netCDF: {var}_nu_roms.nc")
+            
+            shutil.copyfile(os.path.join(interp_dirs[0],'salinity_nudge_roms.gr3'), os.path.join(os.getcwd(),'salinity_nudge_roms.gr3'))
+            shutil.copyfile(os.path.join(interp_dirs[0],'temperature_nudge_roms.gr3'), os.path.join(os.getcwd(),'temperature_nudge_roms.gr3'))
         
         os.chdir('../')
