@@ -75,7 +75,7 @@ def fmt_string_file(fn_in, fn_out, str_dict, method='format_map'):
             fdata = f.read()
             
     if method=='format_map':
-        fdata.format_map(str_dict)
+        fdata = fdata.format_map(str_dict)
     elif method=='replace':
         for key in str_dict.keys():
             fdata = fdata.replace(key, str_dict[key])
@@ -118,6 +118,18 @@ def make_links(start_date, end_date, src_dir, src_dir_narr, link_dir):
             os.remove(link_str_prc)
             os.symlink(src_str_prc, link_str_prc)
         current += delt
+
+def write_noaa(infile, in_df, outfile, repl_col=1):
+    with open(infile,'r') as in_f:
+        with open(outfile,'w') as out_f:
+            inlines = in_f.readlines()
+            for inl in inlines:
+                if re.match("[0-9]{4}-[0-9]{2}-[0-9]{2}",inl[:10]):
+                    break
+                else:
+                    out_f.write(inl)
+            for dateindex, row in in_df.iterrows():
+                out_f.write(f'{dateindex},{row["Water Level"]},999,0,0,0,0,v\n')
 
 #### class definition ===============================================================================
 # TODO make the ModelBCGen object able to take in DSM2 input yamls and output DSM2 BCs
@@ -235,6 +247,7 @@ class ModelBCGen(object):
         if not any('tide' in cp for cp in cperts):
             shutil.copyfile(self.noaa_pt_reyes, os.path.join(modcase_dir, 'pt_reyes.csv'))
             shutil.copyfile(self.noaa_monterey, os.path.join(modcase_dir, 'monterey.csv'))
+            tidal_pert = ''
 
         # Go through perturbations in this case
         for cp in cperts:
@@ -261,7 +274,10 @@ class ModelBCGen(object):
                         fluxes_out = self.format_schism_th(subout_dir, comp['model_input'], modcase_dir, crange, comp, method, th_file, cname, 
                                                            fluxes_out=fluxes_out, fcol=model_setup['flux_col'])
                     else:
-                        self.format_schism_th(subout_dir, comp['model_input'], modcase_dir, crange, cdict, method, th_file, cname)
+                        if 'tide' in cp:
+                            tidal_pert = self.format_schism_th(subout_dir, comp['model_input'], modcase_dir, crange, cdict, method, th_file, cname)
+                        else:
+                            self.format_schism_th(subout_dir, comp['model_input'], modcase_dir, crange, cdict, method, th_file, cname)
 
             else: # Single-element perturbation
                 model_setup = self.configs[pdict['model_input']]
@@ -273,9 +289,11 @@ class ModelBCGen(object):
                     write_flux=True
                     fluxes_out = self.format_schism_th(case_data_dir, cp, modcase_dir, crange, pdict, method, th_file, cname,
                                                        fluxes_out=fluxes_out, fcol=model_setup['flux_col'])
-
                 else:
-                    self.format_schism_th(case_data_dir, cp, modcase_dir, crange, pdict, method, th_file, cname)
+                    if 'tide' in cp:
+                        tidal_pert = self.format_schism_th(case_data_dir, cp, modcase_dir, crange, pdict, method, th_file, cname)
+                    else:
+                        self.format_schism_th(case_data_dir, cp, modcase_dir, crange, pdict, method, th_file, cname)
         
         # creating and writing out flux file
         if write_flux:
@@ -290,13 +308,14 @@ class ModelBCGen(object):
             flux_in = flux_in.interpolate(axis=0, limit_direction='both')
             
             mod_fn = os.path.join(modcase_dir, f'flux.{cname}.dated.th')
-            flux_in.to_csv(mod_fn, sep=' ')
+            flux_in.to_csv(mod_fn, sep=' ',float_format="%.2f")
             clip_fn = mod_fn.replace('.dated.th' ,'.th')
             clip_file_to_start(mod_fn, 
                             outpath=clip_fn,
                             start=dt.datetime(year=crange[0].year,
                                               month=crange[0].month,
                                               day=crange[0].day))
+            self.perturbed_th[os.path.basename(self.flux_file_in)] = clip_fn
 
         print("Updating input files -----------------------------------------------")
 
@@ -317,7 +336,7 @@ class ModelBCGen(object):
         print(f"\t interpolate_variables.in")
         fmt_string_file(self.param_clinic_base, os.path.join(modcase_dir,'interpolate_variables.in'), run_time_dict, method='replace')
 
-        # Create bash files ------------------------------------------------------------------------------------
+        # Create TH files ------------------------------------------------------------------------------------
         
         print('\t copying th files')
         th_files = []
@@ -352,14 +371,15 @@ class ModelBCGen(object):
                                                 '{month_end}':str(case_end.month),
                                                 '{day_end}':str(case_end.day),
                                                 '{cname}':cname,
-                                                '{linked_th_file_strings}':linked_th_file_strings}}
+                                                '{linked_th_file_strings}':linked_th_file_strings},
+                                                '{tidal_pert}':tidal_pert}
 
         bash_case_tropic = os.path.join(modcase_dir,os.path.basename(self.bash_tropic).replace("CASENAME",cname))
         slurm_case_tropic = os.path.join(modcase_dir,os.path.basename(self.slurm_tropic).replace("CASENAME",cname))
 
         # CLINIC BASH
         bash_case_clinic = os.path.join(modcase_dir,os.path.basename(self.bash_clinic).replace("CASENAME",cname))
-        slurm_case_clinic = os.path.join(modcase_dir,os.path.basename(self.slurm_tropic).replace("CASENAME",cname))
+        slurm_case_clinic = os.path.join(modcase_dir,os.path.basename(self.slurm_clinic).replace("CASENAME",cname))
 
         # FINAL PACKAGING ===========================================================================
 
@@ -374,7 +394,13 @@ class ModelBCGen(object):
             if not os.path.exists(os.path.join(meshcase_dir,'outputs')):
                 os.mkdir(os.path.join(meshcase_dir,'outputs'))
                 
+            for env_var in self.env_vars:
+                self.env_vars[env_var] = self.env_vars[env_var].format(**self.env_vars)
+                
             mesh_input_dir = string.Formatter().vformat(mesh_info["indir"],(),SafeDict((self.env_vars)))
+
+            # Copy case directory files
+            shutil.copytree(modcase_dir, meshcase_dir, dirs_exist_ok=True)
 
             # make sflux links
             print('\t making sflux links')
@@ -399,9 +425,10 @@ class ModelBCGen(object):
             shutil.copyfile(os.path.join(modcase_dir, 'param.nml.clinic'), os.path.join(meshcase_dir, 'param.nml.clinic'))
             
             # copy common files
-            print('\t copy param files')
+            print('\t copy common files')
             for cf in self.common_files:
-                shutil.copyfile(th, os.path.join(meshcase_dir, os.path.basename(cf)))
+                cff = string.Formatter().vformat(cf,(),SafeDict(({**self.env_vars, **locals()})))
+                shutil.copyfile(cff, os.path.join(meshcase_dir, os.path.basename(cff)))
 
             # TROPIC ----------------------------------------------
             print(f"\t\t Handling the tropic inputs")
@@ -432,7 +459,7 @@ class ModelBCGen(object):
                                                     '{day_end}':str(case_end.day),
                                                     '{cname}':cname,
                                                     '{linked_th_file_strings}':linked_th_file_strings,
-                                                    '{mesh_input_dir}':mesh_input_dir,
+                                                    '{mesh_input_dir}':os.path.relpath(mesh_input_dir, meshcase_dir),
                                                     '{case_year}':str(case_year),
                                                     '{meshname}':meshname}}
             bash_meshcase_clinic = os.path.join(meshcase_dir,os.path.basename(bash_case_clinic).replace("MESHNAME",meshname))
@@ -470,28 +497,32 @@ class ModelBCGen(object):
         self.job_name = self.inputs.get('job_name')
         self.output_log_file_base = self.inputs.get('output_log_file_base')
         self.geometry_files = self.inputs.get('geometry_files')
-        self.common_files = [cf.format(**self.env_vars) for cf in self.inputs.get('common_files')]
+        self.common_files = [string.Formatter().vformat(cf,(),SafeDict((self.env_vars))) for cf in self.inputs.get('common_files')]
 
     def format_schism_th(self, case_data_dir, cp, modcase_dir, crange, pdict, method, th_file, cname, fluxes_out=None, fcol=None):
-
+        tidal_pert=''
         # Handle the different cases
         if 'tide' in cp:
             print('\t\t Modifying tidal boundary')
             if pdict['method'] == 'shift':
                 if 'shift_forward' in pdict['args'].keys():
                     timedelt = pdict['args']['shift_forward']
-                if 'shift_backward' in pdict['args'].keys():
+                    tidal_pert = '_shift_forward'
+                elif 'shift_backward' in pdict['args'].keys():
                     timedelt = -pdict['args']['shift_backward']
+                    tidal_pert = '_shift_backward'
 
                 pt_reyes = read_noaa(self.noaa_pt_reyes,force_regular=True)
                 pt_reyes.index = pt_reyes.index - pd.Timedelta(days=timedelt)
-                pt_reyes.to_csv(os.path.join(modcase_dir,'pt_reyes.csv'))
+                write_noaa(self.noaa_pt_reyes, pt_reyes, os.path.join(modcase_dir,f'pt_reyes{tidal_pert}.csv'))
 
                 monterey = read_noaa(self.noaa_monterey,force_regular=True)
                 monterey.index = monterey.index - pd.Timedelta(days=timedelt)
-                monterey.to_csv(os.path.join(modcase_dir,'monterey.csv'))
+                write_noaa(self.noaa_monterey, monterey, os.path.join(modcase_dir,f'monterey{tidal_pert}.csv'))
             else:
                 raise ValueError(f"Unknown method to modify tidal boundary: {method}")
+            
+            return tidal_pert
             
         elif any(gate in cp for gate in ['dcc']):
             print('\t\t Modifying Gate Operations')
@@ -523,7 +554,7 @@ class ModelBCGen(object):
 
             # write out dataframe
             dated_fn = os.path.join(modcase_dir,os.path.basename(th_file).replace('.th',f'.{cname}.dated.th'))
-            df.to_csv(dated_fn, sep=' ', index=False)
+            df.to_csv(dated_fn, sep=' ', index=False, float_format="%.2f")
 
             # clip to model period
             clip_fn = dated_fn.replace('.dated.th' ,'.th')

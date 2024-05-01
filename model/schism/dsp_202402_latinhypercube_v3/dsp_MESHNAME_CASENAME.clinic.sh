@@ -33,8 +33,10 @@ ln -sf ./outputs_tropic/uv3D.th.nc uv3D.th.nc
 # add new links
 ln -sf TEM_1.th temp.th
 ln -sf SAL_1.th salt.th
-ln -sf SAL_nu_roms.nc SAL_nu.nc
-ln -sf TEM_nu_roms.nc TEM_nu.nc
+ln -sf {mesh_input_dir}/nudging/{case_year}/SAL_nu_roms.nc SAL_nu.nc
+ln -sf {mesh_input_dir}/nudging/{case_year}/salinity_nudge_roms.gr3 SAL_nudge.gr3
+ln -sf {mesh_input_dir}/nudging/{case_year}/TEM_nu_roms.nc TEM_nu.nc
+ln -sf {mesh_input_dir}/nudging/{case_year}/temperature_nudge_roms.gr3 TEM_nudge.gr3
 ln -sf {mesh_input_dir}/hotstart/hotstart_{case_year}.nc hotstart.nc
 
 # change existing links
