@@ -46,8 +46,10 @@ geometry_files:
   - albedo.gr3
   - diffmax.gr3
   - diffmin.gr3
+  - elev.ic
   - estuary.gr3
   - hgrid.gr3
+  - hgrid.ll
   - krvel.gr3
   - manning.gr3
   - nlayer.gr3
