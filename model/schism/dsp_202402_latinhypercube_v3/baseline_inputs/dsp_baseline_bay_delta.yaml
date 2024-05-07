@@ -23,11 +23,11 @@ mesh:
   depth_enforcement: 
     polygons:
       include: 
-        - .\depth\depth_enforcement_polygons.yaml
+        - ./depth/depth_enforcement_polygons.yaml
     linestrings:
       include: 
-        - .\depth\existing_enforcement_linestrings.yaml
-        - .\depth\restoration_enforcement_linestrings.yaml
+        - ./depth/existing_enforcement_linestrings.yaml
+        - ./depth/restoration_enforcement_linestrings.yaml
   ll_outputfile: hgrid.ll
   gr3_outputfile: hgrid.gr3
 
