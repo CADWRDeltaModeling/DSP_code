@@ -14,9 +14,6 @@ gen_elev2d --outfile {meshname}.{cname}.elev2D.th.nc --hgrid=hgrid.gr3 --stime={
 ln -sf {meshname}.{cname}.elev2D.th.nc elev2D.th.nc
 
 # CREATE OTHER SYMBOLIC LINKS ----------------------------
-# shared inputs
-ln -sf station.in station.in
-
 # shared spatial inputs
 ln -sf bctides.in.2d bctides.in
 ln -sf vgrid.in.2d vgrid.in
