@@ -128,9 +128,11 @@ def dcd_from_dsm2_pert(dcd_dss_file, dsm2_dcd_dss_file, schism_in, out_dir, vers
 
     fn_src = os.path.join(out_dir, f'vsource_{version}_dated.th')
     fn_sink = os.path.join(out_dir, f'vsink_{version}_dated.th')
+
+    sink = -sink
     
-    src.to_csv(fn_src, sep=' ')
-    sink.to_csv(fn_sink, sep=' ')
+    src.to_csv(fn_src, sep=' ', float_format="%.2f")
+    sink.to_csv(fn_sink, sep=' ', float_format="%.2f")
 
 
 def strip_dpart(colname):
@@ -146,7 +148,7 @@ if __name__ == "__main__":
     dsm2_dcd_dss_file = "../../model/dsm2/DSP_DSM2_202307/latinhypercube_v2/timeseries/lhc_1_dcd.dss"
     version = 'v1'
 
-    schism_in = "/home/tomkovic/schism_repos/BayDeltaSCHISM/data/channel_depletion"
+    schism_in = "/home/tomkovic/BayDeltaSCHISM/data/channel_depletion"
     out_dir = "./data_out/schism_dcd/" 
 
     dcd_from_dsm2_pert(dcd_dss_file, dsm2_dcd_dss_file, schism_in, out_dir, version)
