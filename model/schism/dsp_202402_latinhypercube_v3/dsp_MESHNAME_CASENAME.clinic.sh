@@ -11,7 +11,7 @@ mkdir -p outputs
 # CREATE OCEAN BOUNDARY ----------------------------------
 
 cd outputs_tropic
-rsync -avz ../../interpolate_variables.in .
+rsync -avz ../interpolate_variables.in .
 
 # link necessary files
 ln -sf ../hgrid.gr3 bg.gr3
