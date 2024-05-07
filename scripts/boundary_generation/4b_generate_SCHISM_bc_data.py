@@ -257,7 +257,7 @@ class ModelBCGen(object):
                 raise ValueError(f"The perturbation {cp} needs to be defined in the perturbations section of the yaml file")
 
             print(f'\t - {cp}')
-            if 'components' in pdict.keys(): #perturbation is comprised of multiple inputs
+            if 'components' in pdict.keys(): # perturbation is comprised of multiple inputs
                 cdict = pdict.get('components')
                 subout_dir = os.path.join(case_data_dir, cp)
                 for comp in cdict:
@@ -334,7 +334,7 @@ class ModelBCGen(object):
 
         # copy interpolate_variables.in
         print(f"\t interpolate_variables.in")
-        fmt_string_file(self.param_clinic_base, os.path.join(modcase_dir,'interpolate_variables.in'), run_time_dict, method='replace')
+        fmt_string_file(self.int_vars, os.path.join(modcase_dir,'interpolate_variables.in'), run_time_dict, method='replace')
 
         # Create TH files ------------------------------------------------------------------------------------
         
@@ -408,6 +408,7 @@ class ModelBCGen(object):
             if not os.path.exists(sflux_dir):
                 os.mkdir(sflux_dir)
             make_links(crange[0], crange[1], self.env_vars['sflux_src_dir'], self.env_vars['sflux_narr_dir'], sflux_dir)
+            shutil.copyfile(os.path.join(self.env_vars['exp_dir'],'sflux_inputs.txt'), os.path.join(meshcase_dir,'sflux/sflux_inputs.txt'))
             
             # copy spatial files to this dir
             print('\t copy spatial files')
@@ -489,6 +490,7 @@ class ModelBCGen(object):
         self.param_clinic_base = self.inputs.get('param_clinic_base').format(**self.env_vars)
         self.bash_tropic = self.inputs.get('bash_tropic').format(**self.env_vars)
         self.bash_clinic = self.inputs.get('bash_clinic').format(**self.env_vars)
+        self.int_vars = self.inputs.get('int_vars').format(**self.env_vars)
         self.flux_file_in = self.inputs.get('flux_file_in').format(**self.env_vars)
         self.th_repo = self.env_vars['th_repo']
         self.dcd_repo = self.env_vars['dcd_repo']
@@ -599,6 +601,7 @@ class ModelBCGen(object):
             dat_in = pd.read_csv(mod_file, parse_dates=[0], index_col=[0], header=None)
             dat_in.index = dat_in.index.strftime('%Y-%m-%dT%H:%M')
             dat_in.index.name = 'datetime'
+            dat_in[1] = - dat_in[1].div(35.3147) # the fluxes are for some reason backwards in SCHISM (and metric)
             fluxes_out[fcol] = dat_in
 
             return fluxes_out

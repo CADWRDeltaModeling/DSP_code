@@ -118,6 +118,7 @@ def dcd_from_dsm2_pert(dcd_dss_file, dsm2_dcd_dss_file, schism_in, out_dir, vers
     pnet = psrc0 - psink0 # net flow for source/sink for perturbed data for this version
 
     perturb = pnet - net # the difference in net flows to be applied to the schism input/output data
+    perturb = perturb.div(35.3147) # convert to cms
 
     sch_src = pd.read_csv(os.path.join(schism_in,'vsource_dated.th'), sep=' ', header=3, index_col=0, parse_dates=['datetime'], dtype=np.float64)
     sch_sink = pd.read_csv(os.path.join(schism_in,'vsink_dated.th'), sep=' ', header=5, index_col=0, parse_dates=['datetime'], dtype=np.float64)
