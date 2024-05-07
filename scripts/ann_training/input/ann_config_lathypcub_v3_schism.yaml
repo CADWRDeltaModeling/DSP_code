@@ -1,0 +1,92 @@
+# env_vars are used to populate the rest of the variables below 
+env_vars:
+- dsp_home: /scratch/tomkovic/DSP_code # where the main folder of this project is (HPC4)
+- bds_home: /home/tomkovic/BayDeltaSCHISM # where the BayDeltaSCHISM repository is housed
+- experiment: latinhypercube_v3 # name of folder to look inside of test_file 
+- schism_dir: '{dsp_home}/model/schism'
+- exp_dir: '{schism_dir}/dsp_202402_{experiment}'
+# - th_repo: '{bds_home}/data/time_history'
+# - dcd_repo: '{bds_home}/data/channel_depletion'
+# - sflux_src_dir: /scratch/data/atmos/baydelta_sflux_v20220916
+# - sflux_narr_dir: /scratch/data/atmos/NARR
+- common_dir: '{exp_dir}'
+
+th_header: '{bds_home}/data/time_history/flux.th' # use this to get the headers to match teh inputs
+
+in_vars:
+- name: Northern Flow #{'RSAC155': hist_dss_file, 'BYOLO040': hist_dss_file, 'RMKL070': hist_dss_file, 'RCSM075': hist_dss_file, 'RCAL009': hist_dss_file, 'SLBAR002': hist_dss_file}
+  - th_file: '{case_dir}/flux.th'
+  - inputs:
+    - sac # Sacramento River
+    - 
+- name: SJR Flow
+  - inputs:
+    - 1
+- name: Exports # Sum(Banks, Jones, CCC plants(Rock Sl, Middle R (actually old river), Victoria))
+  - inputs:
+    - 1
+- name: DCC Gate
+  - inputs:
+    - 1
+- name: Suisun Gate
+  - inputs:
+    - 1
+- name: Net Delta CU # daily (DIV+SEEP-DRAIN) for DCD and SMCD #
+  - inputs:
+    - 1
+- name: Tidal Energy
+  - inputs:
+    - 1
+- name: SJR Salinity
+  - inputs:
+    - 1
+- name: Sacramento Salinity
+  - inputs:
+    - 1
+
+out_vars:
+- station_in: '{exp_dir}/station.in'
+- output: '{case_dir}/outputs/staout_6'
+- ec_locs:
+  - trp # 'CHDMC006' CVP Intake at Tracy Pumping Plant
+  - wci # 'CHSWP003' West Canal near Clifton Court Intake
+  - vcu # 'CHVCT000' Victoria Canal
+  # - uni # 'OLD_MID' Old River near Middle River
+  - obi # 'ROLD024' Old R at Bacon Island
+  # - old # 'ROLD059' Old River at Tracy Blvd 
+  - pct # 'RSAC064' Sacramento River at Port Chicago 
+  - mal # 'RSAC075': Sacramento River at Mallard Island
+  - cse # 'RSAC081' Sacramento River at Collinsville 
+  - emm2 #'RSAC101' Sacramento River at Emmaton
+  - anh # 'RSAN007' San Joaquin at Antioch
+  - jer # 'RSAN018' Jersey point
+  - sal # 'RSAN032' San Andreas Landing 
+  - ppt # 'RSAN037' Prisoners Point 
+  # - rri2 # 'RSAN058' Rough and Ready Island
+  # - bdt # 'RSAN072' San Joaquin River at Brandt Bridge
+  # - lps # 'RSMKL008' Little Potato Slough at Terminous 
+  # - snc # 'SLCBN002' Chadbourne Slough at Sunrise Duck Club 
+  - dsj # 'SLDUT007' Dutch Sl below Jersey Island
+  - bdl # 'SLMZU011' Montezuma Slough near Beldons Landing  
+  - nsl2 # 'SLMZU025' Montezuma Slough at National Steel
+  - vol # 'SLSUS012' Suisun Slough 300' south of Volanti Slough
+  # - tss # 'SLTRM004' Threemile Slough near San Joaquin River 
+  # - sss # 'SSS' Steamboat Slough btw Sacramento R and Sutter Sl 
+  # - carqb #'RSAC054' Carquinez Strait at Carquinez Bridge near Crockett
+  # Stations not in DSM2 ------------------------------------
+  - inb # 'SLRCK005' CWD Rock Slough PP
+  - srv # 'RSAC101' Sacramento R at Rio Vista
+  - oh4 # 'OH4' Old R near Byron
+  - hll # 'HLL' Holland Tract
+  - bet # 'BET' Piper Slough at Bethal Tract
+  - ibs # 'IBS' Cordelia Slough at Ibis club
+  - gys # 'GYS' Goodyear Slough at Morrow Island clu
+
+cases:
+- case_num: 1
+- case_num: 2
+- case_num: 3
+- case_num: 4
+- case_num: 5
+- case_num: 6
+- case_num: 7
