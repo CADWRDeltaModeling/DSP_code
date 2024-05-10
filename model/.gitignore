@@ -36,11 +36,15 @@ prepare_schism.log
 *.log
 
 # latinhypercube model specifics (these get set up with 4b_generate_SCHISM_bc_data.py)
-schism/dsp_202402_latinhypercube_v*/simulations/*
-schism/dsp_202402_latinhypercube_v*/lhc_*
+schism/**/simulations/*
+schism/**/lhc_*
+schism/azure*/*_inputs/*
 
 # previous archived models
 schism/archive/*
+
+# linked atmospheric flux data
+schism/**/atmos/*
 
 # suxarray data
 **/suxarray
