@@ -85,6 +85,8 @@ def fmt_string_file(fn_in, fn_out, str_dict, method='format_map'):
 
 # make links
 def make_links(start_date, end_date, src_dir, src_dir_narr, link_dir):
+    # Creates sflux links from start to end _dates using the src and narr dirs
+    # the link_dir is where the links will be created
     delt = dt.timedelta(days=1)
     current = start_date
     if (current >= end_date):
@@ -93,11 +95,16 @@ def make_links(start_date, end_date, src_dir, src_dir_narr, link_dir):
     while (current <= end_date):
         # Air data
         # Ours
-        src_str_air = os.path.join(src_dir,"baydelta_schism_air_%s%02d%02d.nc" % (current.year, current.month, current.day))
+        src_str_air = os.path.join(src_dir,
+                                   "baydelta_schism_air_%s%02d%02d.nc" % (current.year, current.month, current.day))
+        src_str_air = os.path.relpath(src_str_air, link_dir)
         # NARR
-        # src_str_air = os.path.join(src_dir_narr, "%4d_%02d/narr_air.%4d_%02d_%02d.nc" % (current.year, current.month, current.year, current.month, current.day))
-        src_str_rad = os.path.join(src_dir_narr, "%4d_%02d/narr_rad.%4d_%02d_%02d.nc" % (current.year, current.month, current.year, current.month, current.day))
-        src_str_prc = os.path.join(src_dir_narr, "%4d_%02d/narr_prc.%4d_%02d_%02d.nc" % (current.year, current.month, current.year, current.month, current.day))
+        src_str_rad = os.path.join(src_dir_narr, 
+                                   "%4d_%02d/narr_rad.%4d_%02d_%02d.nc" % (current.year, current.month, current.year, current.month, current.day))
+        src_str_rad = os.path.relpath(src_str_rad, link_dir)
+        src_str_prc = os.path.join(src_dir_narr, 
+                                   "%4d_%02d/narr_prc.%4d_%02d_%02d.nc" % (current.year, current.month, current.year, current.month, current.day))
+        src_str_prc = os.path.relpath(src_str_prc, link_dir)
         nfile += 1
         link_str_air = os.path.join(link_dir, "sflux_air_1.%04d.nc" % (nfile))
         link_str_rad = os.path.join(link_dir, "sflux_rad_1.%04d.nc" % (nfile))
@@ -220,7 +227,6 @@ class ModelBCGen(object):
         self.linked_th_files = self.inputs.get('linked_th_files') # list of files needed to be linked in .sh file
         self.linked_ss_th_files = self.inputs.get('linked_ss_th_files') # list of source/sink files needed to be linked in .sh file
         self.linked_tracer_th_files = self.inputs.get('linked_tracer_th_files') # list of tracer files
-        self.perturbed_th = {}
 
         # specify model output directory
         self.model_dir = os.path.join(self.env_vars['exp_dir'])
@@ -229,6 +235,8 @@ class ModelBCGen(object):
             os.mkdir(self.simulations_dir)
 
     def setup_schism_case(self, cname, case_data_dir, crange, cperts, case_year):
+
+        perturbed_th = {}
 
         # specify model output directory
         modcase_dir = os.path.join(self.model_dir, cname)
@@ -265,19 +273,27 @@ class ModelBCGen(object):
                     has_version = re.search(r'v\d',cp)
 
                     if has_version:
-                        th_file = string.Formatter().vformat(model_setup.get('th_file'),(),SafeDict(({**self.env_vars, **{'version':has_version.group(0)}})))
+                        th_file = string.Formatter().vformat(model_setup.get('th_file'),(),
+                                                             SafeDict(({**self.env_vars, **{'version':has_version.group(0)}})))
                     else:
                         th_file = string.Formatter().vformat(model_setup.get('th_file'),(),SafeDict((self.env_vars)))
                     method = model_setup.get('method')
                     if 'flux_col' in model_setup.keys():
                         write_flux=True
-                        fluxes_out = self.format_schism_th(subout_dir, comp['model_input'], modcase_dir, crange, comp, method, th_file, cname, 
-                                                           fluxes_out=fluxes_out, fcol=model_setup['flux_col'])
+                        sign_change = model_setup.get('sign_change')
+                        perturbed_th, fluxes_out = self.format_schism_th(subout_dir, comp['model_input'], modcase_dir, 
+                                                                         crange, comp, method, th_file, cname, perturbed_th,
+                                                                         fluxes_out=fluxes_out, fcol=model_setup['flux_col'],
+                                                                         enc_cp=cp, sign_change=sign_change)
                     else:
                         if 'tide' in cp:
-                            tidal_pert = self.format_schism_th(subout_dir, comp['model_input'], modcase_dir, crange, cdict, method, th_file, cname)
+                            perturbed_th, tidal_pert = self.format_schism_th(subout_dir, comp['model_input'], modcase_dir, 
+                                                                             crange, cdict, method, th_file, cname, perturbed_th,
+                                                                         enc_cp=cp)
                         else:
-                            self.format_schism_th(subout_dir, comp['model_input'], modcase_dir, crange, cdict, method, th_file, cname)
+                            perturbed_th = self.format_schism_th(subout_dir, comp['model_input'], modcase_dir, 
+                                                                 crange, cdict, method, th_file, cname, perturbed_th,
+                                                                         enc_cp=cp)
 
             else: # Single-element perturbation
                 model_setup = self.configs[pdict['model_input']]
@@ -287,13 +303,18 @@ class ModelBCGen(object):
                 if 'flux_col' in model_setup.keys():
                     # need to handle this differently since it's all flux inputs in one file
                     write_flux=True
-                    fluxes_out = self.format_schism_th(case_data_dir, cp, modcase_dir, crange, pdict, method, th_file, cname,
-                                                       fluxes_out=fluxes_out, fcol=model_setup['flux_col'])
+                    sign_change = model_setup.get('sign_change')
+                    perturbed_th, fluxes_out = self.format_schism_th(case_data_dir, cp, modcase_dir, 
+                                                                     crange, pdict, method, th_file, cname, perturbed_th,
+                                                                     fluxes_out=fluxes_out, fcol=model_setup['flux_col'], 
+                                                                     sign_change=sign_change)
                 else:
                     if 'tide' in cp:
-                        tidal_pert = self.format_schism_th(case_data_dir, cp, modcase_dir, crange, pdict, method, th_file, cname)
+                        perturbed_th, tidal_pert = self.format_schism_th(case_data_dir, cp, modcase_dir, 
+                                                                         crange, pdict, method, th_file, cname, perturbed_th)
                     else:
-                        self.format_schism_th(case_data_dir, cp, modcase_dir, crange, pdict, method, th_file, cname)
+                        perturbed_th = self.format_schism_th(case_data_dir, cp, modcase_dir, 
+                                                             crange, pdict, method, th_file, cname, perturbed_th)
         
         # creating and writing out flux file
         if write_flux:
@@ -315,7 +336,7 @@ class ModelBCGen(object):
                             start=dt.datetime(year=crange[0].year,
                                               month=crange[0].month,
                                               day=crange[0].day))
-            self.perturbed_th[os.path.basename(self.flux_file_in)] = clip_fn
+            perturbed_th[os.path.basename(self.flux_file_in)] = clip_fn
 
         print("Updating input files -----------------------------------------------")
 
@@ -341,18 +362,18 @@ class ModelBCGen(object):
         print('\t copying th files')
         th_files = []
         linked_th_file_strings = ''
-        for th in self.perturbed_th.keys():
-            th_files.append(self.perturbed_th[th]) # account for any modified files 
-            linked_th_file_strings += f'ln -sf {os.path.basename(self.perturbed_th[th])} {th}\n' # link any modified files
+        for th in perturbed_th.keys():
+            th_files.append(perturbed_th[th]) # account for any modified files 
+            linked_th_file_strings += f'ln -sf {os.path.basename(perturbed_th[th])} {th}\n' # link any modified files
 
-        for fn in list(set(self.linked_th_files) - set(self.perturbed_th.keys())):
+        for fn in list(set(self.linked_th_files) - set(perturbed_th.keys())):
             clip_fn = os.path.join(modcase_dir,fn)
             clip_file_to_start(f'{self.th_repo}/{fn}', outpath=clip_fn, start=dt.datetime(year=crange[0].year,
                                                                                           month=crange[0].month,
                                                                                           day=crange[0].day))
             th_files.append(clip_fn) # account for any th files
             
-        for fn in list(set(self.linked_ss_th_files) - set(self.perturbed_th.keys())):
+        for fn in list(set(self.linked_ss_th_files) - set(perturbed_th.keys())):
             clip_fn = os.path.join(modcase_dir,fn)
             clip_file_to_start(f'{self.dcd_repo}/{fn.replace(".th","_dated.th")}',  outpath=clip_fn, start=dt.datetime(year=crange[0].year,
                                                                                                                        month=crange[0].month,
@@ -501,9 +522,10 @@ class ModelBCGen(object):
         self.geometry_files = self.inputs.get('geometry_files')
         self.common_files = [string.Formatter().vformat(cf,(),SafeDict((self.env_vars))) for cf in self.inputs.get('common_files')]
 
-    def format_schism_th(self, case_data_dir, cp, modcase_dir, crange, pdict, method, th_file, cname, fluxes_out=None, fcol=None):
+    def format_schism_th(self, case_data_dir, cp, modcase_dir, crange, pdict, method, th_file, cname, perturbed_th, 
+                         fluxes_out=None, fcol=None, enc_cp=None, sign_change=None):
         tidal_pert=''
-        # Handle the different cases
+        # Handle the different types of perturbation
         if 'tide' in cp:
             print('\t\t Modifying tidal boundary')
             if pdict['method'] == 'shift':
@@ -524,13 +546,15 @@ class ModelBCGen(object):
             else:
                 raise ValueError(f"Unknown method to modify tidal boundary: {method}")
             
-            return tidal_pert
+            return perturbed_th, tidal_pert
             
         elif any(gate in cp for gate in ['dcc']):
             print('\t\t Modifying Gate Operations')
             # get modified operation. th_file is the model/framework to go off of. mod_file is the data to draw from
             mod_file = os.path.join(case_data_dir, 
-                                    f"{pdict['model_input']}_{pdict['method']}_{dt.datetime.strftime(crange[0], format='%Y%m%d0000')}-{dt.datetime.strftime(crange[1]+dt.timedelta(days=1), format='%Y%m%d0000')}.csv")
+                                    (f"{pdict['model_input']}_{pdict['method']}"
+                                     f"_{dt.datetime.strftime(crange[0], format='%Y%m%d0000')}"
+                                     f"-{dt.datetime.strftime(crange[1]+dt.timedelta(days=1), format='%Y%m%d0000')}.csv"))
             dat_in = pd.read_csv(mod_file, parse_dates=[0], index_col=[0], header=None)
             dat_in.index = dat_in.index.strftime('%Y-%m-%dT%H:%M')
             dat_in.index.name = 'datetime'
@@ -565,12 +589,14 @@ class ModelBCGen(object):
                             start=dt.datetime(year=crange[0].year,
                                               month=crange[0].month,
                                               day=crange[0].day))
-            self.perturbed_th[os.path.basename(th_file)] = clip_fn # add to list of files that are perturbed
+            perturbed_th[os.path.basename(th_file)] = clip_fn # add to list of files that are perturbed
 
-        elif 'suisun' in cp:
+            return perturbed_th
+
+        elif 'suis' in cp:
             print(f'\t\t Copying Suisun gate operations')
             # Determine version
-            gate_ver = cp[-1]
+            gate_ver = enc_cp[-1]
             # Suisun needs to copy the three gates (radial, boatlock, and flashboard)
             for gate in ['radial','boat_lock','flash']:
                 th_file = th_file.format_map(locals()) # uses gate and gate_ver
@@ -581,7 +607,9 @@ class ModelBCGen(object):
                                 start=dt.datetime(year=crange[0].year,
                                                   month=crange[0].month,
                                                   day=crange[0].day))
-                self.perturbed_th[f'{os.path.basename(th_file).split("_")[0]}_{gate}.th'] = clip_fn # add to list of files that are perturbed
+                perturbed_th[f'{os.path.basename(th_file).split("_")[0]}_{gate}.th'] = clip_fn # add to list of files that are perturbed
+            
+            return perturbed_th
 
         elif 'dcd' in cp:
             print(f'\t\t Copying consumptive use file: {os.path.basename(th_file)}')
@@ -592,19 +620,27 @@ class ModelBCGen(object):
                             start=dt.datetime(year=crange[0].year,
                                               month=crange[0].month,
                                               day=crange[0].day))
-            self.perturbed_th[f'{os.path.basename(th_file).split("_")[0]}.th'] = clip_fn # add to list of files that are perturbed
+            perturbed_th[f'{os.path.basename(th_file).split("_")[0]}.th'] = clip_fn # add to list of files that are perturbed
+
+            return perturbed_th
 
         elif fcol:
             print('\t\t Adding to flux file')
             mod_file = os.path.join(case_data_dir, 
-                        f"{pdict['model_input']}_{pdict['method']}_{dt.datetime.strftime(crange[0], format='%Y%m%d0000')}-{dt.datetime.strftime(crange[1]+dt.timedelta(days=1), format='%Y%m%d0000')}.csv")
+                                    (f"{pdict['model_input']}_{pdict['method']}"
+                                     f"_{dt.datetime.strftime(crange[0], format='%Y%m%d0000')}"
+                                     f"-{dt.datetime.strftime(crange[1]+dt.timedelta(days=1), format='%Y%m%d0000')}.csv"))
             dat_in = pd.read_csv(mod_file, parse_dates=[0], index_col=[0], header=None)
             dat_in.index = dat_in.index.strftime('%Y-%m-%dT%H:%M')
             dat_in.index.name = 'datetime'
-            dat_in[1] = - dat_in[1].div(35.3147) # the fluxes are for some reason backwards in SCHISM (and metric)
+            # sign_change: for inflow (eg Sac or SJR) this is negative, for exports (eg ccr) this is positive. Defined in yml
+            dat_in[1] = sign_change * dat_in[1].div(35.3147) # convert to metric
             fluxes_out[fcol] = dat_in
 
-            return fluxes_out
+            return perturbed_th, fluxes_out
+        
+        else:
+            raise ValueError(f"cp method is not defined: {cp}")
     
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))

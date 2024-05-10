@@ -7,8 +7,8 @@ env_vars:
 - exp_dir: '{schism_dir}/dsp_202402_{experiment}'
 - th_repo: '{bds_home}/data/time_history'
 - dcd_repo: '{bds_home}/data/channel_depletion'
-- sflux_src_dir: /scratch/data/atmos/baydelta_sflux_v20220916
-- sflux_narr_dir: /scratch/data/atmos/NARR
+- sflux_src_dir: '{schism_dir}/atmos/baydelta_sflux_v20220916'
+- sflux_narr_dir: '{schism_dir}/atmos/NARR'
 - common_dir: '{exp_dir}'
 
 # auxiliary yaml files
@@ -84,26 +84,31 @@ model_config:
 - model_input: chcc
   th_file: '{th_repo}/flux.th'
   flux_col: ccc_rock
+  sign_change: 1
   method: read
 
 - model_input: chdm
   th_file: '{th_repo}/flux.th'
   flux_col: cvp
+  sign_change: 1
   method: read
 
 - model_input: swp
   th_file: '{th_repo}/flux.th'
   flux_col: swp
+  sign_change: 1
   method: read
 
 - model_input: ccvct
   th_file: '{th_repo}/flux.th'
   flux_col: ccc_victoria
+  sign_change: 1
   method: read
 
 - model_input: rold
   th_file: '{th_repo}/flux.th'
   flux_col: ccc_old
+  sign_change: 1
   method: read
 
 - model_input: dcc
@@ -121,11 +126,13 @@ model_config:
 - model_input: sac
   th_file: '{th_repo}/flux.th'
   flux_col: sac
+  sign_change: -1
   method: read
 
 - model_input: sjr
   th_file: '{th_repo}/flux.th'
   flux_col: sjr
+  sign_change: -1
   method: read
   
 - model_input: dcdsink
