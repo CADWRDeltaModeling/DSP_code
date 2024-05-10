@@ -5,48 +5,53 @@ env_vars:
 - experiment: latinhypercube_v3 # name of folder to look inside of test_file 
 - schism_dir: '{dsp_home}/model/schism'
 - exp_dir: '{schism_dir}/dsp_202402_{experiment}'
-# - th_repo: '{bds_home}/data/time_history'
-# - dcd_repo: '{bds_home}/data/channel_depletion'
-# - sflux_src_dir: /scratch/data/atmos/baydelta_sflux_v20220916
-# - sflux_narr_dir: /scratch/data/atmos/NARR
 - common_dir: '{exp_dir}'
-
-th_header: '{bds_home}/data/time_history/flux.th' # use this to get the headers to match teh inputs
+- case_dir: '{exp_dir}/simulations/{mesh}_lhc_{case_num}'
+- th_header: '{bds_home}/data/time_history/flux.th' # use this to get the headers to match teh inputs
 
 in_vars:
 - name: Northern Flow #{'RSAC155': hist_dss_file, 'BYOLO040': hist_dss_file, 'RMKL070': hist_dss_file, 'RCSM075': hist_dss_file, 'RCAL009': hist_dss_file, 'SLBAR002': hist_dss_file}
-  - th_file: '{case_dir}/flux.th'
-  - inputs:
-    - sac # Sacramento River
-    - 
+  th_file: '{case_dir}/flux.th'
+  inputs:
+    - sac # Sacramento River - RSAC155
+    - yolo # Yolo Bypass
+    - yolo_toedrain # Yolo Toe Drain - BYOLO040
+    - east # Mokelumne/Cosumnes - RMKL070 & RCSM075
+    - calaveras # Calaveras - RCAL009
+    - -northbay # North Bay Aqueduct (negative) -  SLBAR002
 - name: SJR Flow
-  - inputs:
-    - 1
+  th_file: '{case_dir}/flux.th'
+  inputs:
+    - sjr
 - name: Exports # Sum(Banks, Jones, CCC plants(Rock Sl, Middle R (actually old river), Victoria))
-  - inputs:
-    - 1
+  th_file: '{case_dir}/flux.th'
+  inputs:
+    - swp # Banks
+    - cvp # Jones
+    - ccc_rock # CCC Rock Sl
+    - ccc_old # CCC Middle R/Old R
+    - ccc_victoria # CCC Victoria
 - name: DCC Gate
-  - inputs:
+  th_file: '{case_dir}/delta_cross_channel.th'
+  inputs:
     - 1
 - name: Suisun Gate
-  - inputs:
+  th_file: '{case_dir}/montezuma_radial.th'
+  inputs:
     - 1
-- name: Net Delta CU # daily (DIV+SEEP-DRAIN) for DCD and SMCD #
-  - inputs:
+- name: Net Delta CU # daily (DIV+SEEP-DRAIN) for DCD and SMCD 
+  inputs:
     - 1
 - name: Tidal Energy
-  - inputs:
-    - 1
-- name: SJR Salinity
-  - inputs:
-    - 1
-- name: Sacramento Salinity
-  - inputs:
-    - 1
+  station_in: '{exp_dir}/station.in'
+  station_output: '{case_dir}/outputs/staout_1'
+  loc:
+    - sffpx # San Francisco
 
 out_vars:
 - station_in: '{exp_dir}/station.in'
-- output: '{case_dir}/outputs/staout_6'
+- station_output: '{case_dir}/outputs/staout_6'
+- param_clinic: '{case_dir}/param.nml.clinic'
 - ec_locs:
   - trp # 'CHDMC006' CVP Intake at Tracy Pumping Plant
   - wci # 'CHSWP003' West Canal near Clifton Court Intake
@@ -81,6 +86,11 @@ out_vars:
   - bet # 'BET' Piper Slough at Bethal Tract
   - ibs # 'IBS' Cordelia Slough at Ibis club
   - gys # 'GYS' Goodyear Slough at Morrow Island clu
+
+meshes:
+- baseline
+- suisun
+- cache
 
 cases:
 - case_num: 1

@@ -9,17 +9,8 @@ Script to gather input/output data from SCHISM for training ANN
 import os
 from schimpy.station import *
 import datetime
-
-# {'CHDMC006': 'EC', 'CHSWP003': 'EC',\
-#         'CHVCT000': 'EC', 'OLD_MID': 'EC', 'ROLD024': 'EC',
-#         'ROLD059': 'EC', 'RSAC064': 'EC', 'RSAC075': 'EC',
-#         'RSAC081': 'EC', 'RSAC092': 'EC', 'RSAC101': 'EC',
-#         'RSAN007': 'EC', 'RSAN018': 'EC', 'RSAN032': 'EC',
-#         'RSAN037': 'EC', 'RSAN058': 'EC', 'RSAN072': 'EC',
-#         'RSMKL008': 'EC', 'SLCBN002': 'EC', 'SLDUT007': 'EC',
-#         'SLMZU011': 'EC', 'SLMZU025': 'EC', 'SLSUS012': 'EC',
-#         'SLTRM004': 'EC', 'SSS': 'EC', 'RSAC054': 'EC'}
-
+import string
+import re
         
 class SafeDict(dict):
     def __missing__(self, key):
@@ -38,6 +29,21 @@ def build_dict(node):
             od.update(build_dict(d))
     return od
 
+def get_start_date_from_param(param_in):
+
+    with open(param_in, 'r') as param:
+        for line in param.readlines():
+            if 'start_year' in line:
+                sy =  int(re.findall(r'\b\d+\b', line)[0])
+            elif 'start_month' in line:
+                sm =  int(re.findall(r'\b\d+\b', line)[0])
+            elif 'start_day' in line:
+                sd =  int(re.findall(r'\b\d+\b', line)[0])
+                
+    start_date = datetime.datetime(sy, sm, sd)
+    
+    return start_date
+
 #### class definition ===============================================================================
 # TODO make the ANNBCECGen object able to take in DSM2 input yamls and output DSM2 inputs/outputs for ANN
 class ANNBCECGen(object):
@@ -51,16 +57,62 @@ class ANNBCECGen(object):
         # assign env vars to format strings with ----------------------------------------------------
         self.env_vars = build_dict(self.inputs.get('env_vars'))
         for env_var in self.env_vars:
-            self.env_vars[env_var] = self.env_vars[env_var].format(**self.env_vars)
+            self.env_vars[env_var] = string.Formatter().vformat(self.env_vars[env_var],(),SafeDict((self.env_vars)))
+
+        # define in/out vars
+        self.in_vars = build_dict(self.inputs.get('in_vars'))
+        self.out_vars = build_dict(self.inputs.get('out_vars'))
+
+        # define header values
+        with open(self.env_vars['th_header'], 'r') as thh:
+            head = thh.readline()
+            headers = head.split(' ')
+        
+        if 'meshes' in self.inputs.keys():
+            meshes = self.inputs.get('meshes')
+        else:
+            raise ValueError("Need to define the meshes using key 'meshes' in the yaml file")
     
         if 'cases' in self.inputs.keys():
             cases = self.inputs.get('cases')
             for case in cases:
                 case_num = case.get('case_num')
-                outputs_fpath = "../outputs/staout_1" # TODO: fix
-                station_fpath = '../station.in' # TODO: fix
-                time_basis = datetime.datetime(2009, 2, 10) # TODO: fix
-                read_staout(outputs_fpath, station_fpath, time_basis)
+                for mesh in meshes:
+                    case_dir = string.Formatter().vformat(self.env_vars['case_dir'],(),
+                                                          SafeDict(({**self.env_vars, 
+                                                                     **locals()})))
+                    # EC outputs
+                    station_fpath = string.Formatter().vformat(self.out_vars['station_in'],(),
+                                                               SafeDict(({**self.env_vars, 
+                                                                          **locals()})))
+                    outputs_fpath = string.Formatter().vformat(self.out_vars['station_output'],(),
+                                                               SafeDict(({**self.env_vars, 
+                                                                          **locals()})))
+                    param_fpath = string.Formatter().vformat(self.out_vars['param_clinic'],(),
+                                                               SafeDict(({**self.env_vars, 
+                                                                          **locals()})))
+                    time_basis = get_start_date_from_param(param_fpath)
+                    # all_ts = read_staout(outputs_fpath, station_fpath, time_basis)
+
+                    # for ec_loc in self.out_vars['ec_locs']:
+                    #     print('hi')
+                        # look for upper or default (no lower)
+                    
+                    # Inputs
+
+                    for invar in self.inpuin_vars:
+                        in_name = invar['name']
+                        if 'th_file' in invar.keys():
+                            th_file = invar['th_file'].format({**self.env_vars, 
+                                                               **locals()})
+                            for inp in invar['inputs']:
+                                if inp[0] in ['-']:
+                                    # negative flow!
+                                    mult = -1
+                                else:
+                                    mult = 1
+                                print('hi')
+
                 # hist_dss_file = inputs.get('hist_dss_file').format(**locals())
                 # gate_dss_file = inputs.get('gate_dss_file').format(**locals())
                 # model_ec_file = inputs.get('model_ec_file').format(**locals())
@@ -74,6 +126,9 @@ class ANNBCECGen(object):
 
                 # # combine ANN input csv files into xlsx file (TODO: make this unecessary?)
                 # csv_to_ann_xlsx(output_folder, xlsx_filepath)
+        else:
+
+            raise ValueError("Need to define the casess using key 'cases' in the yaml file")
 
         # else:
             # hist_dss_file = inputs.get('hist_dss_file').format(**locals())
@@ -96,4 +151,4 @@ if __name__ == '__main__':
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
     in_fname = "./input/ann_config_lathypcub_v3_schism.yaml"
-    run_ann_input(in_fname)
+    ANNBCECGen(in_fname, model_type="SCHISM")
