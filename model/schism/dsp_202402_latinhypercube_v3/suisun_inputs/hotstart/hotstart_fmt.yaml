@@ -1,5 +1,7 @@
 hotstart: 
     date: '{date_start}'
+    run_start: default
+    time_step: 90
     hgrid_input_file: ../hgrid.gr3              # hgrid needs to be in utm coordinates. 
     vgrid_input_file: ../vgrid.in.3d 
     vgrid_version: "5.10"
@@ -24,7 +26,7 @@ hotstart:
                   - region: estuary
                     initializer: 
                         extrude_casts: 
-                            station: ./USGS_polaris_station_locations_xy.csv
+                            station: ./usgs_cruise_station.csv
                             data: ./SanFranciscoBayWaterQualityData1969-2015v4.csv
                             variable: "Temperature"
                   - region: delta
@@ -55,7 +57,7 @@ hotstart:
                   - region: estuary
                     initializer: 
                         extrude_casts: 
-                            station: ./USGS_polaris_station_locations_xy.csv
+                            station: ./usgs_cruise_station.csv
                             data: ./SanFranciscoBayWaterQualityData1969-2015v4.csv
                             variable: Salinity
                   - region: delta
