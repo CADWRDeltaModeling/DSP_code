@@ -75,7 +75,7 @@ def fmt_string_file(fn_in, fn_out, str_dict, method='format_map'):
             fdata = f.read()
             
     if method=='format_map':
-        fdata = fdata.format_map(str_dict)
+        fdata = string.Formatter().vformat(fdata,(),SafeDict((str_dict)))
     elif method=='replace':
         for key in str_dict.keys():
             fdata = fdata.replace(key, str_dict[key])
@@ -142,7 +142,7 @@ def write_noaa(infile, in_df, outfile, repl_col=1):
 # TODO make the ModelBCGen object able to take in DSM2 input yamls and output DSM2 BCs
 class ModelBCGen(object):
 
-    def __init__(self, yml_fname, model_type):
+    def __init__(self, yml_fname, model_type, machine, write_meta_bash=False):
         # read input yaml ---------------------------------------------------------------------------
         self.yml_fname = yml_fname
         with open(yml_fname, 'r') as f:
@@ -182,6 +182,7 @@ class ModelBCGen(object):
 
             self.configs[mname] = build_dict({k: config[k] for k in set(list(config.keys())) - set(['name'])})
 
+        self.machine = machine
 
         if model_type.lower() == 'schism':
             self.setup_schism_model()
@@ -210,7 +211,7 @@ class ModelBCGen(object):
 
                 self.setup_schism_case(cname, case_data_dir, crange, case_perts, case.get('model_year'))
 
-        if model_type.lower() == 'schism':
+        if model_type.lower() == 'schism' and write_meta_bash:
             # write meta-bash files
             for bash_cat in self.bash_file_dict:
                 meta_bash = ''
@@ -380,13 +381,6 @@ class ModelBCGen(object):
                                                                                                                        day=crange[0].day))
             th_files.append(clip_fn) # account for source/sink files
 
-        for tr in self.linked_tracer_th_files:
-            clip_fn = os.path.join(modcase_dir, tr['out'])
-            clip_file_to_start(f'{self.th_repo}/{tr["in"]}',  outpath=clip_fn, start=dt.datetime(year=crange[0].year,
-                                                                                                 month=crange[0].month,
-                                                                                                 day=crange[0].day))
-            th_files.append(clip_fn) # account for tracer files
-
         # TROPIC BASH
         bash_tropic_dict = {**run_time_dict, **{'{year_end}':str(case_end.year),
                                                 '{month_end}':str(case_end.month),
@@ -428,13 +422,32 @@ class ModelBCGen(object):
             sflux_dir = os.path.join(meshcase_dir,'sflux')
             if not os.path.exists(sflux_dir):
                 os.mkdir(sflux_dir)
-            make_links(crange[0], crange[1], self.env_vars['sflux_src_dir'], self.env_vars['sflux_narr_dir'], sflux_dir)
+            if self.machine.lower() == 'hpc5':
+                make_links(crange[0], crange[1], self.env_vars['sflux_src_dir'], self.env_vars['sflux_narr_dir'], sflux_dir)
+            elif self.machine.lower() == 'azure':
+                mk_links_file = self.inputs.get("make_links").format_map(self.env_vars)
+                fmt_string_file(mk_links_file, 
+                                os.path.join(meshcase_dir,f'sflux/{os.path.basename(mk_links_file)}'), 
+                                {**{"{start_date}":crange[0].strftime('%Y, %m, %d'), 
+                                    "{end_date}":crange[1].strftime('%Y, %m, %d'), 
+                                    "{src_dir}":os.path.relpath(self.env_vars['sflux_src_dir'], os.path.join(meshcase_dir,'sflux')), 
+                                    "{src_dir_narr}":os.path.relpath(self.env_vars['sflux_narr_dir'], os.path.join(meshcase_dir,'sflux')),
+                                    "{link_dir}":'./'}}, 
+                                method='replace')
             shutil.copyfile(os.path.join(self.env_vars['exp_dir'],'sflux_inputs.txt'), os.path.join(meshcase_dir,'sflux/sflux_inputs.txt'))
             
             # copy spatial files to this dir
             print('\t copy spatial files')
             for gf in self.geometry_files:
-                shutil.copyfile(os.path.join(mesh_input_dir.format(**self.env_vars), gf), os.path.join(meshcase_dir, gf))
+                infile = os.path.join(mesh_input_dir.format(**self.env_vars), 
+                                      gf.format_map({'case_year':str(case_year)}))
+                if not os.path.exists(infile):
+                    raise ValueError(f"infile: {infile} does not exist!\n Check geometry_files list in yaml")
+                else:
+                    inbase = os.path.basename(infile)
+                    shutil.copyfile(infile, 
+                                    os.path.join(meshcase_dir, 
+                                                 inbase))
 
             # copy th files to this dir
             print('\t copy time history files')
@@ -468,10 +481,11 @@ class ModelBCGen(object):
                                                'output_log_file_base':self.output_log_file_base.format_map(locals())}}
             
             slurm_meshcase_tropic = os.path.join(meshcase_dir,os.path.basename(slurm_case_tropic).replace("MESHNAME",meshname))
-            fmt_string_file(self.slurm_tropic, 
-                            slurm_meshcase_tropic, 
-                            slurm_tropic_dict, 
-                            method='format_map')
+            if self.machine.lower() == 'hpc5':
+                fmt_string_file(self.slurm_tropic, 
+                                slurm_meshcase_tropic, 
+                                slurm_tropic_dict, 
+                                method='format_map')
             
             # CLINIC ----------------------------------------------
             print(f"\t\t Handling the clinic inputs")
@@ -492,15 +506,30 @@ class ModelBCGen(object):
             print(f"\t\t\t clinic.sh: {bash_meshcase_clinic}")
             self.bash_file_dict['clinic'].append(bash_meshcase_clinic)
 
-            slurm_clinic_dict = {**locals(),**{'job_name':self.job_name,
-                                               'baro':'clinic',
-                                               'output_log_file_base':self.output_log_file_base.format_map(locals())}}
-            
-            slurm_meshcase_clinic = os.path.join(meshcase_dir,os.path.basename(slurm_case_clinic).replace("MESHNAME",meshname))
-            fmt_string_file(self.slurm_clinic, 
-                            slurm_meshcase_clinic, 
-                            slurm_clinic_dict, 
-                            method='format_map')
+            if self.machine.lower() == 'hpc5':
+                slurm_clinic_dict = {**locals(),**{'job_name':self.job_name,
+                                                'baro':'clinic',
+                                                'output_log_file_base':self.output_log_file_base.format_map(locals())}}
+                
+                slurm_meshcase_clinic = os.path.join(meshcase_dir,os.path.basename(slurm_case_clinic).replace("MESHNAME",meshname))
+                fmt_string_file(self.slurm_clinic, 
+                                slurm_meshcase_clinic, 
+                                slurm_clinic_dict, 
+                                method='format_map')
+            elif self.machine.lower() == 'azure':
+                az_dict = {**locals(),
+                           **self.env_vars,
+                           **{'rel_study_dir':f"{os.path.basename(self.env_vars['exp_dir'])}/{os.path.relpath(meshcase_dir,self.env_vars['exp_dir'])}",
+                              'job_name':self.job_name}}
+                az_yml_meshcase = os.path.join(self.az_yml_dir,
+                                               os.path.basename(self.az_yml_file).replace("MESHNAME", meshname))
+                az_yml_meshcase = az_yml_meshcase.replace("CASENAME",cname)
+                fmt_string_file(self.az_yml_file, 
+                                az_yml_meshcase, 
+                                az_dict, 
+                                method='format_map')
+            else:
+                raise ValueError(f"Machine needs to be defined as 'hpc5' or 'azure' to properly format bash files.")
     
     def set_schism_vars(self):
         self.meshes = self.inputs.get('meshes')
@@ -517,6 +546,8 @@ class ModelBCGen(object):
         self.dcd_repo = self.env_vars['dcd_repo']
         self.slurm_tropic = self.inputs.get('slurm_tropic').format(**self.env_vars)
         self.slurm_clinic = self.inputs.get('slurm_clinic').format(**self.env_vars)
+        self.az_yml_file = self.inputs.get('az_yml_file').format(**self.env_vars)
+        self.az_yml_dir = self.inputs.get('az_yml_dir').format(**self.env_vars)
         self.job_name = self.inputs.get('job_name')
         self.output_log_file_base = self.inputs.get('output_log_file_base')
         self.geometry_files = self.inputs.get('geometry_files')
@@ -646,7 +677,11 @@ if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
     ## Read in param.tropic and param.clinic and modify
+    if True: # run for azure
+        yml_fname = "./input/schism_lathypcub_v3_azure.yaml"
 
-    yml_fname = "./input/schism_lathypcub_v3.yaml"
+        mbc = ModelBCGen(yml_fname, 'schism', machine='azure')
+    else:
+        yml_fname = "./input/schism_lathypcub_v3_hpc5.yaml"
 
-    mbc = ModelBCGen(yml_fname, 'schism')
+        mbc = ModelBCGen(yml_fname, 'schism', machine='hpc5')
