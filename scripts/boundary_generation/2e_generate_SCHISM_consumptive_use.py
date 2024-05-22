@@ -44,13 +44,29 @@ def adjust_src_sink(src,sink,perturb,sinkfrac=0.001):
         negsink = True
         hasneg = sink.loc[(sink<0).any(axis=1),:]
         colswithneg = (hasneg<0).any(axis=0)
-        hasneg.loc[:,colswithneg].to_csv("test.csv")
+        hasneg.loc[:,colswithneg].to_csv("test_sink.csv")
         print("negsink")
         print(sink.loc[(sink<0).any(axis=1),:])
+        print("Sink has all neg values")
     else: 
         negsink = False
-        print("not",(sink>=0).all(axis=None),)
+        print("Sink has all pos values")
         sink = -sink 
+
+    
+    if (src<0).any(axis=None): 
+        negsrc = True
+        hasneg = src.loc[(src<0).any(axis=1),:]
+        colswithneg = (hasneg<0).any(axis=0)
+        hasneg.loc[:,colswithneg].to_csv("test_src.csv")
+        print("negsrc")
+        print(src.loc[(src<0).any(axis=1),:])
+        print("Source has all neg values")
+        # SHOULD BE DataFrame of positive sources
+        src = -src 
+    else: 
+        negsrc = False
+        print("Source has all pos values")
 
     src_total = src.sum(axis=1)
     sink_total = sink.sum(axis=1)
@@ -83,6 +99,9 @@ def adjust_src_sink(src,sink,perturb,sinkfrac=0.001):
     sink=sink.mul(scale,axis=0)
     if not negsink:
         sink = -sink
+        #sink.loc[sink==0.] = -0.0
+    if negsrc:
+        src = -src
         #sink.loc[sink==0.] = -0.0
     return src,sink
 
@@ -130,10 +149,17 @@ def dcd_from_dsm2_pert(dcd_dss_file, dsm2_dcd_dss_file, schism_in, out_dir, vers
     fn_src = os.path.join(out_dir, f'vsource_{version}_dated.th')
     fn_sink = os.path.join(out_dir, f'vsink_{version}_dated.th')
 
+    src = -src
     sink = -sink
     
-    src.to_csv(fn_src, sep=' ', float_format="%.2f")
-    sink.to_csv(fn_sink, sep=' ', float_format="%.2f")
+    if (src.values<0).any():
+        raise ValueError("There are negative values in the source dataframe! They should all be positive")
+    else:
+        src.to_csv(fn_src, sep=' ', float_format="%.2f")
+    if (sink.values>0).any():
+        raise ValueError("There are positive values in the sink dataframe! They should all be negative")
+    else:
+        sink.to_csv(fn_sink, sep=' ', float_format="%.2f")
 
 
 def strip_dpart(colname):
