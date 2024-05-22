@@ -1,25 +1,31 @@
 # env_vars are used to populate the rest of the variables below 
 env_vars:
-- dsp_home: /scratch/tomkovic/DSP_code # where the main folder of this project is (HPC4)
+- dsp_home: /scratch/tomkovic/DSP_code # where the main folder of this project is (HPC4/HPC5)
 - bds_home: /home/tomkovic/BayDeltaSCHISM # where the BayDeltaSCHISM repository is housed
-- experiment: latinhypercube_v3 # name of folder to look inside of test_file 
+- experiment: lhc_v3 # name of folder to look inside of test_file for azure setup
+# - experiment: latinhypercube_v3 # name of folder to look inside of test_file for HPC5 setup
 - schism_dir: '{dsp_home}/model/schism'
-- exp_dir: '{schism_dir}/dsp_202402_{experiment}'
+- exp_dir: '{schism_dir}/azure_dsp_2024_{experiment}' # for azure setup
+# - exp_dir: '{schism_dir}/dsp_202402_{experiment}' # for HPC55 setup
 - th_repo: '{bds_home}/data/time_history'
 - dcd_repo: '{bds_home}/data/channel_depletion'
 - sflux_src_dir: '{schism_dir}/atmos/baydelta_sflux_v20220916'
-- sflux_narr_dir: '{schism_dir}/atmos/NARR'
-- common_dir: '{exp_dir}'
+- sflux_narr_dir: '{schism_dir}/atmos/NARR_cropped'
+- common_dir: '{exp_dir}' # where to copy common files from
 
 # auxiliary yaml files
 case_setup: '{dsp_home}/scripts/boundary_generation/input/lathypcub_v3_setup.yaml'
 
-# bash files
+# setup files
 param_tropic_base: '{exp_dir}/param.nml.tropic'
 param_clinic_base: '{exp_dir}/param.nml.clinic'
 
+make_links: '{exp_dir}/make_links_az.py'
+
 slurm_tropic: '{exp_dir}/slurm_MESHNAME_CASENAME.tropic.sh'
 slurm_clinic: '{exp_dir}/slurm_MESHNAME_CASENAME.clinic.sh'
+az_yml_file: '{exp_dir}/run_MESHNAME_CASENAME.yml'
+az_yml_dir: '{exp_dir}/az_yml_files' # where to copy azure yml files for run configurations
 job_name: dsp_2024
 output_log_file_base: dsp_{cname}
 
@@ -55,12 +61,10 @@ geometry_files:
   - nlayer.gr3
   - nlayer_default.gr3
   - rough.gr3
-  - SAL_nudge.gr3
   - sav_cd.gr3
   - sav_D.gr3
   - sav_h.gr3
   - sav_N.gr3
-  - TEM_nudge.gr3
   - watertype.gr3
   - windfactor.gr3
   - windrot_geo2proj.gr3
@@ -72,7 +76,14 @@ geometry_files:
   - fluxflag.prop
   - split_quad.prop
   - tvd.prop
-
+  # files needed to run baroclinic mode:
+  - 'nudging/{case_year}/SAL_nu_roms.nc'
+  - 'nudging/{case_year}/salinity_nudge_roms.gr3'
+  - 'nudging/{case_year}/TEM_nu_roms.nc'
+  - 'nudging/{case_year}/temperature_nudge_roms.gr3'
+  - 'hotstart/hotstart_{case_year}.nc'
+  - vgrid.in.3d
+  
 # relevant files
 flux_file_in: '{th_repo}/flux.th'
 noaa_download:
@@ -161,12 +172,8 @@ linked_th_files:
   - oldr_tracy_weir.th
   - tom_paine_sl_culvert.th
   - west_false_river_barrier_leakage.th
-
-linked_tracer_th_files:
-  - in: salt.th
-    out: SAL_1.th
-  - in: temp.th
-    out: TEM_1.th
+  - salt.th
+  - temp.th
 
 linked_ss_th_files:
   - msource.th
@@ -178,6 +185,5 @@ common_files:
   - '{common_dir}/bctides.in.2d'
   - '{common_dir}/bctides.in.3d'
   - '{common_dir}/vgrid.in.2d'
-  - '{mesh_input_dir}/vgrid.in.3d'
   - '{common_dir}/station.in'
-  - '{common_dir}/schism.sh'
+  # - '{common_dir}/schism.sh'
