@@ -3,7 +3,7 @@
 # You will need to copy station_flow_xsects from the /data directory as well as the 
 # mesh file
 
-output_dir: .
+# output_dir: .
 
 mesh:
   mesh_inputfile: dsp_112d_3_SS_2.2dm   # cc vs hist requires coordination with dem_list.yaml which has variants of same names
