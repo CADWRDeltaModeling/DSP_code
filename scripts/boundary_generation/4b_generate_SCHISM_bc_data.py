@@ -362,12 +362,15 @@ class ModelBCGen(object):
         
         print('\t copying th files')
         th_files = []
+        mod_th_files = dict()
         linked_th_file_strings = ''
         for th in perturbed_th.keys():
             th_files.append(perturbed_th[th]) # account for any modified files 
             linked_th_file_strings += f'ln -sf {os.path.basename(perturbed_th[th])} {th}\n' # link any modified files
+            mod_th_files[''.join(['{',f'{th}','}'])] = perturbed_th[th]
 
         for fn in list(set(self.linked_th_files) - set(perturbed_th.keys())):
+            mod_th_files[''.join(['{',f'{fn}','}'])] = os.path.join(modcase_dir, fn)
             clip_fn = os.path.join(modcase_dir,fn)
             clip_file_to_start(f'{self.th_repo}/{fn}', outpath=clip_fn, start=dt.datetime(year=crange[0].year,
                                                                                           month=crange[0].month,
@@ -375,6 +378,7 @@ class ModelBCGen(object):
             th_files.append(clip_fn) # account for any th files
             
         for fn in list(set(self.linked_ss_th_files) - set(perturbed_th.keys())):
+            mod_th_files[''.join(['{',f'{fn}','}'])] = os.path.join(modcase_dir, fn)
             clip_fn = os.path.join(modcase_dir,fn)
             clip_file_to_start(f'{self.dcd_repo}/{fn.replace(".th","_dated.th")}',  outpath=clip_fn, start=dt.datetime(year=crange[0].year,
                                                                                                                        month=crange[0].month,
@@ -486,6 +490,13 @@ class ModelBCGen(object):
                                 slurm_meshcase_tropic, 
                                 slurm_tropic_dict, 
                                 method='format_map')
+                
+            # write out a yaml of modified th files
+            mod_th_case = os.path.join(meshcase_dir,os.path.basename(self.mod_th_dict).replace("CASENAME",cname))
+            fmt_string_file(self.mod_th_dict,
+                            mod_th_case,
+                            mod_th_files,
+                            method='replace')
             
             # CLINIC ----------------------------------------------
             print(f"\t\t Handling the clinic inputs")
@@ -552,6 +563,7 @@ class ModelBCGen(object):
         self.output_log_file_base = self.inputs.get('output_log_file_base')
         self.geometry_files = self.inputs.get('geometry_files')
         self.common_files = [string.Formatter().vformat(cf,(),SafeDict((self.env_vars))) for cf in self.inputs.get('common_files')]
+        self.mod_th_dict = string.Formatter().vformat(self.inputs.get('mod_th_dict'),(),SafeDict((self.env_vars)))
 
     def format_schism_th(self, case_data_dir, cp, modcase_dir, crange, pdict, method, th_file, cname, perturbed_th, 
                          fluxes_out=None, fcol=None, enc_cp=None, sign_change=None):
