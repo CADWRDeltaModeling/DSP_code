@@ -1,0 +1,5 @@
+flux_file: '{flux.th}'
+dcc_file: '{delta_cross_channel.th}'
+smscg_file: '{montezuma_radial.th}'
+vsource_file: '{vsource.th}'
+vsink_file: '{vsink.th}'

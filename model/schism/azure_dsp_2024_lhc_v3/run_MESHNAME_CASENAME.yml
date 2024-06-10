@@ -18,7 +18,11 @@ python make_links_az.py;
 cd ../;
 source dsp_{meshname}_{cname}.tropic.sh; 
 mpirun -n {num_cores} --hostfile hostfile -x PATH -x LD_LIBRARY_PATH {mpi_opts} pschism_PREC_EVAP_GOTM_TVD-VL {num_scribes}; 
-source dsp_{meshname}_{cname}.clinic.sh; 
+
+[ ! -s outputs/fatal.error ] && echo "fatal.error not empty!" && cat outputs/fatal.error && sleep 120 return;
+
+source dsp_{meshname}_{cname}.clinic.sh;
+azcopy copy {study_copy_flags} outputs_tropic/ "https://{storage_account_name}.blob.core.windows.net/{storage_container_name}/{study_dir}/?{sas}" && rm -r -f ./outputs_tropic; # delete outputs_tropic after generating uv3D.th.nc
 mpirun -n {num_cores} --hostfile hostfile -x PATH -x LD_LIBRARY_PATH {mpi_opts} pschism_PREC_EVAP_GOTM_TVD-VL {num_scribes}"
 # template for the pool name, which is used to create the pool with appropriate settings
 template_name: "alma87_20240426" # this is the template name for the pool, e.g. "centos7" or "alma8"

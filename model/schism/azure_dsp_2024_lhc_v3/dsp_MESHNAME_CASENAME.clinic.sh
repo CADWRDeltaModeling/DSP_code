@@ -9,6 +9,14 @@ mkdir -p outputs_tropic
 mv outputs/* outputs_tropic
 mkdir -p outputs
 
+# Re link barotropic files -------------------------------
+
+# link .th.nc file
+ln -sf {meshname}.{cname}.elev2D.th.nc elev2D.th.nc
+
+# modified TH inputs
+{linked_th_file_strings}
+
 # CREATE OCEAN BOUNDARY ----------------------------------
 
 cd outputs_tropic
@@ -22,17 +30,17 @@ ln -sf ../vgrid.in.3d vgrid.fg
 
 # run script to create uv3d.th.nc
 ulimit -s unlimited
-interpolate_variables8 # this takes quite a while
+[ "$1" != "no-interp" ] && interpolate_variables8 # this takes quite a while
 cd ../
 cp ./outputs_tropic/uv3D.th.nc uv3D.th.nc
 
 # CREATE CLIINIC SYMBOLIC LINKS ----------------------------	
 
 # add new links
-ln -sf /SAL_nu_roms.nc SAL_nu.nc
-ln -sf /salinity_nudge_roms.gr3 SAL_nudge.gr3
-ln -sf /TEM_nu_roms.nc TEM_nu.nc
-ln -sf /temperature_nudge_roms.gr3 TEM_nudge.gr3
+ln -sf SAL_nu_roms.nc SAL_nu.nc
+ln -sf salinity_nudge_roms.gr3 SAL_nudge.gr3
+ln -sf TEM_nu_roms.nc TEM_nu.nc
+ln -sf temperature_nudge_roms.gr3 TEM_nudge.gr3
 ln -sf hotstart_{case_year}.nc hotstart.nc
 
 # change existing links
