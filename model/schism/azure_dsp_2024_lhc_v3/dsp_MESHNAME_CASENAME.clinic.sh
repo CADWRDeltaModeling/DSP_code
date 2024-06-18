@@ -4,37 +4,42 @@ set -e
 # LOAD CONDA ENVIRONMENT PRIOR TO RUNNING THIS BASH SCRIPT
 # conda activate schism-dms (for LAT HPC4)
 
-# CHANGE OUTPUTS DIR -------------------------------------
-mkdir -p outputs_tropic
-mv outputs/* outputs_tropic
-mkdir -p outputs
-
-# Re link barotropic files -------------------------------
-
 # link .th.nc file
 ln -sf {meshname}.{cname}.elev2D.th.nc elev2D.th.nc
+
+# run script to create uv3d.th.nc
+ulimit -s unlimited
+
+# START !no-interp commands
+[ "$1" != "no-interp" ] && 
+# CHANGE OUTPUTS DIR -------------------------------------
+mkdir -p outputs_tropic && 
+mv outputs/* outputs_tropic && 
+mkdir -p outputs &&
+	
+
+# CREATE OCEAN BOUNDARY ----------------------------------
+
+cd outputs_tropic &&
+rsync -avz ../interpolate_variables.in . &&
+
+# link necessary files
+ln -sf ../hgrid.gr3 bg.gr3 &&
+ln -sf ../hgrid.gr3 fg.gr3 &&
+ln -sf ../vgrid.in.2d vgrid.bg &&
+ln -sf ../vgrid.in.3d vgrid.fg &&
+
+interpolate_variables8 && # this takes quite a while
+cp uv3D.th.nc ../uv3D.th.nc &&
+cd ../
+# END !no-interp commands
+
+# Re link barotropic files -------------------------------
 
 # modified TH inputs
 {linked_th_file_strings}
 
-# CREATE OCEAN BOUNDARY ----------------------------------
-
-cd outputs_tropic
-rsync -avz ../interpolate_variables.in .
-
-# link necessary files
-ln -sf ../hgrid.gr3 bg.gr3
-ln -sf ../hgrid.gr3 fg.gr3
-ln -sf ../vgrid.in.2d vgrid.bg
-ln -sf ../vgrid.in.3d vgrid.fg
-
-# run script to create uv3d.th.nc
-ulimit -s unlimited
-[ "$1" != "no-interp" ] && interpolate_variables8 # this takes quite a while
-cd ../
-cp ./outputs_tropic/uv3D.th.nc uv3D.th.nc
-
-# CREATE CLIINIC SYMBOLIC LINKS ----------------------------	
+# CREATE CLIINIC SYMBOLIC LINKS ----------------------------
 
 # add new links
 ln -sf SAL_nu_roms.nc SAL_nu.nc
