@@ -5,6 +5,7 @@ storage_account_name: dwrbdodspsa # this is the storage account containing batch
 storage_container_name: test # this is mounted to $AZ_BATCH_MOUNTS_DIR/<<storage_container_name>> in addition to batch container which is mounted to $AZ_BATCH_MOUNTS_DIR/batch
 study_copy_flags: --recursive --preserve-symlinks
 study_dir: {rel_study_dir} # where the relative study directory for the simulation will be
+schism_run_start_date: {year_start}-{month_start}-{day_start} # this is the start date of the schism run
 setup_dirs: # these are directories that are also copied in addition to the study_dir
   - atmos # try to avoid copying this and use symlink to mounted container instead (see mpi_command below)
 num_hosts: 2 # number of nodes in the pool
@@ -12,18 +13,23 @@ num_hosts: 2 # number of nodes in the pool
 num_scribes: 10 # This is used in the mpi_cmd template if referred to there
 # command to run , assume the study_dir is current directory
 mpi_opts: --bind-to core
-mpi_command: "cd sflux;
-rm -f *.nc;
-python make_links_az.py;
-cd ../;
-source dsp_{meshname}_{cname}.tropic.sh; 
-mpirun -n {num_cores} --hostfile hostfile -x PATH -x LD_LIBRARY_PATH {mpi_opts} pschism_PREC_EVAP_GOTM_TVD-VL {num_scribes}; 
-
-[ ! -s outputs/fatal.error ] && echo "fatal.error not empty!" && cat outputs/fatal.error && sleep 120 return;
-
-source dsp_{meshname}_{cname}.clinic.sh;
-azcopy copy {study_copy_flags} outputs_tropic/ "https://{storage_account_name}.blob.core.windows.net/{storage_container_name}/{study_dir}/?{sas}" && rm -r -f ./outputs_tropic; # delete outputs_tropic after generating uv3D.th.nc
-mpirun -n {num_cores} --hostfile hostfile -x PATH -x LD_LIBRARY_PATH {mpi_opts} pschism_PREC_EVAP_GOTM_TVD-VL {num_scribes}"
+mpi_command: |
+  cd sflux;
+  rm -f *.nc;
+  python make_links_az.py;
+  cd ../;
+  source dsp_{meshname}_{cname}.clinic.sh;
+  azcopy copy {study_copy_flags} outputs_tropic/ "https://{storage_account_name}.blob.core.windows.net/{storage_container_name}/{study_dir}/?{sas}" && rm -r -f ./outputs_tropic; # delete outputs_tropic after generating uv3D.th.nc
+  cp process_x2.sh vgrid.in x2_bay_sjr_station.bp x2_bay_ny_sjr_station.bp x2_bay_suisun_station.bp x2_bay_sac_station.bp x2route_bay_sjr.csv x2route_bay_ny_sjr.csv x2route_bay_suisun.csv x2route_bay_sac.csv outputs/; 
+  cd outputs/; 
+  chmod +x process_x2.sh;
+  $SCHISM_SCRIPTS_HOME/batch/run_modified_loop.sh -c "$SCHISM_SCRIPTS_HOME/batch/track_processed.sh ./process_x2.sh {schism_run_start_date}" -m 3 -x 10 -w 1 -p "salinity*.nc" . &
+  run_x2_pid=$!; 
+  echo "Running background run_modified_loop.sh with pid $run_x2_pid";
+  cd ../;
+  mpirun -n {num_cores} --hostfile hostfile -x PATH -x LD_LIBRARY_PATH {mpi_opts} pschism_PREC_EVAP_GOTM_TVD-VL {num_scribes}
+  echo "Sending signal to background run_modified_loop.sh with pid $run_x2_pid";
+  # kill -SIGUSR1 $run_x2_pid
 # template for the pool name, which is used to create the pool with appropriate settings
 template_name: "alma87_20240426" # this is the template name for the pool, e.g. "centos7" or "alma8"
-delete_after_mins: 2000 # delete the job after this many minutes
+# delete_after_mins: 2000 # delete the job after this many minutes
