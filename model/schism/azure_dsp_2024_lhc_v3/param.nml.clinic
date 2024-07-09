@@ -445,6 +445,20 @@
 !-----------------------------------------------------------------------
   ihconsv = 1 !heat exchange option
   isconsv = 1 !evaporation/precipitation model
+  ! If isconsv=1, need to compile with precip/evap module turned on.
+  ! If at least one of ihconsv and isconsv is set to 1,
+  ! locally turning off air-sea exchange in shallow waters (<0.25 m) is recommended.
+  ! Options for locally turning off heat/salt exchange are specified by
+  ! i_hmin_airsea_ex, i_hmin_salt_ex respectively:
+  !   0: not turned off locally;
+  !   1: locally turned off, based on grid depth, i.e.,
+  !      off when the local grid depth (z in hgrid) < hmin_airsea_ex or hmin_salt_ex;
+  !   2 (recommended): locally turned off, based on local total water depth, i.e.,
+  !      off when the local total water depth < hmin_airsea_ex or hmin_salt_ex,
+  ! hmin_airsea_ex, hmin_salt_ex:
+  !   0.2 m is recommended for both "1" and "2"
+  i_hmin_airsea_ex = 2 
+  hmin_airsea_ex = 0.1 ! 10 cm
 
 !-----------------------------------------------------------------------
 ! Turbulence closure.
@@ -632,7 +646,7 @@
   iof_hydro(8) = 0 !upward longwave radiation (positive upward) [W/m/m] {upwardLongwave}  2D
   iof_hydro(9) = 0 !downward longwave radiation (positive downward) [W/m/m] {downwardLongwave}  2D
   iof_hydro(10) = 0 !total flux=-flsu-fllu-(radu-radd) [W/m/m] {totalHeat}  2D
-  iof_hydro(11) = 0 !evaporation rate [kg/m/m/s] {evaporationRate}  2D
+  iof_hydro(11) = 1 !evaporation rate [kg/m/m/s] {evaporationRate}  2D
   iof_hydro(12) = 0 !precipitation rate [kg/m/m/s] {precipitationRate}  2D
   iof_hydro(13) = 0 !Bottom stress vector [kg/m/s^2(Pa)] {bottomStressX,Y}  2D vector
   iof_hydro(14) = 0 !wind velocity vector [m/s] {windSpeedX,Y}  2D vector
