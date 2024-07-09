@@ -107,7 +107,7 @@ def create_dsm2_bcs(in_fname, dsm2_config_fname):
     with open(in_fname, 'r') as f:
         # loader = RawLoader(stream)
         inputs = schism_yaml.load(f)
-        output_dir = process_output_dir(inputs)
+        output_dir = inputs['output_dir']
 
     # create output folder
     if not os.path.exists(output_dir):
