@@ -1,0 +1,344 @@
+linestrings:
+- agency_id: null
+  comment: null
+  coordinates:
+  - - 610552.3425964523
+    - 4215838.661869838
+  - - 610019.2449893301
+    - 4216590.487013947
+  name: EMM
+  new_name: null
+  station_id: EMM
+  station_na: Sacramento R at Emmaton
+- agency_id: null
+  comment: null
+  coordinates:
+  - - 583257.4896560122
+    - 4223318.352284931
+  - - 582714.1021595019
+    - 4222532.356007475
+  name: grizzly island west
+  new_name: null
+  station_id: grizzly island west
+  station_na: Breach at the North West of Grizzly Island
+- agency_id: null
+  comment: null
+  coordinates:
+  - - 593205.163164095
+    - 4224813.692242067
+  - - 592926.2483048347
+    - 4224817.95506668
+  - - 592686.0073763796
+    - 4224803.272944684
+  - - 592522.653711785
+    - 4224825.835206763
+  - - 592435.6255442125
+    - 4224862.738745563
+  name: grizzly island north
+  new_name: null
+  station_id: grizzly island north
+  station_na: Breach at the North East of Grizzly Island
+- agency_id: null
+  comment: null
+  coordinates:
+  - - 600484.0495424157
+    - 4212380.22920104
+  - - 600435.5412718697
+    - 4212378.662812747
+  name: winter island north
+  new_name: null
+  station_id: winter island north
+  station_na: Breach at the North of Winter Island
+- agency_id: null
+  comment: null
+  coordinates:
+  - - 601165.7594132319
+    - 4211537.064978483
+  - - 601142.0445668905
+    - 4211607.742534009
+  name: winter island east north
+  new_name: null
+  station_id: winter island east north
+  station_na: Breach at the East North of Winter Island
+- agency_id: null
+  comment: null
+  coordinates:
+  - - 601687.6642942431
+    - 4209666.936762989
+  - - 601723.1514799256
+    - 4209686.600191145
+  name: winter island south
+  new_name: null
+  station_id: winter island south
+  station_na: Breach at the South of Winter Island
+- agency_id: null
+  comment: null
+  coordinates:
+  - - 617330.4178536858
+    - 4227807.307701113
+  - - 617385.4237991952
+    - 4227935.373639483
+  - - 617420.0835617251
+    - 4228091.480268306
+  - - 617447.7977233487
+    - 4228288.41353995
+  - - 617460.744555927
+    - 4228414.977570244
+  - - 617463.0086079406
+    - 4228647.099812935
+  name: little egbert south
+  new_name: null
+  station_id: little egbert south
+  station_na: Breach at the South of Little Egbert Tract
+- agency_id: null
+  comment: null
+  coordinates:
+  - - 615019.5756372791
+    - 4233036.798388049
+  - - 614993.3027863163
+    - 4233106.8592662355
+  - - 614938.1743464617
+    - 4233175.90771567
+  - - 614835.5690234154
+    - 4233261.025697211
+  - - 614780.9272143148
+    - 4233334.490900412
+  - - 614728.9153215796
+    - 4233421.211975768
+  - - 614690.7603687013
+    - 4233487.614482383
+  - - 614647.3979878899
+    - 4233580.031205164
+  - - 614602.7394258861
+    - 4233645.131783429
+  name: little egbert north
+  new_name: null
+  station_id: little egbert north
+  station_na: Breach at the North of Little Egbert
+- agency_id: null
+  comment: null
+  coordinates:
+  - - 616922.2833199364
+    - 4233786.309549832
+  - - 616947.0964604783
+    - 4233836.432199514
+  - - 616993.2880793368
+    - 4233901.484270218
+  name: prospect south
+  new_name: null
+  station_id: prospect south
+  station_na: Breach at the South of Prospect Island
+- agency_id: null
+  comment: null
+  coordinates:
+  - - 617585.8049634662
+    - 4234898.928330319
+  - - 617597.38505873
+    - 4234918.116041775
+  - - 617629.3278307501
+    - 4234952.200419922
+  - - 617664.2054857352
+    - 4234974.177550817
+  - - 617721.3512349038
+    - 4234983.657638641
+  name: prospect middle
+  new_name: null
+  station_id: prospect middle
+  station_na: Breach at the middle of Prospect Island
+- agency_id: null
+  comment: null
+  coordinates:
+  - - 618452.631097817
+    - 4238557.708195755
+  - - 618427.2002800014
+    - 4238606.932188634
+  - - 618417.8425647903
+    - 4238674.949903853
+  - - 618422.6200100019
+    - 4238723.565546866
+  - - 618411.9534372379
+    - 4238807.429480942
+  name: prospect north
+  new_name: null
+  station_id: prospect north
+  station_na: Breach at the North of Prospect Island
+- agency_id: null
+  comment: null
+  coordinates:
+  - - 614163.0555101618
+    - 4242339.03653192
+  - - 614159.6756193119
+    - 4242505.690270403
+  name: lookout1
+  new_name: null
+  station_id: lookout 1
+  station_na: Breach 1 of 8 N-S on Lookout Slough
+- agency_id: null
+  comment: null
+  coordinates:
+  - - 614052.3688795266
+    - 4237539.099277459
+  - - 614141.9656738688
+    - 4237748.7196076065
+  name: lookout 8
+  new_name: null
+  station_id: lookout 8
+  station_na: Breach 8 of 8 N-S on Lookout Slough
+- agency_id: null
+  comment: null
+  coordinates:
+  - - 614260.3803876638
+    - 4238142.136872938
+  - - 614258.0220734761
+    - 4238245.416771455
+  name: lookout 7
+  new_name: null
+  station_id: lookout 7
+  station_na: Breach 7 of 8 N-S on Lookout Slough
+- agency_id: null
+  comment: null
+  coordinates:
+  - - 614249.0132509692
+    - 4238614.822417294
+  - - 614251.6506765338
+    - 4238717.270667241
+  name: lookout 6
+  new_name: null
+  station_id: lookout 6
+  station_na: Breach 6 of 8 N-S on Lookout Slough
+- agency_id: null
+  comment: null
+  coordinates:
+  - - 614241.1582483021
+    - 4239132.343523713
+  - - 614239.2763803103
+    - 4239251.539889444
+  name: lookout 5
+  new_name: null
+  station_id: lookout 5
+  station_na: Breach 5 of 8 N-S on Lookout Slough
+- agency_id: null
+  comment: null
+  coordinates:
+  - - 614228.834787722
+    - 4240123.21821285
+  - - 614228.0156205863
+    - 4240228.6186736105
+  name: lookout 4
+  new_name: null
+  station_id: lookout 4
+  station_na: Breach 4 of 8 N-S on Lookout Slough
+- agency_id: null
+  comment: null
+  coordinates:
+  - - 614213.4139208089
+    - 4241039.021855733
+  - - 614213.6409775031
+    - 4241152.265723322
+  name: lookout 3
+  new_name: null
+  station_id: lookout 3
+  station_na: Breach 3 of 8 N-S on Lookout Slough
+- agency_id: null
+  comment: null
+  coordinates:
+  - - 614167.6933011767
+    - 4241820.593313211
+  - - 614167.9811587591
+    - 4241999.5683811065
+  name: lookout 2
+  new_name: null
+  station_id: lookout 2
+  station_na: Breach 2 of 8 N-S on Lookout Slough
+- agency_id: null
+  comment: null
+  coordinates:
+  - - 597310.5271701992
+    - 4218172.146078578
+  - - 597264.1920828571
+    - 4218324.670997414
+  - - 597192.765418918
+    - 4218587.347281374
+  - - 597158.962265214
+    - 4218864.489121791
+  name: grizzly island south
+  new_name: null
+  station_id: grizzly island south
+  station_na: Breach at the South of Grizzly Island
+- agency_id: '381142122015801'
+  comment: Diagnistic, not in station database
+  coordinates:
+  - - 576510.0000000005
+    - 4209337.0
+  - - 575594.0000000009
+    - 4211015.0
+  name: martinez
+  new_name: LHTN
+  station_id: martinez
+  station_na: martinez
+- agency_id: '11312676'
+  comment: null
+  coordinates:
+  - - 628809.1449999998
+    - 4200456.782
+  - - 629043.8310000001
+    - 4200441.436
+  name: MDM
+  new_name: null
+  station_id: MDM
+  station_na: Middle R at Middle River
+- agency_id: '11313315'
+  comment: null
+  coordinates:
+  - - 625695.7679999997
+    - 4194742.269
+  - - 625756.250999999
+    - 4194563.657
+  name: OH4
+  new_name: null
+  station_id: OH4
+  station_na: Old R near Byron
+- agency_id: '11455420'
+  comment: null
+  coordinates:
+  - - 615729.9050000006
+    - 4224005.417
+  - - 615053.893
+    - 4224406.261
+  name: SRV
+  new_name: null
+  station_id: SRV
+  station_na: Sacramento R at Rio Vista
+- agency_id: E33670
+  comment: null
+  coordinates:
+  - - 597343.6259999998
+    - 4219918.985
+  - - 597472.1650000006
+    - 4219941.64
+  name: NSL
+  new_name: null
+  station_id: NSL
+  station_na: Montezuma Slough at National Steel
+- agency_id: '11337190'
+  comment: null
+  coordinates:
+  - - 615070.909000001
+    - 4212370.875
+  - - 614592.012999999
+    - 4212823.313
+  name: SJJ
+  new_name: null
+  station_id: SJJ
+  station_na: San Joaquin R at Jersey Point
+- agency_id: '380833122033401'
+  comment: null
+  coordinates:
+  - - 582497.9999999995
+    - 4222081.0
+  - - 582134.0000000009
+    - 4222163.0
+  name: MTZ
+  new_name: LHTN
+  station_id: MTZ
+  station_na: Montezuma Slough Above Grizzly Bay
