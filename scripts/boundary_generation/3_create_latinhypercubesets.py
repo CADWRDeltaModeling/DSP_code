@@ -56,7 +56,7 @@ def create_cases(in_fname):
     with open(in_fname, 'r') as f:
         # loader = RawLoader(stream)
         inputs = schism_yaml.load(f)
-        output_dir = process_output_dir(inputs)
+        output_dir = inputs['output_dir']
 
     # create output folder
     if not os.path.exists(output_dir):
@@ -139,6 +139,10 @@ def create_cases(in_fname):
                                            header=header)
                     else:
                         dat_out, header = apply_method(pdict)
+                        try:
+                            dat_out.index = dat_out.index.to_pydatetime()
+                        except:
+                            None
                         dat_out = dat_out[dat_out.index.to_series().between(pd.to_datetime(start_date),pd.to_datetime(end_date))]
                         dat_out.to_csv(os.path.join(case_dir, f'{pdict["model_input"]}_{pdict["method"]}_{crange[0]}-{crange[1]}.csv'),
                                            header=header)

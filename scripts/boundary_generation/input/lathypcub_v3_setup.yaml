@@ -69,28 +69,25 @@ perturbations:
     set_value: 0
 - name: suisun_mark_pert_v1
   variable: op
+  model_input: suisgate
+  method: read_suisun
   args:
+    file: ./data_out/MTZSL_markov_pert_v1.csv
     copy_files:
       - ./data_out/suisun_gates/montezuma_radial_lhc_v1.th
       - ./data_out/suisun_gates/montezuma_flash_lhc_v1.th
       - ./data_out/suisun_gates/montezuma_boat_lock_lhc_v1.th
-  components:
-    - model_input: suisgate
-      method: read_suisun
-      args:
-        file: ./data_out/MTZSL_markov_pert_v1.csv
 - name: suisun_mark_pert_v2
   variable: op
+  model_input: suisgate
+  method: read_suisun
   args:
+  args:
+    file: ./data_out/MTZSL_markov_pert_v2.csv
     copy_files:
       - ./data_out/suisun_gates/montezuma_radial_lhc_v2.th
       - ./data_out/suisun_gates/montezuma_flash_lhc_v2.th
       - ./data_out/suisun_gates/montezuma_boat_lock_lhc_v2.th
-  components:
-    - model_input: suisgate
-      method: read_suisun
-      args:
-        file: ./data_out/MTZSL_markov_pert_v2.csv
 - name: tide_shift_100
   model_input: tide
   variable: stage

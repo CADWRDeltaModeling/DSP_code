@@ -1,4 +1,4 @@
-dsp_home: D:/projects/delta_salinity/scripts/DSP_code # where the main folder of this project is
+dsp_home: /scratch/tomkovic/DSP_code # where the main folder of this project is (HPC4/5)
 
 experiment: latinhypercube_v3 # name of folder to look inside of test_file dir
 
