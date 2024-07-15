@@ -202,6 +202,11 @@ out_vars:
   - ibs # 'IBS' Cordelia Slough at Ibis club
   - gys # 'GYS' Goodyear Slough at Morrow Island club
   - mdm # 'MDM' Middle R at Middle River
+  # Additional stations of curiousity
+  - mtz # 'MTZ' Martinez
+  - carqb # 'CARQB' Carquinez Strait at Carquinez Bridge
+  - gzm # Grizzly Bay at Head of Montezuma Slough
+  - msl # Montezuma Slough at Roaring River
   method: assign_multiple_ec
 
 # Rio Vista, Emmaton and Jersey Point.  Compare tidally average time series from cross section flow computed at salinity monitoring locations.
@@ -297,6 +302,11 @@ out_vars:
   - ibs # 'IBS' Cordelia Slough at Ibis club
   - gys # 'GYS' Goodyear Slough at Morrow Island club
   - mdm # 'MDM' Middle R at Middle River
+  # Additional stations of curiousity
+  - mtz # 'MTZ' Martinez
+  - carqb # 'CARQB' Carquinez Strait at Carquinez Bridge
+  - gzm # Grizzly Bay at Head of Montezuma Slough
+  - msl # Montezuma Slough at Roaring River
   method: assign_multiple_wse
 
 # Tidal exchange (tidal prism) at each restoration.  Daily tidal prism volume.

@@ -398,7 +398,8 @@ class ANNBCECGen(object):
         if not loc[0] in self.flux_df:
             raise ValueError(f"Flux out location '{loc[0]}' needs to be found in the flow_station_xsects yaml file and is not")
         
-        flux_ts = read_flux_out(outputs_fpath, loc, time_basis)
+        flux_ts = read_flux_out(outputs_fpath, self.flux_df, time_basis)
+        flux_ts = flux_ts.loc[:,loc]
         flux_ts = flux_ts.resample('15min').ffill()
 
         return flux_ts
