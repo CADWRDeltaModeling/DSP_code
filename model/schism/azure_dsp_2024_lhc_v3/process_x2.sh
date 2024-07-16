@@ -44,6 +44,7 @@ process_x2()
     file_num=$1
     date_to_process=$2
     station_bp=$3 # the station.bp filename
+    simulation_start_date=$4
     echo "Processing X2 for file number $file_num for date $date_to_process"
     # run for the file_num
     ulimit -s unlimited
@@ -58,28 +59,29 @@ salinity
 $file_num $file_num
 1
 EOF
-    python $BAY_DELTA_SCHISM_HOME/bdschism/bdschism/x2_time_series.py --salt_data_file fort.18 --start $date_to_process --x2route station.bp --output x2_$file_num.csv 
-    # we expect 1 line of output per file and we want to append to x2.out
-    tail -1 x2_$file_num.csv >> $station_bp.out
+    python $BAY_DELTA_SCHISM_HOME/bdschism/bdschism/x2_time_series.py --salt_data_file fort.18 --start $date_to_process --x2route station.bp --output x2out_${station_bp}_${file_num}.csv --model_start $simulation_start_date 
+    # x2_$station_bp_$file_num.csv is the output file that will be saved to a temporary folder
+    
     # cleanup
-    # rm fort.18 x2_$file_num.csv fort.20
+    # rm fort.18 fort.20
 }
 
-fname="$1" # of the form salinity_100.nc
-simulation_start_date=`get_start_date ../param.nml` # of the form 2005-01-24
-echo "Simulation start date from param.nml is $simulation_start_date"
-file_num=`extract_simulation_day $fname`
+file_num="$1" # integer corresponding to salinity_##.nc file
+simulation_start_date=`get_start_date param.nml.clinic` # of the form 2005-01-24
+echo "Simulation start date from param.nml.clinic is $simulation_start_date"
 date_to_process=`add_days_to_start_date $simulation_start_date $file_num`
 echo "Model date to be processed is $date_to_process"
 
+cd outputs;
+
 echo "Processing Bay-SJR X2 route............................................"
-process_x2 "$file_num" "$date_to_process" x2_bay_sjr
+process_x2 "$file_num" "$date_to_process" x2_bay_sjr "$simulation_start_date"
 
 echo "Processing Bay-NY-SJR X2 route............................................"
-process_x2 "$file_num" "$date_to_process" x2_bay_nysjr
+process_x2 "$file_num" "$date_to_process" x2_bay_nysjr "$simulation_start_date"
 
 echo "Processing Bay-Suisun X2 route............................................"
-process_x2 "$file_num" "$date_to_process" x2_bay_mzm
+process_x2 "$file_num" "$date_to_process" x2_bay_mzm "$simulation_start_date"
 
 echo "Processing Bay-Sacramento X2 route............................................"
-process_x2 "$file_num" "$date_to_process" x2_bay_sac
+process_x2 "$file_num" "$date_to_process" x2_bay_sac "$simulation_start_date"
