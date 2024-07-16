@@ -13,6 +13,7 @@ scripts/boundary_generation/data_out/*bundles*
 **/.vscode/*
 **/*.pickle
 **/tempCodeRunnerFile.py
+**/*.locks
 
 # ignore ANN experiment output
 **/ann_training/Experiments/*
