@@ -1,0 +1,16 @@
+# Description:
+# Standard Delta Configuration
+GATE
+NAME                        FROM_OBJ  FROM_IDENTIFIER TO_NODE
+clifton_court               reservoir clifton_court        72 
+END
+
+
+
+GATE_WEIR_DEVICE
+GATE_NAME                   DEVICE               NDUPLICATE WIDTH  ELEV HEIGHT CF_FROM_NODE CF_TO_NODE DEFAULT_OP      
+clifton_court               reservoir_gates               5  20.0  -13.20 20              1.0        1.0 gate_open     
+END
+
+
+

@@ -1,0 +1,47 @@
+# Description:
+# Historical operation of gates
+OPERATING_RULE
+NAME                      ACTION                                                                                                								TRIGGER                                                 
+ccfb_open				"SET gate_op(gate=clifton_court,device=reservoir_gates,direction=from_node) TO 1.0"   													"(ccfb_prio_eligible AND ccfb_wl_open AND (vol_water < export_remain))"
+ccfb_close				"SET gate_op(gate=clifton_court,device=reservoir_gates,direction=from_node) TO 0.0"  													"NOT(ccfb_prio_eligible) OR (vol_water > export_remain)"
+clfct_gate_cf_from      "SET gate_coef(gate=clifton_court,device=reservoir_gates,direction=from_node) TO MIN2(MIN2(ts(name=max_gate),11*(chan_stage(channel=232,dist=0)-res_stage(res=clifton_court))^-0.3 - 0.5)/(chan_stage(channel=232,dist=0)+13.2), 1)*0.8 + 0.75"  TRUE
+clfct_gate_cf_to        "SET gate_coef(gate=clifton_court,device=reservoir_gates,direction=to_node) TO MIN2(MIN2(ts(name=max_gate),11*(chan_stage(channel=232,dist=0)-res_stage(res=clifton_court))^-0.3 - 0.5)/(chan_stage(channel=232,dist=0)+13.2), 1)*0.8 + 0.75"    TRUE    
+ccfb_height_G			"SET gate_height(gate=clifton_court,device=reservoir_gates) TO MIN2(ts(name=max_gate),11*(MAX2((chan_stage(channel=232,dist=0)-res_stage(res=clifton_court)),0))^-0.3 - 0.5)"	 TRUE		
+ccfb_gate_nduplicate    "SET gate_nduplicate(gate=clifton_court,device=reservoir_gates) TO ts(name=ccfb_gate_duplicate)"        								TRUE
+END
+
+
+
+
+OPRULE_EXPRESSION
+NAME          		DEFINITION         
+export_remain		"(ts(name=export)*24*60*60) - (ACCUMULATE(ts(name=export_inst)*DT,0.0,HOUR==0))"
+vol_water			"(res_stage(res=clifton_court)-2)*91.868*1000000"  # this is the volume of water above the 2ft threshold. Area taken from the reservoir definition file.
+ccfb_prio_eligible	"ts(name=prio_ts)>0"
+ccfb_wl_open   		"(chan_stage(channel=232,dist=0)-res_stage(res=clifton_court))>0.1" 
+END
+
+OPRULE_TIME_SERIES
+NAME                FILLIN   FILE        PATH       
+ccfb_gate_duplicate	last	 constant	 5
+export_inst		    last	${CCF_INPUTS} /HIST+GATE/CHSWP003/FLOW-EXPORT//15MIN/DWR-DMS/
+export				last	${CCF_INPUTS} /HIST+GATE/CHSWP003/FLOW-EXPORT//1DAY/DWR-DMS/
+prio_ts 			last	${CCF_INPUTS} /HIST+GATE/CCFB/GATE-OP//IR-YEAR/DWR-MSS/
+max_gate			last	${CCF_INPUTS} /HIST+GATE/CCFB/GATE-MAX//1DAY/DWR-MSS/
+END
+
+## ==== Clifton Court Gate Operation ====
+# The opening of the gate is contingent on the priority eligibility and if the water level outside the forebay is higher than inside.
+# The gate will close early if the volume of water above the 2 ft contour is sufficient to cover the rest of the allocation for the day. This is to simulate the field operation where the operators try to 
+# keep water elevation as close to 2 ft as possible. Without the closing early clause the water level in CC would tend to equilibrate to the outside WL which is around 5ft. 
+# Similarly, we also have the oposite rule where the gate will remain open if the amount of water above the 2ft contour is not sufficient to cover the allocation. This is a safegard against the water level 
+# inside the forebay to get too low. 
+
+# The gate default height is 16 ft, however it will be set to a lower value to protect flow from exceeding 12,000 cfs. This reflects the real life operation. 
+# The function to calculate the gate heights is derived from a simplification of the flow rating (ref. AR2015-6) so that it is only function of the head difference.
+# The reason for the simplification is that the real equation was too long for the current oprule interface. It was found that the gate formula can be represented exactly in a simple exponential 12.054*head^-0.334. 
+# where head is (wl_upstream - wl_reservoir). However it was found that in the field the gate is operated more concervatively and I found that an offset version of the equation give the best results. 
+# The final formulate is the following Gate Height = 11*(wl_upstream - wl_reservoir)^-0.3 - 0.5. This gate formula is present in the gate_height but also in the calculation of the gate_coef
+
+# In addition there is also a time serie of maximum gate height based on export level. This is to emulate the sipping condition during low export (i.e. < 4000cfs). 
+# 6/28/2024 added a MAX2 statement in the gate height to avoid NaN when (chan_stage(channel=232,dist=0)-res_stage(res=clifton_court))<0

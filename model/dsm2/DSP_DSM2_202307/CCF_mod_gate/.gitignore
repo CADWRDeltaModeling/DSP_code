@@ -1,0 +1,18 @@
+# SET UP CONFIG TO IGNORE SYMLINKS
+# git config --global core.symlink false
+
+# outputs
+output/*
+preprocess/prio_ts/*
+*.dss
+*.dsc
+*.dsd
+*.dsk
+
+# inputs
+preprocess/data/*
+timeseries/*
+
+# scripts
+! preprocess/data/move_tidal_boundary.py
+! preprocess/data/download_sffpx_data.sh

@@ -1,0 +1,19 @@
+OUTPUT_CHANNEL
+NAME	CHAN_NO	DISTANCE	VARIABLE	INTERVAL	PERIOD_OP	FILE
+CCF_up  232     500     	stage   	${FINE_OUT}	inst		${GATEOUTDSSFILE}
+END
+
+OUTPUT_RESERVOIR
+NAME		RES_NAME		NODE		VARIABLE	INTERVAL	PERIOD_OP	FILE
+CCF_res   	clifton_court   72  		stage   	${FINE_OUT}	inst		${GATEOUTDSSFILE}
+CCF_res   	clifton_court   72  		flow     	${FINE_OUT} inst      	${GATEOUTDSSFILE} 
+CCF_res  	clifton_court   none  		flow-source ${FINE_OUT} inst      	${GATEOUTDSSFILE} 
+END
+
+OUTPUT_GATE
+NAME		GATE_NAME	         DEVICE				VARIABLE	INTERVAL	PERIOD_OP	FILE
+CCF_gate	clifton_court        reservoir_gates    flow   		 ${FINE_OUT}	inst		${GATEOUTDSSFILE}
+CCF_gate 	clifton_court        reservoir_gates    op-from-node ${FINE_OUT}	inst		${GATEOUTDSSFILE}
+CCF_gate 	clifton_court        reservoir_gates    height 		 ${FINE_OUT}	inst		${GATEOUTDSSFILE}
+END
+

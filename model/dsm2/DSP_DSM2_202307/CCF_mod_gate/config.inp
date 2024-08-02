@@ -1,0 +1,70 @@
+
+ENVVAR
+NAME                     VALUE
+DSM2MODIFIER             template                #Study name used for DSM2 output
+GTMMODIFIER              ${DSM2MODIFIER}_gtm
+DSM2INPUTDIR             ../../dsm2_inputs/common_input
+DSM2AGENCY               dwr
+VERSIONDATE              201707
+HISTFLOWVERSION          DWR-DMS-${VERSIONDATE}
+HISTSTAGEVERSION         ${HISTFLOWVERSION}
+HISTQUALVERSION          DWR-DMS-${VERSIONDATE}
+
+
+#runtime
+START_DATE               01Jan2020
+START_TIME               0000
+QUAL_START_DATE          15Jan2020
+PTM_START_DATE           01Jan2016
+GTM_START_DATE           15Jan2020
+GTM_END_DATE             31DEC2023
+END_DATE                 15MAY2024
+END_TIME                 2400
+TEMPDIR                  ./temp                                #Spacious directory for scratch files
+#Input envvars
+STUDYDIR                 .
+TSINPUTDIR               ../../dsm2_inputs/timeseries
+MODINPUT    			 ../../dsm2_inputs/CCF_inputs			#** Folder where all the modified files related to CCF are
+CCF_INPUTS               ${MODINPUT}/CCF_gate_op.dss			#** Priority schedule for Clifton Court
+BNDRYINPUT               ${TSINPUTDIR}/hist_20240220_mrzm.dss   #modified MRZ boundary condition (2024/02/28)
+GATEFILE                 ${TSINPUTDIR}/gates-20240507.dss
+DICUFILE                 ${TSINPUTDIR}/dcd_dsm2_mss2_extran_tp_greenfunction.dss
+QUALBNDINP               ${BNDRYINPUT}
+DICUFILE_ECE             ../../inferred/deltacdwq_da_dcd_mss2_extran_fillpdup_2021_2023.dss         #This is the same as the original dicu file but extended to 2024.
+DICUFILE-ECS             ${TSINPUTDIR}/dicuwq_20240130_greenfunction_extran.dss         #seasonal DICU file for EC
+#DICUFILE_ECS             ${TSINPUTDIR}/dicuwq_3vals_extended.dss
+SMCDFILEEC               ${TSINPUTDIR}/SMCD_hist_wq_ec.dss   #SMCD_hist_wq_ec_20240205.dss
+SSCDFILE                 ${TSINPUTDIR}/smcd_dsm2.dss         #suisun_cd_dsm2.dss
+NULLZONEINPUT            ${TSINPUTDIR}/nullzone-old.dss
+POTWSINPUT               ${TSINPUTDIR}/potw_ds_cnra_extended.dss
+CLIMATE                  ${TSINPUTDIR}/climate-5years.dss
+STOCKTON_FLOW_FILE       constant
+WWTP_FLOW_FILE           ${TSINPUTDIR}/WWTP1992_2015.dss        #needed for DO runs, if not available use constant
+STOCKTON_EFF_FLOW        0.0                                    #needed for DO runs, if not available use 0.0
+#Output
+DSM2OUTPUTDIR            ${STUDYDIR}/output
+OUTPUTFILE               ${DSM2OUTPUTDIR}/${DSM2MODIFIER}.dss
+#hydro
+FLOWPATTERN              ${DSM2OUTPUTDIR}/FLOWPATTERN.dss
+#HYDROOUTDSSFILE          ${DSM2OUTPUTDIR}/${OUTPUTFILE}
+HYDROOUTDSSFILE		    ${DSM2OUTPUTDIR}/${DSM2MODIFIER}_hydro.dss
+GATEOUTDSSFILE		    ${DSM2OUTPUTDIR}/${DSM2MODIFIER}_CCF.dss  #** add outputs for the gates here. 
+HYDROOUTFILE             ${DSM2OUTPUTDIR}/${DSM2MODIFIER}.hof
+HYDRORSTFILE             ${DSM2OUTPUTDIR}/${DSM2MODIFIER}.hrf
+HYDROTIDEFILE            ${DSM2OUTPUTDIR}/${DSM2MODIFIER}.h5
+#Qual
+#QUALOUTDSSFILE           ${DSM2OUTPUTDIR}/${OUTPUTFILE}
+QUALOUTDSSFILE		 ${DSM2OUTPUTDIR}/${DSM2MODIFIER}_gtm.dss
+QUALOUTFILE              ${DSM2OUTPUTDIR}/${GTMMODIFIER}.qof
+QUALRSTFILE              ${DSM2OUTPUTDIR}/${GTMMODIFIER}.qrf
+QUALTIDEFILE             ${DSM2OUTPUTDIR}/${GTMMODIFIER}_ec.h5
+FINE_OUT                 15MIN
+FINE_OUT_DAY             1DAY
+#Jones Tract Levee Break
+EVENTSINPUT              ${TSINPUTDIR}/events-20220124.dss
+#PTM
+PTMOUTFILE               ${DSM2OUTPUTDIR}/${DSM2MODIFIER}.pof
+PTMOUTPUTFILE            ${DSM2OUTPUTDIR}/ptmout.dss
+END
+
+
