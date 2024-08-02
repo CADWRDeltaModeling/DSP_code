@@ -171,6 +171,9 @@ class ModelBCGen(object):
 
         ## update cases
         self.case_items = self.case_inputs.get('cases')
+        self.cases_exclude = self.inputs.get('cases_exclude')
+        self.meshes_exclude = self.inputs.get('meshes_exclude')
+        self.meshcases_exclude = self.inputs.get('meshcases_exclude')
 
         ## get model configurations
         print(f'Storing model configurations:')
@@ -191,25 +194,26 @@ class ModelBCGen(object):
         # retrieve and write out cases
         print('Handling cases:')
         for case in self.case_items:
+            if case not in self.cases_exclude:
 
-            cname = case.get('name')
-            print(f'CASE: {cname} ==================================================================')
-            # define bundle output dir
-            case_data_dir = os.path.join(self.case_data_dir, cname)
-            if not os.path.exists(case_data_dir):
-                raise ValueError(f'Need to have bundled data saved to {case_data_dir} from previous effort')
+                cname = case.get('name')
+                print(f'CASE: {cname} ==================================================================')
+                # define bundle output dir
+                case_data_dir = os.path.join(self.case_data_dir, cname)
+                if not os.path.exists(case_data_dir):
+                    raise ValueError(f'Need to have bundled data saved to {case_data_dir} from previous effort')
 
-            crange = [case.get('case_start'),
-                      case.get('case_end')]
-            
-            if 'perturbations' in case.keys():
-                case_perts = case['perturbations']
-            else:
-                case_perts = {}
-            
-            if model_type.lower() == 'schism':
+                crange = [case.get('case_start'),
+                        case.get('case_end')]
+                
+                if 'perturbations' in case.keys():
+                    case_perts = case['perturbations']
+                else:
+                    case_perts = {}
+                
+                if model_type.lower() == 'schism':
 
-                self.setup_schism_case(cname, case_data_dir, crange, case_perts, case.get('model_year'))
+                    self.setup_schism_case(cname, case_data_dir, crange, case_perts, case.get('model_year'))
 
         if model_type.lower() == 'schism' and write_meta_bash:
             # write meta-bash files
@@ -315,7 +319,7 @@ class ModelBCGen(object):
                                                                          crange, pdict, method, th_file, cname, perturbed_th)
                     else:
                         perturbed_th = self.format_schism_th(case_data_dir, cp, modcase_dir, 
-                                                             crange, pdict, method, th_file, cname, perturbed_th)
+                                                             crange, pdict, method, th_file, cname, perturbed_th, enc_cp=cp)
         
         # creating and writing out flux file
         if write_flux:
@@ -404,143 +408,147 @@ class ModelBCGen(object):
 
         for mesh_info in self.meshes:
             meshname = mesh_info['name']
+            meshcase = f'{meshname}_{cname}'
+            if meshcase not in self.meshcases_exclude and meshname not in self.meshes_exclude:
 
-            # Create the mesh_case directory where the simulations will go
-            print(f"\tMesh: {meshname.upper()} -------------------------------------")
-            meshcase_dir = os.path.join(self.simulations_dir, f'{meshname}_{cname}') # This is where simulations will be run
-            if not os.path.exists(meshcase_dir):
-                os.mkdir(meshcase_dir)
-            if not os.path.exists(os.path.join(meshcase_dir,'outputs')):
-                os.mkdir(os.path.join(meshcase_dir,'outputs'))
+                # Create the mesh_case directory where the simulations will go
+                print(f"\tMesh: {meshname.upper()} -------------------------------------")
+                meshcase_dir = os.path.join(self.simulations_dir, f'{meshname}_{cname}') # This is where simulations will be run
+                basemeshcase_dir = os.path.join(self.simulations_dir, f'baseline_{cname}') # This is where simulations will be run
+                if not os.path.exists(meshcase_dir):
+                    os.mkdir(meshcase_dir)
+                if not os.path.exists(os.path.join(meshcase_dir,'outputs')):
+                    os.mkdir(os.path.join(meshcase_dir,'outputs'))
+                    
+                for env_var in self.env_vars:
+                    self.env_vars[env_var] = self.env_vars[env_var].format(**self.env_vars)
+                    
+                mesh_input_dir = string.Formatter().vformat(mesh_info["indir"],(),SafeDict((self.env_vars)))
+
+                # Copy case directory files
+                shutil.copytree(modcase_dir, meshcase_dir, dirs_exist_ok=True)
+
+                # make sflux links
+                print('\t making sflux links')
+                sflux_dir = os.path.join(meshcase_dir,'sflux')
+                if not os.path.exists(sflux_dir):
+                    os.mkdir(sflux_dir)
+                if self.machine.lower() == 'hpc5':
+                    make_links(crange[0], crange[1], self.env_vars['sflux_src_dir'], self.env_vars['sflux_narr_dir'], sflux_dir)
+                elif self.machine.lower() == 'azure':
+                    mk_links_file = self.inputs.get("make_links").format_map(self.env_vars)
+                    fmt_string_file(mk_links_file, 
+                                    os.path.join(meshcase_dir,f'sflux/{os.path.basename(mk_links_file)}'), 
+                                    {**{"{start_date}":crange[0].strftime('%Y, %m, %d'), 
+                                        "{end_date}":crange[1].strftime('%Y, %m, %d'), 
+                                        "{src_dir}":os.path.relpath(self.env_vars['sflux_src_dir'], os.path.join(meshcase_dir,'sflux')), 
+                                        "{src_dir_narr}":os.path.relpath(self.env_vars['sflux_narr_dir'], os.path.join(meshcase_dir,'sflux')),
+                                        "{link_dir}":'./'}}, 
+                                    method='replace')
+                shutil.copyfile(os.path.join(self.env_vars['exp_dir'],'sflux_inputs.txt'), os.path.join(meshcase_dir,'sflux/sflux_inputs.txt'))
                 
-            for env_var in self.env_vars:
-                self.env_vars[env_var] = self.env_vars[env_var].format(**self.env_vars)
+                # copy spatial files to this dir
+                print('\t copy spatial files')
+                for gf in self.geometry_files:
+                    infile = os.path.join(mesh_input_dir.format(**self.env_vars), 
+                                        gf.format_map({'case_year':str(case_year)}))
+                    if not os.path.exists(infile):
+                        raise ValueError(f"infile: {infile} does not exist!\n Check geometry_files list in yaml")
+                    else:
+                        inbase = os.path.basename(infile)
+                        shutil.copyfile(infile, 
+                                        os.path.join(meshcase_dir, 
+                                                    inbase))
+
+                # copy th files to this dir
+                print('\t copy time history files')
+                for th in th_files:
+                    shutil.copyfile(th, os.path.join(meshcase_dir, os.path.basename(th)))
+
+                # copy param files
+                print('\t copy param files')
+                shutil.copyfile(os.path.join(modcase_dir, 'param.nml.tropic'), os.path.join(meshcase_dir, 'param.nml.tropic'))
+                shutil.copyfile(os.path.join(modcase_dir, 'param.nml.clinic'), os.path.join(meshcase_dir, 'param.nml.clinic'))
                 
-            mesh_input_dir = string.Formatter().vformat(mesh_info["indir"],(),SafeDict((self.env_vars)))
+                # copy common files
+                print('\t copy common files')
+                for cf in self.common_files:
+                    cff = string.Formatter().vformat(cf,(),SafeDict(({**self.env_vars, **locals()})))
+                    shutil.copyfile(cff, os.path.join(meshcase_dir, os.path.basename(cff)))
 
-            # Copy case directory files
-            shutil.copytree(modcase_dir, meshcase_dir, dirs_exist_ok=True)
+                # TROPIC ----------------------------------------------
+                print(f"\t\t Handling the tropic inputs")
 
-            # make sflux links
-            print('\t making sflux links')
-            sflux_dir = os.path.join(meshcase_dir,'sflux')
-            if not os.path.exists(sflux_dir):
-                os.mkdir(sflux_dir)
-            if self.machine.lower() == 'hpc5':
-                make_links(crange[0], crange[1], self.env_vars['sflux_src_dir'], self.env_vars['sflux_narr_dir'], sflux_dir)
-            elif self.machine.lower() == 'azure':
-                mk_links_file = self.inputs.get("make_links").format_map(self.env_vars)
-                fmt_string_file(mk_links_file, 
-                                os.path.join(meshcase_dir,f'sflux/{os.path.basename(mk_links_file)}'), 
-                                {**{"{start_date}":crange[0].strftime('%Y, %m, %d'), 
-                                    "{end_date}":crange[1].strftime('%Y, %m, %d'), 
-                                    "{src_dir}":os.path.relpath(self.env_vars['sflux_src_dir'], os.path.join(meshcase_dir,'sflux')), 
-                                    "{src_dir_narr}":os.path.relpath(self.env_vars['sflux_narr_dir'], os.path.join(meshcase_dir,'sflux')),
-                                    "{link_dir}":'./'}}, 
+                bash_meshcase_tropic = os.path.join(meshcase_dir,os.path.basename(bash_case_tropic).replace("MESHNAME",meshname))
+                fmt_string_file(self.bash_tropic, 
+                                bash_meshcase_tropic, 
+                                {**bash_tropic_dict,**{"{meshname}":meshname}}, 
                                 method='replace')
-            shutil.copyfile(os.path.join(self.env_vars['exp_dir'],'sflux_inputs.txt'), os.path.join(meshcase_dir,'sflux/sflux_inputs.txt'))
-            
-            # copy spatial files to this dir
-            print('\t copy spatial files')
-            for gf in self.geometry_files:
-                infile = os.path.join(mesh_input_dir.format(**self.env_vars), 
-                                      gf.format_map({'case_year':str(case_year)}))
-                if not os.path.exists(infile):
-                    raise ValueError(f"infile: {infile} does not exist!\n Check geometry_files list in yaml")
-                else:
-                    inbase = os.path.basename(infile)
-                    shutil.copyfile(infile, 
-                                    os.path.join(meshcase_dir, 
-                                                 inbase))
-
-            # copy th files to this dir
-            print('\t copy time history files')
-            for th in th_files:
-                shutil.copyfile(th, os.path.join(meshcase_dir, os.path.basename(th)))
-
-            # copy param files
-            print('\t copy param files')
-            shutil.copyfile(os.path.join(modcase_dir, 'param.nml.tropic'), os.path.join(meshcase_dir, 'param.nml.tropic'))
-            shutil.copyfile(os.path.join(modcase_dir, 'param.nml.clinic'), os.path.join(meshcase_dir, 'param.nml.clinic'))
-            
-            # copy common files
-            print('\t copy common files')
-            for cf in self.common_files:
-                cff = string.Formatter().vformat(cf,(),SafeDict(({**self.env_vars, **locals()})))
-                shutil.copyfile(cff, os.path.join(meshcase_dir, os.path.basename(cff)))
-
-            # TROPIC ----------------------------------------------
-            print(f"\t\t Handling the tropic inputs")
-
-            bash_meshcase_tropic = os.path.join(meshcase_dir,os.path.basename(bash_case_tropic).replace("MESHNAME",meshname))
-            fmt_string_file(self.bash_tropic, 
-                            bash_meshcase_tropic, 
-                            {**bash_tropic_dict,**{"{meshname}":meshname}}, 
-                            method='replace')
-            print(f"\t\t\t tropic.sh: {bash_meshcase_tropic}")
-            self.bash_file_dict['tropic'].append(bash_meshcase_tropic)
-            
-            slurm_tropic_dict = {**locals(),**{'job_name':self.job_name,
-                                               'baro':'tropic',
-                                               'output_log_file_base':self.output_log_file_base.format_map(locals())}}
-            
-            slurm_meshcase_tropic = os.path.join(meshcase_dir,os.path.basename(slurm_case_tropic).replace("MESHNAME",meshname))
-            if self.machine.lower() == 'hpc5':
-                fmt_string_file(self.slurm_tropic, 
-                                slurm_meshcase_tropic, 
-                                slurm_tropic_dict, 
-                                method='format_map')
+                print(f"\t\t\t tropic.sh: {bash_meshcase_tropic}")
+                self.bash_file_dict['tropic'].append(bash_meshcase_tropic)
                 
-            # write out a yaml of modified th files
-            mod_th_case = os.path.join(meshcase_dir,os.path.basename(self.mod_th_dict).replace("CASENAME",cname))
-            fmt_string_file(self.mod_th_dict,
-                            mod_th_case,
-                            mod_th_files,
-                            method='replace')
-            
-            # CLINIC ----------------------------------------------
-            print(f"\t\t Handling the clinic inputs")
-
-            bash_clinic_dict = {**run_time_dict, **{'{year_end}':str(case_end.year),
-                                                    '{month_end}':str(case_end.month),
-                                                    '{day_end}':str(case_end.day),
-                                                    '{cname}':cname,
-                                                    '{linked_th_file_strings}':linked_th_file_strings,
-                                                    '{mesh_input_dir}':os.path.relpath(mesh_input_dir, meshcase_dir),
-                                                    '{case_year}':str(case_year),
-                                                    '{meshname}':meshname}}
-            bash_meshcase_clinic = os.path.join(meshcase_dir,os.path.basename(bash_case_clinic).replace("MESHNAME",meshname))
-            fmt_string_file(self.bash_clinic, 
-                            bash_meshcase_clinic, 
-                            bash_clinic_dict, 
-                            method='replace')
-            print(f"\t\t\t clinic.sh: {bash_meshcase_clinic}")
-            self.bash_file_dict['clinic'].append(bash_meshcase_clinic)
-
-            if self.machine.lower() == 'hpc5':
-                slurm_clinic_dict = {**locals(),**{'job_name':self.job_name,
-                                                'baro':'clinic',
+                slurm_tropic_dict = {**locals(),**{'job_name':self.job_name,
+                                                'baro':'tropic',
                                                 'output_log_file_base':self.output_log_file_base.format_map(locals())}}
                 
-                slurm_meshcase_clinic = os.path.join(meshcase_dir,os.path.basename(slurm_case_clinic).replace("MESHNAME",meshname))
-                fmt_string_file(self.slurm_clinic, 
-                                slurm_meshcase_clinic, 
-                                slurm_clinic_dict, 
-                                method='format_map')
-            elif self.machine.lower() == 'azure':
-                az_dict = {**locals(),
-                           **self.env_vars,
-                           **{'rel_study_dir':f"{os.path.basename(self.env_vars['exp_dir'])}/{os.path.relpath(meshcase_dir,self.env_vars['exp_dir'])}",
-                              'job_name':self.job_name}}
-                az_yml_meshcase = os.path.join(self.az_yml_dir,
-                                               os.path.basename(self.az_yml_file).replace("MESHNAME", meshname))
-                az_yml_meshcase = az_yml_meshcase.replace("CASENAME",cname)
-                fmt_string_file(self.az_yml_file, 
-                                az_yml_meshcase, 
-                                az_dict, 
-                                method='format_map')
-            else:
-                raise ValueError(f"Machine needs to be defined as 'hpc5' or 'azure' to properly format bash files.")
+                slurm_meshcase_tropic = os.path.join(meshcase_dir,os.path.basename(slurm_case_tropic).replace("MESHNAME",meshname))
+                if self.machine.lower() == 'hpc5':
+                    fmt_string_file(self.slurm_tropic, 
+                                    slurm_meshcase_tropic, 
+                                    slurm_tropic_dict, 
+                                    method='format_map')
+                    
+                # write out a yaml of modified th files
+                mod_th_case = os.path.join(meshcase_dir,os.path.basename(self.mod_th_dict).replace("CASENAME",cname))
+                fmt_string_file(self.mod_th_dict,
+                                mod_th_case,
+                                mod_th_files,
+                                method='replace')
+                
+                # CLINIC ----------------------------------------------
+                print(f"\t\t Handling the clinic inputs")
+
+                bash_clinic_dict = {**bash_tropic_dict, **{'{year_end}':str(case_end.year),
+                                                            '{month_end}':str(case_end.month),
+                                                            '{day_end}':str(case_end.day),
+                                                            '{cname}':cname,
+                                                            '{linked_th_file_strings}':linked_th_file_strings,
+                                                            '{mesh_input_dir}':os.path.relpath(mesh_input_dir, meshcase_dir),
+                                                            '{case_year}':str(case_year),
+                                                            '{meshname}':meshname}}
+                bash_meshcase_clinic = os.path.join(meshcase_dir,os.path.basename(bash_case_clinic).replace("MESHNAME",meshname))
+                fmt_string_file(self.bash_clinic, 
+                                bash_meshcase_clinic, 
+                                bash_clinic_dict, 
+                                method='replace')
+                print(f"\t\t\t clinic.sh: {bash_meshcase_clinic}")
+                self.bash_file_dict['clinic'].append(bash_meshcase_clinic)
+
+                if self.machine.lower() == 'hpc5':
+                    slurm_clinic_dict = {**locals(),**{'job_name':self.job_name,
+                                                    'baro':'clinic',
+                                                    'output_log_file_base':self.output_log_file_base.format_map(locals())}}
+                    
+                    slurm_meshcase_clinic = os.path.join(meshcase_dir,os.path.basename(slurm_case_clinic).replace("MESHNAME",meshname))
+                    fmt_string_file(self.slurm_clinic, 
+                                    slurm_meshcase_clinic, 
+                                    slurm_clinic_dict, 
+                                    method='format_map')
+                elif self.machine.lower() == 'azure':
+                    az_dict = {**locals(),
+                            **self.env_vars,
+                            **{'rel_study_dir':f"{os.path.basename(self.env_vars['exp_dir'])}/{os.path.relpath(meshcase_dir,self.env_vars['exp_dir'])}",
+                                'rel_study_base_dir':f"{os.path.basename(self.env_vars['exp_dir'])}/{os.path.relpath(basemeshcase_dir,self.env_vars['exp_dir'])}",
+                                'job_name':self.job_name}}
+                    az_yml_meshcase = os.path.join(self.az_yml_dir,
+                                                os.path.basename(self.az_yml_file).replace("MESHNAME", meshname))
+                    az_yml_meshcase = az_yml_meshcase.replace("CASENAME",cname)
+                    fmt_string_file(self.az_yml_file, 
+                                    az_yml_meshcase, 
+                                    az_dict, 
+                                    method='format_map')
+                else:
+                    raise ValueError(f"Machine needs to be defined as 'hpc5' or 'azure' to properly format bash files.")
     
     def set_schism_vars(self):
         self.meshes = self.inputs.get('meshes')
@@ -689,10 +697,16 @@ if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
     ## Read in param.tropic and param.clinic and modify
-    if True: # run for azure
+    if False: # run for azure
         yml_fname = "./input/schism_lathypcub_v3_azure.yaml"
 
         mbc = ModelBCGen(yml_fname, 'schism', machine='azure')
+        
+    elif True: # run for azure
+        yml_fname = "./input/schism_lathypcub_v3_azure_from_base.yaml"
+
+        mbc = ModelBCGen(yml_fname, 'schism', machine='azure')
+    
     else:
         yml_fname = "./input/schism_lathypcub_v3_hpc5.yaml"
 

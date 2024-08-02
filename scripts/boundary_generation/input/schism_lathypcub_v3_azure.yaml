@@ -188,4 +188,15 @@ common_files:
   - '{common_dir}/vgrid.in.2d'
   - '{common_dir}/station.in'
   - '{common_dir}/check_progress_tropic.sh'
+  - '{common_dir}/process_x2.sh'
+  - '{bds_home}/bdschism/bdschism/x2_bay_sjr.bp'
+  - '{bds_home}/bdschism/bdschism/x2_bay_nysjr.bp'
+  - '{bds_home}/bdschism/bdschism/x2_bay_mzm.bp'
+  - '{bds_home}/bdschism/bdschism/x2_bay_sac.bp'  
   # - '{common_dir}/schism.sh'
+
+cases_exclude:
+  - lhc_4
+
+meshcases_exclude:
+  - baseline_lhc_1
