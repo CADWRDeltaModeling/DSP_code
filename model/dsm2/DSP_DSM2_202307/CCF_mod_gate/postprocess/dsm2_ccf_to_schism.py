@@ -1,3 +1,4 @@
+# adapted from Sophie Munger by Lily Tomkovic
 
 import shutil, os, sys, io
 import pyhecdss

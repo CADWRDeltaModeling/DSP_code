@@ -14,5 +14,8 @@ preprocess/data/*
 timeseries/*
 
 # scripts
-! preprocess/data/move_tidal_boundary.py
-! preprocess/data/download_sffpx_data.sh
+!preprocess/data/move_tidal_boundary.py
+!preprocess/data/noaa_stations.txt
+!preprocess/data/download_sffpx_data.sh
+!preprocess/make_CCF_MSS.py
+!postprocess/dsm2_ccf_to_schism.py

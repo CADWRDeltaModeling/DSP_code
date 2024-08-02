@@ -11,7 +11,6 @@ You'll also need to provide the predicted tide at San Francisco for the duration
 
 """
 
-
 import shutil, os, glob
 import pyhecdss
 import pydsm
