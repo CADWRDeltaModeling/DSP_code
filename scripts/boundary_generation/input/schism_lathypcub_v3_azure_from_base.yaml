@@ -1,0 +1,206 @@
+# env_vars are used to populate the rest of the variables below 
+env_vars:
+- dsp_home: /scratch/tomkovic/DSP_code # where the main folder of this project is (HPC4/HPC5)
+- bds_home: /home/tomkovic/BayDeltaSCHISM # where the BayDeltaSCHISM repository is housed
+- experiment: lhc_v3 # name of folder to look inside of test_file for azure setup
+# - experiment: latinhypercube_v3 # name of folder to look inside of test_file for HPC5 setup
+- schism_dir: '{dsp_home}/model/schism'
+- exp_dir: '{schism_dir}/azure_dsp_2024_{experiment}' # for azure setup
+# - exp_dir: '{schism_dir}/dsp_202402_{experiment}' # for HPC55 setup
+- th_repo: '{bds_home}/data/time_history'
+- dcd_repo: '{bds_home}/data/channel_depletion'
+- sflux_src_dir: '{schism_dir}/atmos/baydelta_sflux_v20220916'
+- sflux_narr_dir: '{schism_dir}/atmos/NARR_cropped'
+- common_dir: '{exp_dir}' # where to copy common files from
+
+# auxiliary yaml files
+case_setup: '{dsp_home}/scripts/boundary_generation/input/lathypcub_v3_setup.yaml'
+
+# setup files
+param_tropic_base: '{exp_dir}/param.nml.tropic'
+param_clinic_base: '{exp_dir}/param.nml.clinic'
+
+make_links: '{exp_dir}/make_links_az.py'
+
+slurm_tropic: '{exp_dir}/slurm_MESHNAME_CASENAME.tropic.sh'
+slurm_clinic: '{exp_dir}/slurm_MESHNAME_CASENAME.clinic.sh'
+az_yml_file: '{exp_dir}/run_MESHNAME_CASENAME.from_baseline.yml'
+az_yml_dir: '{exp_dir}/az_yml_files' # where to copy azure yml files for run configurations
+job_name: dsp_2024
+output_log_file_base: dsp_{cname}
+
+bash_tropic: '{exp_dir}/dsp_MESHNAME_CASENAME.tropic.sh' # needs replacing of meshname and casename when copied into case dir
+bash_clinic: '{exp_dir}/dsp_MESHNAME_CASENAME.clinic.from_baseline.sh'
+
+# copied files
+int_vars: '{exp_dir}/interpolate_variables.in' # has runtimedays placeholder for each case
+
+mod_th_dict: '{exp_dir}/mod_th_dict_CASENAME.yaml'
+
+# mesh parameters
+meshes:
+- name: baseline
+  indir: '{exp_dir}/baseline_inputs'
+- name: suisun
+  indir: '{exp_dir}/suisun_inputs'
+- name: cache
+  indir: '{exp_dir}/cache_inputs'
+
+# files specific to each geometry
+geometry_files: 
+  # .gr3 files:
+  - vgrid.in.3d
+  - albedo.gr3
+  - diffmax.gr3
+  - diffmin.gr3
+  - elev.ic
+  - estuary.gr3
+  - hgrid.gr3
+  - hgrid.ll
+  - krvel.gr3
+  - manning.gr3
+  - nlayer.gr3
+  - nlayer_default.gr3
+  - rough.gr3
+  - sav_cd.gr3
+  - sav_D.gr3
+  - sav_h.gr3
+  - sav_N.gr3
+  - watertype.gr3
+  - windfactor.gr3
+  - windrot_geo2proj.gr3
+  - xlsc.gr3
+  # .in files:
+  - hydraulics.in
+  - source_sink.in
+  # .prop files
+  - fluxflag.prop
+  - split_quad.prop
+  - tvd.prop
+  # files needed to run baroclinic mode:
+  - 'nudging/{case_year}/SAL_nu_roms.nc'
+  - 'nudging/{case_year}/salinity_nudge_roms.gr3'
+  - 'nudging/{case_year}/TEM_nu_roms.nc'
+  - 'nudging/{case_year}/temperature_nudge_roms.gr3'
+  - 'hotstart/hotstart_{case_year}.nc'
+  - vgrid.in.3d
+
+# relevant files
+flux_file_in: '{th_repo}/flux.th'
+noaa_download:
+  - pt_reyes: '{exp_dir}/noaa_download/pryc_filled_data.csv'
+  - monterey: '{exp_dir}/noaa_download/noaa_mtyc1_9413450_water_level_2006_2017.csv'
+
+# source locations
+model_config:
+- model_input: chcc
+  th_file: '{th_repo}/flux.th'
+  flux_col: ccc_rock
+  sign_change: 1
+  method: read
+
+- model_input: chdm
+  th_file: '{th_repo}/flux.th'
+  flux_col: cvp
+  sign_change: 1
+  method: read
+
+- model_input: swp
+  th_file: '{th_repo}/flux.th'
+  flux_col: swp
+  sign_change: 1
+  method: read
+
+- model_input: ccvct
+  th_file: '{th_repo}/flux.th'
+  flux_col: ccc_victoria
+  sign_change: 1
+  method: read
+
+- model_input: rold
+  th_file: '{th_repo}/flux.th'
+  flux_col: ccc_old
+  sign_change: 1
+  method: read
+
+- model_input: dcc
+  th_file: '{th_repo}/delta_cross_channel.th'
+  method: read
+  
+- model_input: suisgate
+  th_file: '{dsp_home}/scripts/boundary_generation/data_out/suisun_gates/montezuma_{gate}_lhc_v{gate_ver}.th'
+  method: copy
+
+- model_input: tide
+  th_file: none
+  method: modify_elev2d
+
+- model_input: sac
+  th_file: '{th_repo}/flux.th'
+  flux_col: sac
+  sign_change: -1
+  method: read
+
+- model_input: sjr
+  th_file: '{th_repo}/flux.th'
+  flux_col: sjr
+  sign_change: -1
+  method: read
+  
+- model_input: dcdsink
+  th_file: '{dsp_home}/scripts/boundary_generation/data_out/schism_dcd/vsink_{version}_dated.th'
+  method: read_sourcesink
+    
+- model_input: dcdsource
+  th_file: '{dsp_home}/scripts/boundary_generation/data_out/schism_dcd/vsource_{version}_dated.th'
+  method: read_sourcesink
+
+linked_th_files:
+  - ccfb_gate.th
+  - delta_cross_channel.th
+  - flux.th
+  - grantline_barrier.th
+  - grantline_culvert.th
+  - grantline_weir.th
+  - midr_culvert_l.th
+  - midr_culvert_r.th
+  - midr_weir.th
+  - montezuma_boat_lock.th
+  - montezuma_flash.th
+  - montezuma_radial.th
+  - oldr_head_barrier.th
+  - oldr_tracy_culvert.th
+  - oldr_tracy_weir.th
+  - tom_paine_sl_culvert.th
+  - west_false_river_barrier_leakage.th
+  - salt.th
+  - temp.th
+
+linked_ss_th_files:
+  - msource.th
+  - vsink.th
+  - vsource.th
+
+# common files that get copied to each meshcase directory
+common_files:
+  - '{common_dir}/bctides.in.2d'
+  - '{common_dir}/bctides.in.3d'
+  - '{common_dir}/vgrid.in.2d'
+  - '{common_dir}/station.in'
+  - '{common_dir}/check_progress_tropic.sh'
+  # - '{common_dir}/schism.sh'
+  - '{common_dir}/process_x2.sh'
+  - '{bds_home}/bdschism/bdschism/x2_bay_sjr.bp'
+  - '{bds_home}/bdschism/bdschism/x2_bay_nysjr.bp'
+  - '{bds_home}/bdschism/bdschism/x2_bay_mzm.bp'
+  - '{bds_home}/bdschism/bdschism/x2_bay_sac.bp'  
+
+cases_exclude:
+  - none
+
+meshcases_exclude:
+  - suisun_lhc_4
+  - cache_lhc_4
+
+meshes_exclude:
+  - baseline
