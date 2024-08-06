@@ -69,9 +69,11 @@ if __name__ == "__main__":
 
     # case_name = "lhc_5"
     # start_time = "2006-11-14"
-    case_name = "lhc_3"
-    start_time = "2013-10-24"
-    case_dir = "D:/projects/delta_salinity/scripts/DSP_code/model/dsm2/DSP_DSM2_202307/CCF_new_gate_op_June2024-lily"
+    # case_name = "lhc_3"
+    # start_time = "2013-10-24"
+    case_name = "lhc_6"
+    start_time = "2011-10-18"
+    case_dir = "D:/projects/delta_salinity/scripts/DSP_code/model/dsm2/DSP_DSM2_202307/CCF_mod_gate"
 
     # Reference ccfb th, whose height column will be replaced.
     ccfb_ref = './data/ccfb_gate.th'

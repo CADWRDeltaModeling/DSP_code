@@ -329,21 +329,24 @@ def make_prio_for_varying_exports(input_tide, dss_output, dss_in):
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    tidal_infile = "./data/noaa_sffpx_shift_forward_100d.csv"
-    tidal_df = read_noaa(tidal_infile,force_regular=True)
+    # tidal_infile = "./data/noaa_sffpx_shift_forward_100d.csv" # works for any case where tidal boundary is shifted 100 days
+    # tidal_df = read_noaa(tidal_infile,force_regular=True)
 
     # For dsm2 runs with export that are time varying
     # point to the dss that has the swp export time series. 
     # you might have to adjust the path in the <get_exports> function
+
     # dss_output = 'CCF_gate_op_5.dss'
     # dss_in = '../timeseries/lhc_5_hist.dss' 
     # make_prio_for_varying_exports(tidal_df, dss_output, dss_in)
 
     # shutil.copyfile(dss_output, f"../CCF_inputs/CCF_gate_op_5.dss")
 
+    tidal_infile = "./data/noaa_download/noaa_sffpx_9414290_water_level_2006_2017.csv"
+    tidal_df = read_noaa(tidal_infile,force_regular=True)
 
-    dss_output = 'CCF_gate_op_3.dss'
-    dss_in = '../timeseries/lhc_3_hist.dss' 
+    dss_output = 'CCF_gate_op_6.dss'
+    dss_in = '../timeseries/lhc_6_hist.dss' 
     make_prio_for_varying_exports(tidal_df, dss_output, dss_in)
 
     shutil.copyfile(dss_output, f"../CCF_inputs/CCF_gate_op_3.dss")

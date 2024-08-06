@@ -3,26 +3,25 @@
 # 202107
 ENVVAR
 NAME                     VALUE
-DSM2MODIFIER             lhc_3                              #Study name used for DSM2 output
+DSM2MODIFIER             lhc_6                              #Study name used for DSM2 output
 DSM2INPUTDIR             ../../2021DSM2FP_202301/common_input
 VERSIONDATE              202112
 HISTFLOWVERSION          DWR-DMS-${VERSIONDATE}
 HISTSTAGEVERSION         ${HISTFLOWVERSION}
 HISTQUALVERSION          DWR-DMS-${VERSIONDATE}
-YEARRUN 				 2008
-STAGE_EXPERIMENT		 DSP_LHC_3
-GATE_EXPERIMENT			 DSP_LHC_3
-FLOW_EXPERIMENT			 DSP_LHC_3
-SAC_EXPERIMENT			 DSP_LHC_3
-EXPORT_EXPERIMENT	     DSP_LHC_3
-DCD_EXPERIMENT			 DWR-BDO
-SUIS_GATE_EXPERIMENT	 DWR-ESO
+STAGE_EXPERIMENT		 ${HISTFLOWVERSION}
+GATE_EXPERIMENT			 DSP_LHC_6
+FLOW_EXPERIMENT			 DSP_LHC_6
+SAC_EXPERIMENT			 DSP_LHC_6
+EXPORT_EXPERIMENT	     DSP_LHC_6
+DCD_EXPERIMENT			 DSP_LHC_6
+SUIS_GATE_EXPERIMENT	 DSP_LHC_6
 
 #runtime
-START_DATE               24OCT2013
-QUAL_START_DATE          01NOV2013
+START_DATE               18OCT2011
+QUAL_START_DATE          01NOV2011
 PTM_START_DATE           ${QUAL_START_DATE}
-END_DATE                 31DEC2015
+END_DATE                 31DEC2012
 START_TIME               0000
 END_TIME                 0000
 TEMPDIR                  z:/temp                                #Spacious directory for scratch files
@@ -31,7 +30,7 @@ TEMPDIR                  z:/temp                                #Spacious direct
 STUDYDIR                 .
 TSINPUTDIR               ../../2021DSM2FP_202301/timeseries
 MODINPUT    			 ./CCF_inputs			#** Folder where all the modified files related to CCF are
-CCF_INPUTS               ${MODINPUT}/CCF_gate_op_3.dss			#** Priority schedule for Clifton Court																						 
+CCF_INPUTS               ${MODINPUT}/CCF_gate_op_6.dss			#** Priority schedule for Clifton Court
 BNDRYINPUT               ./timeseries/${DSM2MODIFIER}_hist.dss
 GATEFILE                 ./timeseries/${DSM2MODIFIER}_gates.dss
 DICUFILE                 ./timeseries/${DSM2MODIFIER}_dcd.dss
