@@ -253,17 +253,17 @@ class ANNBCECGen(object):
             in_name = outvar['name']
             if outvar['method'] == "assign_multiple_ec":
                 
-                ec_out_df = self.get_multiple_staout(outputs_fpath, station_inpath, time_basis, outvar['locs'])
+                ec_out_df, z_outs = self.get_multiple_staout(outputs_fpath, station_inpath, time_basis, outvar['locs'])
 
-                for col in ec_out_df.columns:
-                    outvar_df[f"{col} EC"] = ec_out_df.loc[:,col]
+                for c, col in enumerate(ec_out_df.columns):
+                    outvar_df[f"{col.split('_')[0]} z={z_outs[c]} {in_name}"] = ec_out_df.loc[:,col]
                 
             elif outvar['method'] == "assign_multiple_wse":
                 
-                wse_out_df = self.get_multiple_staout(outputs_fpath, station_inpath, time_basis, outvar['locs'])
+                wse_out_df, z_outs = self.get_multiple_staout(outputs_fpath, station_inpath, time_basis, outvar['locs'])
 
                 for col in wse_out_df.columns:
-                    outvar_df[f"{col} WSE"] = wse_out_df.loc[:,col]
+                    outvar_df[f"{col} {in_name}"] = wse_out_df.loc[:,col]
 
             elif outvar['method'] == "read_single_flux": # outputs_fpath, time_basis, loc TODO: check inputs
                 
@@ -380,18 +380,21 @@ class ANNBCECGen(object):
         all_ts = read_staout(outputs_fpath, station_df, time_basis)
 
         cols = []
+        zs = []
         for loc in locs:
             loc_outs = [stc for stc in station_df.index if loc in stc]
             if len(loc_outs) == 0:
                 raise ValueError(f"There is no station output for {loc}")
             elif len([stc for stc in loc_outs if 'upper' in stc]) > 0:
                 cols.append(f'{loc}_upper')
+                zs.append(station_df.loc[(loc, 'upper'),'z'])
             else:
                 cols.append(f'{loc}_default')
+                zs.append(station_df.loc[(loc, 'default'),'z'])
 
         out_ts = all_ts[cols] # this is the output df for all requested locs
 
-        return out_ts
+        return out_ts, zs
 
     def read_single_flux(self, outputs_fpath, time_basis, loc):
 
@@ -411,4 +414,4 @@ if __name__ == '__main__':
     
     in_fname = "./input/pull_output_lathypcub_v3_schism.yaml"
     annbc = ANNBCECGen(in_fname, model_type="SCHISM")
-    annbc.get_meshcase_inouts('suisun_basebc', 4)
+    annbc.get_meshcase_inouts('baseline', 1)

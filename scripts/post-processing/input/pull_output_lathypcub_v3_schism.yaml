@@ -20,7 +20,7 @@ flux_in: '{exp_dir}/flow_station_xsects.yaml'
 
 in_vars:
 # ANN
-- name: Northern Flow In #{'RSAC155': hist_dss_file, 'BYOLO040': hist_dss_file, 'RMKL070': hist_dss_file, 'RCSM075': hist_dss_file, 'RCAL009': hist_dss_file, 'SLBAR002': hist_dss_file}
+- name: Northern Flow In [cms] #{'RSAC155': hist_dss_file, 'BYOLO040': hist_dss_file, 'RMKL070': hist_dss_file, 'RCSM075': hist_dss_file, 'RCAL009': hist_dss_file, 'SLBAR002': hist_dss_file}
   th_files: 
     - '{flux_file}'
   th_header: '{bds_home}/data/time_history/flux.th' # use this to get the headers to match the inputs
@@ -34,7 +34,7 @@ in_vars:
   method: read_multiple_column_th
 
 # Sacramento and San Joaquin Inflow.  Compare daily (or weekly) average time series from boundary inflows.
-- name: Sacramento Flow In #{'RSAC155': hist_dss_file, 'BYOLO040': hist_dss_file, 'RMKL070': hist_dss_file, 'RCSM075': hist_dss_file, 'RCAL009': hist_dss_file, 'SLBAR002': hist_dss_file}
+- name: sac In [cms] #{'RSAC155': hist_dss_file, 'BYOLO040': hist_dss_file, 'RMKL070': hist_dss_file, 'RCSM075': hist_dss_file, 'RCAL009': hist_dss_file, 'SLBAR002': hist_dss_file}
   th_files: 
     - '{flux_file}'
   th_header: '{bds_home}/data/time_history/flux.th' # use this to get the headers to match the inputs
@@ -43,7 +43,7 @@ in_vars:
   method: read_single_column_th
 
 # Sacramento and San Joaquin Inflow.  Compare daily (or weekly) average time series from boundary inflows.
-- name: SJR Flow In
+- name: sjr In [cms]
   th_files: 
     - '{flux_file}'
   th_header: '{bds_home}/data/time_history/flux.th' # use this to get the headers to match the inputs
@@ -52,7 +52,7 @@ in_vars:
   method: read_single_column_th
 
 # ANN
-- name: Exports In # Sum(Banks, Jones, CCC plants(Rock Sl, Middle R (actually old river), Victoria))
+- name: Exports Combined In [cms] # Sum(Banks, Jones, CCC plants(Rock Sl, Middle R (actually old river), Victoria))
   th_files: 
     - '{flux_file}'
   header_in:
@@ -67,7 +67,7 @@ in_vars:
   method: read_multiple_column_th
 
 # SWP and CVP exports.  Compare daily (or weekly) average time series from boundary specifications.
-- name: SWP In # Sum(Banks, Jones, CCC plants(Rock Sl, Middle R (actually old river), Victoria))
+- name: SWP Combined In [cms] # Sum(Banks, Jones, CCC plants(Rock Sl, Middle R (actually old river), Victoria))
   th_files: 
     - '{flux_file}'
   header_in:
@@ -78,14 +78,14 @@ in_vars:
   method: read_single_column_th
 
 # SWP and CVP exports.  Compare daily (or weekly) average time series from boundary specifications.
-- name: CVP In # Sum(Banks, Jones, CCC plants(Rock Sl, Middle R (actually old river), Victoria))
+- name: CVP In [cms] # Sum(Banks, Jones, CCC plants(Rock Sl, Middle R (actually old river), Victoria))
   th_files: 
     - '{flux_file}'
   header_in:
     - '{meshcase_dir}/flow_station_xsects.yaml'
   th_header: '{bds_home}/data/time_history/flux.th' # use this to get the headers to match the inputs
   inputs:
-    - cvp # Banks
+    - cvp # Jones
   method: read_single_column_th
 
 # DCC gate operations schedule
@@ -107,7 +107,7 @@ in_vars:
   method: read_single_column_th
 
 # ANN
-- name: Net Delta CU In # daily (DIV+SEEP-DRAIN) for DCD and SMCD 
+- name: Net Delta CU In [cms] # daily (DIV+SEEP-DRAIN) for DCD and SMCD 
   th_files: 
     - '{vsource_file}'
     - '{vsink_file}'
@@ -121,7 +121,7 @@ in_vars:
   method: calc_tidal_energy
 
 # intermediate for NDO
-- name: Other Flux In
+- name: Other Flux In [cms]
   th_files: 
     - '{flux_file}'
   th_header: '{bds_home}/data/time_history/flux.th' # use this to get the headers to match the inputs
@@ -151,13 +151,13 @@ in_vars:
 # Combined inputs ===================================================================================
 comb_in_vars:
 # Net Delta Outflow at Martinez.  Compare daily (or weekly) average time series based on summation of all boundary conditions.
-- name: Net Delta Outflow In
+- name: Net Delta Outflow In [cms]
   vars:
-    - Other Flux In
-    - Net Delta CU In
-    - Exports In
-    - SJR Flow In
-    - Northern Flow In
+    - Other Flux In [cms]
+    - Net Delta CU In [cms]
+    - Exports Combined In [cms]
+    - sjr In [cms]
+    - Northern Flow In [cms]
 
 # Output Variables to the ANN =========================================================================
 
@@ -166,7 +166,7 @@ param_clinic: '{meshcase_dir}/param.nml.clinic'
 
 # ANN
 out_vars:
-- name: EC Out
+- name: EC Out [psu]
   locs:
   - trp # 'CHDMC006' CVP Intake at Tracy Pumping Plant
   - wci # 'CHSWP003' West Canal near Clifton Court Intake
@@ -210,63 +210,63 @@ out_vars:
   method: assign_multiple_ec
 
 # Rio Vista, Emmaton and Jersey Point.  Compare tidally average time series from cross section flow computed at salinity monitoring locations.
-- name: Rio Vista Flow Out
+- name: srv Out [cms]
   flux_output: '{meshcase_dir}/outputs/flux.out'
   loc:
     - srv # Rio Vista
   method: read_single_flux
 
 # Rio Vista, Emmaton and Jersey Point.  Compare tidally average time series from cross section flow computed at salinity monitoring locations.
-- name: Jersey Point Flow Out
+- name: sjj Out [cms]
   flux_output: '{meshcase_dir}/outputs/flux.out'
   loc:
     - sjj # Jersey Point
   method: read_single_flux
 
 # Net Delta Outflow at Martinez.  Compare tidally averaged time series based on cross section flow at Martinez.
-- name: Net Delta Outflow Out
+- name: martinez Out [cms]
   flux_output: '{meshcase_dir}/outputs/flux.out'
   loc:
     - martinez # Martinez
   method: read_single_flux
 
 # DCC gate operations.  Compare tidally averaged time series through the cross channel
-- name: DCC Flow Out
+- name: dlc Out [cms]
   flux_output: '{meshcase_dir}/outputs/flux.out'
   loc:
     - dlc # Delta Cross Channel
   method: read_single_flux
 
 # East and west end of Montezuma Slough.  Compare tidally average time series from cross section flow computed convenient locations in Montezuma Slough.
-- name: Montezuma East Flow Out
+- name: nsl Out [cms]
   flux_output: '{meshcase_dir}/outputs/flux.out'
   loc:
     - nsl # Montezuma Slough at National Steel
   method: read_single_flux
   
 # East and west end of Montezuma Slough.  Compare tidally average time series from cross section flow computed convenient locations in Montezuma Slough.
-- name: Montezuma West Flow Out
+- name: mtz Out [cms]
   flux_output: '{meshcase_dir}/outputs/flux.out'
   loc:
     - mtz # Montezuma Slough above Grizzly Bay
   method: read_single_flux
 
 # Old and Middle River Flow.  Compare tidally average time series from cross section flow computed at Old and Middle salinity monitoring locations.
-- name: Old River Flow Out
+- name: oh4 Out [cms]
   flux_output: '{meshcase_dir}/outputs/flux.out'
   loc:
     - oh4 # Montezuma Slough above Grizzly Bay
   method: read_single_flux
 
 # Old and Middle River Flow.  Compare tidally average time series from cross section flow computed at Old and Middle salinity monitoring locations.
-- name: Middle River Flow Out
+- name: mdm Out [cms]
   flux_output: '{meshcase_dir}/outputs/flux.out'
   loc:
     - mdm # Montezuma Slough above Grizzly Bay
   method: read_single_flux
 
 # Water surface elevation in restoration site(s).  Tidal variation in WSE at a few locations within the restoration sites.
-- name: WSE Out
+- name: WSE Out [m NAVD88]
   locs:
   - trp # 'CHDMC006' CVP Intake at Tracy Pumping Plant
   - wci # 'CHSWP003' West Canal near Clifton Court Intake
