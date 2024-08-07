@@ -54,22 +54,23 @@ class rst_fm_hotstart(object):
         # hotstart files are written as hotstart_[process_id]_[time_step].nc
         self.last_hotstart = str(int(num_timesteps))
 
-    def combine_hotstart(self, iteration, machine='HPC5'):
+    def combine_hotstart(self, iteration, machine='hpc5'):
         
-        os.chdir(os.path.join(self.mod_dir, 'outputs'))
-        if machine.lower=='hpc5':
+        os.chdir('outputs')
+        if machine.lower()=='hpc5':
             modld = f'module purge; module load intel/2024.0 hmpt/2.29 hdf5/1.14.3 netcdf-c/4.9.2 netcdf-fortran/4.6.1 schism/5.11.1; '
         else:
             modld = ''
         command = f'{modld}combine_hotstart7 --iteration {iteration}'
 
         ret = subprocess.run(command, capture_output=True, shell=True)
+        os.chdir('../')
         
         print(ret.stdout.decode())
 
     def param_mod(self, iteration, param_in="param.nml.clinic"):
 
-        os.chdir(os.path.join(self.mod_dir))
+        # os.chdir(os.path.join(self.mod_dir))
         
         # replace hotstart variables ihot 
         with open(param_in, 'r') as file:
@@ -118,10 +119,12 @@ def main():
 
 # if __name__ == '__main__':
 
-#     mod_dir = '/scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_1'
+#     os.chdir(os.path.dirname(os.path.abspath(__file__)))
+#     mod_dir = '.'
 #     baro = 'clinic'
 
 #     rfh = rst_fm_hotstart(mod_dir, baro)
+#     print(rfh.last_hotstart)
 #     rfh.combine_hotstart(rfh.last_hotstart, machine='hpc5')
 #     rfh.param_mod(rfh.last_hotstart)
 
