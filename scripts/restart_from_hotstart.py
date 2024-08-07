@@ -54,11 +54,14 @@ class rst_fm_hotstart(object):
         # hotstart files are written as hotstart_[process_id]_[time_step].nc
         self.last_hotstart = str(int(num_timesteps))
 
-    def combine_hotstart(self, iteration):
+    def combine_hotstart(self, iteration, machine='HPC5'):
         
         os.chdir(os.path.join(self.mod_dir, 'outputs'))
-        command = f'module purge; module load intel/2024.0 hmpt/2.29 hdf5/1.14.3 netcdf-c/4.9.2 netcdf-fortran/4.6.1 schism/5.11.1; combine_hotstart7 --iteration {iteration}'
-        # proc = subprocess.Popen(['module purge; module load intel/2024.0 hmpt/2.29 hdf5/1.14.3 netcdf-c/4.9.2 netcdf-fortran/4.6.1 schism/5.11.1; combine_hotstart7', '--iteration', iteration], stdout=subprocess.PIPE)
+        if machine.lower=='hpc5':
+            modld = f'module purge; module load intel/2024.0 hmpt/2.29 hdf5/1.14.3 netcdf-c/4.9.2 netcdf-fortran/4.6.1 schism/5.11.1; '
+        else:
+            modld = ''
+        command = f'{modld}combine_hotstart7 --iteration {iteration}'
 
         ret = subprocess.run(command, capture_output=True, shell=True)
         
@@ -96,6 +99,8 @@ def create_arg_parser():
                         help='directory for ', required=True)
     parser.add_argument('--baro', type=str,                        
                         help='"clinic" or "tropic" mode. Looks at relevant param.nml', default=None)
+    parser.add_argument('--machine', type=str,                        
+                        help='hpc5 or azure, decides which command to submit to cli', default=None)
     return parser
 
 
@@ -105,19 +110,19 @@ def main():
     args = parser.parse_args()
 
     rfh = rst_fm_hotstart(args.mod_dir, args.baro)
-    rfh.combine_hotstart(rfh.last_hotstart)
+    rfh.combine_hotstart(rfh.last_hotstart, machine=args.machine)
     rfh.param_mod(rfh.last_hotstart)
 
     print('Combined Hotstart files')
 
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
 
-    mod_dir = '/scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_1'
-    baro = 'clinic'
+#     mod_dir = '/scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_1'
+#     baro = 'clinic'
 
-    rfh = rst_fm_hotstart(mod_dir, baro)
-    rfh.combine_hotstart(rfh.last_hotstart)
-    rfh.param_mod(rfh.last_hotstart)
+#     rfh = rst_fm_hotstart(mod_dir, baro)
+#     rfh.combine_hotstart(rfh.last_hotstart, machine='hpc5')
+#     rfh.param_mod(rfh.last_hotstart)
 
-    print('Combined Hotstart files')
+#     print('Combined Hotstart files')
