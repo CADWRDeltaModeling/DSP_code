@@ -194,9 +194,9 @@ class ModelBCGen(object):
         # retrieve and write out cases
         print('Handling cases:')
         for case in self.case_items:
-            if case not in self.cases_exclude:
+            cname = case.get('name')
+            if cname not in self.cases_exclude:
 
-                cname = case.get('name')
                 print(f'CASE: {cname} ==================================================================')
                 # define bundle output dir
                 case_data_dir = os.path.join(self.case_data_dir, cname)
@@ -235,7 +235,7 @@ class ModelBCGen(object):
 
         # specify model output directory
         self.model_dir = os.path.join(self.env_vars['exp_dir'])
-        self.simulations_dir = os.path.join(self.model_dir,'simulations')
+        self.simulations_dir = self.env_vars['simulation_dir']
         if not os.path.exists(self.simulations_dir):
             os.mkdir(self.simulations_dir)
 
@@ -388,6 +388,17 @@ class ModelBCGen(object):
                                                                                                                        month=crange[0].month,
                                                                                                                        day=crange[0].day))
             th_files.append(clip_fn) # account for source/sink files
+
+        for fn in self.versioned_th_files:
+            linked_source = string.Formatter().vformat(fn['linked_fn'],(),SafeDict(({**self.env_vars, **locals()})))
+            linked_fn = os.path.basename(linked_source)       
+            th_file = os.path.join(modcase_dir, linked_fn)         
+            shutil.copyfile(linked_source, th_file)
+            th = fn['key']
+            th_files.append(th_file) # account for any modified files 
+            linked_th_file_strings += f'ln -sf {linked_fn} {th}\n' # link any modified files
+            mod_th_files[''.join(['{',f'{th}','}'])] = linked_fn
+
 
         # TROPIC BASH
         bash_tropic_dict = {**run_time_dict, **{'{year_end}':str(case_end.year),
@@ -572,6 +583,7 @@ class ModelBCGen(object):
         self.geometry_files = self.inputs.get('geometry_files')
         self.common_files = [string.Formatter().vformat(cf,(),SafeDict((self.env_vars))) for cf in self.inputs.get('common_files')]
         self.mod_th_dict = string.Formatter().vformat(self.inputs.get('mod_th_dict'),(),SafeDict((self.env_vars)))
+        self.versioned_th_files = self.inputs.get('versioned_th_files')
 
     def format_schism_th(self, case_data_dir, cp, modcase_dir, crange, pdict, method, th_file, cname, perturbed_th, 
                          fluxes_out=None, fcol=None, enc_cp=None, sign_change=None):
@@ -701,8 +713,13 @@ if __name__ == "__main__":
         yml_fname = "./input/schism_lathypcub_v3_azure.yaml"
 
         mbc = ModelBCGen(yml_fname, 'schism', machine='azure')
+    
+    elif True: # run for azure SLR
+        yml_fname = "./input/schism_slr_lathypcub_v3_azure.yaml"
+
+        mbc = ModelBCGen(yml_fname, 'schism', machine='azure')
         
-    elif True: # run for azure
+    elif False: # run for azure
         yml_fname = "./input/schism_lathypcub_v3_azure_from_base.yaml"
 
         mbc = ModelBCGen(yml_fname, 'schism', machine='azure')
