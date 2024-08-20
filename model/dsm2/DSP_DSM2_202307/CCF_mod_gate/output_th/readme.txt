@@ -1,0 +1,1 @@
+these files are copied to /scratch/tomkovic/DSP_code/scripts/boundary_generation/data_out/ccfb_gates for compilation into SCHISM boundary generation using 4b_generate_SCHISM_bc_data.py
