@@ -74,15 +74,15 @@ def main():
     print('Combined Hotstart files')
 
 
-# if __name__ == '__main__':
+if __name__ == '__main__':
 
-#     mod_dir = '/scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_lhc_4'
-#     baro = 'clinic'
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    mod_dir = '.'
+    baro = 'clinic'
 
-#     rfh = rst_fm_hotstart(mod_dir, baro)
+    rfh = rst_fm_hotstart(mod_dir, baro)
+    print(rfh.last_hotstart)
+    rfh.combine_hotstart(rfh.last_hotstart, machine='hpc5')
+    rfh.param_mod(rfh.last_hotstart)
 
-    
-#     mod_dir = '/scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_3'
-#     baro = 'tropic'
-
-#     rfh = rst_fm_hotstart(mod_dir, baro)
+    print('Combined Hotstart files')
