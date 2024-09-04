@@ -38,6 +38,7 @@ prepare_schism.log
 # latinhypercube model specifics (these get set up with 4b_generate_SCHISM_bc_data.py)
 schism/**/*simulations*/*
 schism/**/az_yml_files/*
+schism/**/pp_yml_files/*
 schism/**/lhc_*
 schism/azure*/*_inputs/*
 

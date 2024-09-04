@@ -24,3 +24,10 @@ scripts/boundary_generation/data_out/*bundles*
 # ignore large files
 *.nc
 scripts/post-processing/**/*.html
+
+# ignore plots
+scripts/post-processing/**/*.png
+scripts/post-processing/plots/*
+
+# ignore evap folder for now
+scripts/evap/*

@@ -1,0 +1,133 @@
+# Batch metrics sample YAML
+# Outputs directories. They should contains station.in or flowlines.yaml.
+# The files used here have extra transects and sampling locations around Franks Tract
+
+# launching looks like this:
+# $ batch_metrics batch_metric_yourname.yaml
+
+dest_dir: /scratch/tomkovic/DSP_code/scripts/post-processing/plots/baseline_lhc_4
+
+outputs_dir:
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_4/outputs/
+
+# Station database
+# This is correct for flow, the one without _new is correct for station.in
+stations_csv: /home/tomkovic/BayDeltaSCHISM/data/station_dbase.csv
+obs_search_path: 
+ - /scratch/nasbdo/modeling_data/repo/continuous/screened
+
+station_input: 
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_4/station.in
+ 
+flow_station_input:
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_4/fluxflag.prop  
+ 
+# Database of the field data file
+# This is correct for flow. Use the one without _new for station.in
+obs_links_csv: /scratch/nasbdo/modeling_data/repo/continuous/obs_links_screened_20240120.csv
+time_basis:  2006-11-14  # ISO date format (e.g. 2009-05-05)
+start_inst:  2008-06-01  # 5-15 to 6-15 for gate install flow/elev 9/20-10/10 good
+end_inst:    2008-07-01  # 11-15 for water levels
+start_avg:   2007-01-01
+end_avg:     2008-12-31
+variable: elev # one of elev, salt, flow
+labels: # Three labels for field data and two runs
+  - Observed
+  #- SCHISM
+  #- v113b11 5/30
+  #- v113b11 6/04 (g)
+  - SCHISM DSP
+
+
+selected_stations:
+  - lps
+  - dlc
+  - gsm
+  - mok  
+  - sjr
+  - anh
+  - mrz
+  - pdc
+  - pco
+  - old
+  - gle
+  - glc
+  - glc2
+  - glab
+  - gl2
+  - gct
+  - oh1
+  - oh4
+  - wci
+  - orm
+  - mab
+  - mru
+  - mho
+  - mrmow
+  - mhr
+  - obi
+  - bac
+  - hol 
+  - orx
+  - orq
+  - mrx
+  - mtb
+  - obd
+  - oad
+  - odm
+  - ori
+  - clc
+  - sga
+  - tpi
+  - tppa
+  - tpp
+  - tps
+  - dgl
+  - sjl
+  - sjd
+  - msd
+  - sjj
+  - jer
+  - pdup
+  - sjg
+  - vic
+  - vcu
+  - mdm
+  - srv
+  - osj
+  - hll
+  - hlt
+  - vns
+  - clc
+  - trn
+  - emm
+  - emm2
+  - fal
+  - mrz
+  - alk  
+  - mal
+  - richb
+  - ges
+  - sss
+  - fpt
+  - dvi
+  - sal
+  - sdc
+  - ges
+  - gss
+  - pccu
+  - pccd
+  - orfu
+  - oaad
+  - otbd
+  - pcnb
+  - pcnb
+  - otww
+  - twa
+  - bdt
+  - uni
+
+
+plot_all: False
+max_gap_to_fill: 4h
+remove_outliers: False
