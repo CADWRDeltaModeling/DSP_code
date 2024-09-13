@@ -5,7 +5,7 @@ set -e
 # conda activate schism-dms (for LAT HPC4)
 
 # generate .th.nc file
-gen_elev2d --outfile {meshname}.{cname}.elev2D.th.nc --hgrid=hgrid.gr3 --stime=2009-10-29 --etime=2011-12-31 --slr 0.0 pt_reyes{tidal_pert}.csv monterey{tidal_pert}.csv
+gen_elev2d --outfile {meshname}.{cname}.elev2D.th.nc --hgrid=hgrid.gr3 --stime={year_start}-{month_start}-{day_start} --etime={year_end}-{month_end}-{day_end} --slr 0.0 pt_reyes{tidal_pert}.csv monterey{tidal_pert}.csv
 ln -sf {meshname}.{cname}.elev2D.th.nc elev2D.th.nc
 
 # run script to create uv3d.th.nc
