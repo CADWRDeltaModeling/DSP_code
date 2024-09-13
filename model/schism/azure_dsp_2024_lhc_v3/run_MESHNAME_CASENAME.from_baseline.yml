@@ -8,7 +8,7 @@ setup_dirs_copy_flags: --recursive --preserve-symlinks --include-regex "outputs_
 study_dir: {rel_study_dir} # where the relative study directory for the simulation will be
 setup_dirs: # these are directories that are also copied in addition to the study_dir
   - atmos # try to avoid copying this and use symlink to mounted container instead (see mpi_command below)
-  - {rel_study_base_dir}
+  # - {rel_study_base_dir}
 num_hosts: 2 # number of nodes in the pool
 # num_cores: <<number of cores total>> # is optional as default is number of cores per host * number of hosts
 num_scribes: 10 # This is used in the mpi_cmd template if referred to there

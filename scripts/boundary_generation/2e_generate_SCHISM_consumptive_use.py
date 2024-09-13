@@ -142,15 +142,15 @@ def dcd_from_dsm2_pert(dcd_dss_file, dsm2_dcd_dss_file, schism_in, out_dir, vers
     sch_src = pd.read_csv(os.path.join(schism_in,'vsource_dated.th'), sep=' ', header=3, index_col=0, parse_dates=['datetime'], dtype=np.float64)
     sch_sink = pd.read_csv(os.path.join(schism_in,'vsink_dated.th'), sep=' ', header=5, index_col=0, parse_dates=['datetime'], dtype=np.float64)
 
-    src,sink = adjust_src_sink(sch_sink, sch_src, perturb) # create the adjusted source/sink values to be used for this version in SCHISM
+    src,sink = adjust_src_sink(sch_src, sch_sink, perturb) # create the adjusted source/sink values to be used for this version in SCHISM
     src.index = src.index.strftime('%Y-%m-%dT00:00')
     sink.index = sink.index.strftime('%Y-%m-%dT00:00')
 
     fn_src = os.path.join(out_dir, f'vsource_{version}_dated.th')
     fn_sink = os.path.join(out_dir, f'vsink_{version}_dated.th')
 
-    src = -src
-    sink = -sink
+    src = src
+    sink = sink
     
     if (src.values<0).any():
         raise ValueError("There are negative values in the source dataframe! They should all be positive")
@@ -171,16 +171,12 @@ if __name__ == "__main__":
     
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    dcd_dss_file = "../../model/dsm2/2021DSM2FP_202301/timeseries/DCD_hist_Lch5.dss"
-    dsm2_dcd_dss_file = "../../model/dsm2/DSP_DSM2_202307/latinhypercube_v2/timeseries/lhc_1_dcd.dss"
-    version = 'v1'
-
     schism_in = "/home/tomkovic/BayDeltaSCHISM/data/channel_depletion"
     out_dir = "./data_out/schism_dcd/" 
+    dcd_dss_file = "../../model/dsm2/2021DSM2FP_202301/timeseries/DCD_hist_Lch5.dss"
 
-    dcd_from_dsm2_pert(dcd_dss_file, dsm2_dcd_dss_file, schism_in, out_dir, version)
-    
-    dsm2_dcd_dss_file = "../../model/dsm2/DSP_DSM2_202307/latinhypercube_v2/timeseries/lhc_2_dcd.dss"
-    version = 'v2'
-    
-    dcd_from_dsm2_pert(dcd_dss_file, dsm2_dcd_dss_file, schism_in, out_dir, version)
+    for case in range(1,8):
+        dsm2_dcd_dss_file = f"../../model/dsm2/DSP_DSM2_202307/latinhypercube_v3/timeseries/lhc_{case}_dcd.dss"
+        version = f'lhc_{case}' 
+        
+        dcd_from_dsm2_pert(dcd_dss_file, dsm2_dcd_dss_file, schism_in, out_dir, version)

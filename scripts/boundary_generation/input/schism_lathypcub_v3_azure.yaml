@@ -151,11 +151,11 @@ model_config:
   method: read
   
 - model_input: dcdsink
-  th_file: '{dsp_home}/scripts/boundary_generation/data_out/schism_dcd/vsink_{version}_dated.th'
+  th_file: '{dsp_home}/scripts/boundary_generation/data_out/schism_dcd/vsink_{cname}_dated.th'
   method: read_sourcesink
     
 - model_input: dcdsource
-  th_file: '{dsp_home}/scripts/boundary_generation/data_out/schism_dcd/vsource_{version}_dated.th'
+  th_file: '{dsp_home}/scripts/boundary_generation/data_out/schism_dcd/vsource_{cname}_dated.th'
   method: read_sourcesink
 
 linked_th_files:
@@ -206,16 +206,18 @@ cases_exclude:
   - lhc_1
   - lhc_2
   - lhc_3
-  - lhc_5
-  - lhc_6
-  - lhc_7
+  - lhc_4
+  # - lhc_5
+  # - lhc_6
+  # - lhc_7
+  # - none
 
 meshcases_exclude:
   - none
 #   - baseline_lhc_1
 
 meshes_exclude:
-  - baseline
+  # - baseline
   - suisun
   - cache
-  # - franks
+  - franks

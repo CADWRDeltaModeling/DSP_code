@@ -279,9 +279,12 @@ class ModelBCGen(object):
 
                     if has_version:
                         th_file = string.Formatter().vformat(model_setup.get('th_file'),(),
-                                                             SafeDict(({**self.env_vars, **{'version':has_version.group(0)}})))
+                                                             SafeDict(({**self.env_vars, 
+                                                             **locals(),
+                                                             **{'version':has_version.group(0)}})))
                     else:
-                        th_file = string.Formatter().vformat(model_setup.get('th_file'),(),SafeDict((self.env_vars)))
+                        th_file = string.Formatter().vformat(model_setup.get('th_file'),(),SafeDict(({**self.env_vars,
+                                                                                                     **locals()})))
                     method = model_setup.get('method')
                     if 'flux_col' in model_setup.keys():
                         write_flux=True
@@ -637,7 +640,7 @@ class ModelBCGen(object):
                 elif float(pdict['args']['set_value']) == 0:
                     dat_out[1] = 0 # schism has height of 0/10
             elif pdict['method'] == 'read':
-                dat_out = dat_in.copy()
+                dat_out = dat_in.copy()*10 # the input is just 0 -> 1 and it needs to be 0 ->10
 
             df['height'] = dat_out[1].to_list()
 
@@ -709,12 +712,12 @@ if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
     ## Read in param.tropic and param.clinic and modify
-    if False: # run for azure
+    if True: # run for azure
         yml_fname = "./input/schism_lathypcub_v3_azure.yaml"
 
         mbc = ModelBCGen(yml_fname, 'schism', machine='azure')
     
-    elif True: # run for azure SLR
+    elif False: # run for azure SLR
         yml_fname = "./input/schism_slr_lathypcub_v3_azure.yaml"
 
         mbc = ModelBCGen(yml_fname, 'schism', machine='azure')
