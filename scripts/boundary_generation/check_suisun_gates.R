@@ -92,3 +92,12 @@ plt <- ggplot(plt.df, aes(x=Time,y=value,color=variable)) +
 plt
 ggplotly(plt)
 
+
+
+# SCHISM Check ------------------------------------------------------------
+
+smscg_bl_fn <- 'D:/schism/repositories/BayDeltaSCHISM/data/time_history/montezuma_boat_lock.th'
+smscg_bl_mod_Fn <- 'D:/projects/delta_salinity/scripts/DSP_code/scripts/boundary_generation/data_out/suisun_gates/montezuma_boat_lock_lhc_v1.th'
+
+
+
