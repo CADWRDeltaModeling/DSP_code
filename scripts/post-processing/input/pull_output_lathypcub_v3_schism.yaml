@@ -13,7 +13,9 @@ mod_th_dict: '{meshcase_dir}/mod_th_dict_lhc_{case_num}.yaml'
 
 out_dir: '{dsp_home}/scripts/post-processing/data_out/schism_{experiment}' # where the ANN-ready data will go
 
-station_in: '{exp_dir}/station.in'
+case_setup: '{dsp_home}/scripts/boundary_generation/input/lathypcub_v3_setup.yaml'
+
+station_in: '{mc_dir}/station.in'
 flux_in: '{exp_dir}/flow_station_xsects.yaml'
 
 # Input Variables to the ANN ==========================================================================
@@ -25,7 +27,8 @@ in_vars:
     - '{flux_file}'
   th_header: '{bds_home}/data/time_history/flux.th' # use this to get the headers to match the inputs
   inputs:
-    - sac # Sacramento River - RSAC155
+    - sac # Sacramento River - RSAC155 (Sacramento component)
+    - american # American River -RSAC155 (American component)
     - yolo # Yolo Bypass
     - yolo_toedrain # Yolo Toe Drain - BYOLO040
     - east # Mokelumne/Cosumnes - RMKL070 & RCSM075
@@ -94,14 +97,32 @@ in_vars:
     - '{dcc_file}'
   th_header: '{bds_home}/data/time_history/delta_cross_channel.th' # use this to get the headers to match the inputs
   inputs:
-    - op_up # this is what will consider the operation of the gate (1=Open, 0=Closed)
+    - height # this is what will consider the operation of the gate (1=Open, 0=Closed)
   method: read_single_column_th
 
 # Suisun Marsh Salinity Control Gate schedule (if used in the restoration scenarios) (definitely double check this one!)
-- name: Suisun Gate In
+- name: Suisun Boatlock In
   th_files: 
-    - '{smscg_file}'
+    - '{smscg_boatlock_file}'
+  th_header: '{bds_home}/data/time_history/montezuma_boat_lock.th' # use this to get the headers to match the inputs
+  inputs:
+    - op_up # this is what will consider the operation of the gate (1=Open, 0=Tidally Operated)
+  method: read_single_column_th
+
+# Suisun Marsh Salinity Control Gate schedule (if used in the restoration scenarios) (definitely double check this one!)
+- name: Suisun Radial In
+  th_files: 
+    - '{smscg_radial_file}'
   th_header: '{bds_home}/data/time_history/montezuma_radial.th' # use this to get the headers to match the inputs
+  inputs:
+    - op_up # this is what will consider the operation of the gate (1=Open, 0=Tidally Operated)
+  method: read_single_column_th
+
+  # Suisun Marsh Salinity Control Gate schedule (if used in the restoration scenarios) (definitely double check this one!)
+- name: Suisun Flashboard In
+  th_files: 
+    - '{smscg_flashboard_file}'
+  th_header: '{bds_home}/data/time_history/montezuma_flash.th' # use this to get the headers to match the inputs
   inputs:
     - op_up # this is what will consider the operation of the gate (1=Open, 0=Tidally Operated)
   method: read_single_column_th
@@ -121,14 +142,22 @@ in_vars:
   method: calc_tidal_energy
 
 # intermediate for NDO
-- name: Other Flux In [cms]
+- name: american in [cms]
   th_files: 
     - '{flux_file}'
   th_header: '{bds_home}/data/time_history/flux.th' # use this to get the headers to match the inputs
   inputs:
     - american 
+  method: read_single_column_th
+
+  # intermediate for NDO
+- name: napa in [cms]
+  th_files: 
+    - '{flux_file}'
+  th_header: '{bds_home}/data/time_history/flux.th' # use this to get the headers to match the inputs
+  inputs:
     - napa 
-  method: read_multiple_column_th
+  method: read_single_column_th
 
 # South Delta temporary barriers schedule (if used in the restoration scenarios)
 - name: Grantline Barrier In
@@ -153,7 +182,8 @@ comb_in_vars:
 # Net Delta Outflow at Martinez.  Compare daily (or weekly) average time series based on summation of all boundary conditions.
 - name: Net Delta Outflow In [cms]
   vars:
-    - Other Flux In [cms]
+    - american in [cms]
+    - napa in [cms]
     - Net Delta CU In [cms]
     - Exports Combined In [cms]
     - sjr In [cms]
@@ -161,49 +191,56 @@ comb_in_vars:
 
 # Output Variables to the ANN =========================================================================
 
-station_output: '{meshcase_dir}/outputs/staout_6'
+station_output: '{meshcase_dir}/outputs/staout_{stanum}'
 param_clinic: '{meshcase_dir}/param.nml.clinic'
 
 # ANN
 out_vars:
 - name: EC Out [psu]
   locs:
-  - trp # 'CHDMC006' CVP Intake at Tracy Pumping Plant
-  - wci # 'CHSWP003' West Canal near Clifton Court Intake
-  - vcu # 'CHVCT000' Victoria Canal
-  # - uni # 'OLD_MID' Old River near Middle River
-  - obi # 'ROLD024' Old R at Bacon Island
-  # - old # 'ROLD059' Old River at Tracy Blvd 
-  - pct # 'RSAC064' Sacramento River at Port Chicago 
-  - mal # 'RSAC075': Sacramento River at Mallard Island
-  - cse # 'RSAC081' Sacramento River at Collinsville 
+  # CalSim Stations -----------------------------------------
   - emm2 #'RSAC101' Sacramento River at Emmaton
-  - anh # 'RSAN007' San Joaquin at Antioch
+  - rsl # 'ROLD024' Rock Slough at Old River
   - jer # 'RSAN018' Jersey point
-  - sal # 'RSAN032' San Andreas Landing 
-  - ppt # 'RSAN037' Prisoners Point 
-  # - rri2 # 'RSAN058' Rough and Ready Island
-  # - bdt # 'RSAN072' San Joaquin River at Brandt Bridge
-  # - lps # 'RSMKL008' Little Potato Slough at Terminous 
-  # - snc # 'SLCBN002' Chadbourne Slough at Sunrise Duck Club 
-  - dsj # 'SLDUT007' Dutch Sl below Jersey Island
+  - cll # 'RSAC081' Collinsville
+  - anc # 'RSAN007' Antioch
+  - mal # 'RSAC075' Sacramento River at Mallard Island
+  - mrz # 'RSAC054' Sacramento River at Martinez
+  - vcu # 'CHVCT000' Victoria Canal
+  - wci # 'CHSWP003' West Canal near Clifton Court Intake
   - bdl # 'SLMZU011' Montezuma Slough near Beldons Landing  
+  # Other Important Stations  -------------------------------
+  - trp # 'CHDMC006' CVP Intake at Tracy Pumping Plant
+  - obi # 'ROLD024' Old R at Bacon Island
+  - sal # 'RSAN032' San Andreas Landing 
+  - tms # Sacramento River at Threemile Slough
+  - pct # 'RSAC064' Sacramento River at Port Chicago 
+  - srv # 'RSAC101' Sacramento R at Rio Vista
+  - ppt # 'RSAN037' Prisoners Point 
+  - dsj # 'SLDUT007' Dutch Sl below Jersey Island
   - nsl2 # 'SLMZU025' Montezuma Slough at National Steel
   - vol # 'SLSUS012' Suisun Slough 300' south of Volanti Slough
-  # - tss # 'SLTRM004' Threemile Slough near San Joaquin River 
-  # - sss # 'SSS' Steamboat Slough btw Sacramento R and Sutter Sl 
-  # - carqb #'RSAC054' Carquinez Strait at Carquinez Bridge near Crockett
-  # Stations not in DSM2 ------------------------------------
-  - inb # 'SLRCK005' CWD Rock Slough PP
-  - srv # 'RSAC101' Sacramento R at Rio Vista
   - oh4 # 'OH4' Old R near Byron
   - hll # 'HLL' Holland Tract
   - bet # 'BET' Piper Slough at Bethal Tract
   - ibs # 'IBS' Cordelia Slough at Ibis club
   - gys # 'GYS' Goodyear Slough at Morrow Island club
+  - ver # 'VER' Vernalis
+  # - uni # 'OLD_MID' Old River near Middle River
+  # - old # 'ROLD059' Old River at Tracy Blvd 
+  # - cse # 'RSAC081' Sacramento River at Collinsville 
+  # - rri2 # 'RSAN058' Rough and Ready Island
+  # - bdt # 'RSAN072' San Joaquin River at Brandt Bridge
+  # - lps # 'RSMKL008' Little Potato Slough at Terminous 
+  # - snc # 'SLCBN002' Chadbourne Slough at Sunrise Duck Club 
+  # - tss # 'SLTRM004' Threemile Slough near San Joaquin River 
+  # - sss # 'SSS' Steamboat Slough btw Sacramento R and Sutter Sl 
+  # - carqb # Carquinez Strait at Carquinez Bridge near Crockett
+  # Stations not in DSM2 ------------------------------------
+  # - inb # 'SLRCK005' CWD Rock Slough PP
   - mdm # 'MDM' Middle R at Middle River
   # Additional stations of curiousity
-  - mtz # 'MTZ' Martinez
+  - mtz # 'MTZ' Martinez ------------------------------------
   - carqb # 'CARQB' Carquinez Strait at Carquinez Bridge
   - gzm # Grizzly Bay at Head of Montezuma Slough
   - msl # Montezuma Slough at Roaring River
@@ -228,6 +265,20 @@ out_vars:
   flux_output: '{meshcase_dir}/outputs/flux.out'
   loc:
     - martinez # Martinez
+  method: read_single_flux
+
+# DCC gate operations.  Compare tidally averaged time series through the cross channel
+- name: dlc Out [cms]
+  flux_output: '{meshcase_dir}/outputs/flux.out'
+  loc:
+    - dlc # Delta Cross Channel
+  method: read_single_flux
+
+# DCC gate operations.  Compare tidally averaged time series through the cross channel
+- name: dlc Out [cms]
+  flux_output: '{meshcase_dir}/outputs/flux.out'
+  loc:
+    - dlc # Delta Cross Channel
   method: read_single_flux
 
 # DCC gate operations.  Compare tidally averaged time series through the cross channel
@@ -268,42 +319,49 @@ out_vars:
 # Water surface elevation in restoration site(s).  Tidal variation in WSE at a few locations within the restoration sites.
 - name: WSE Out [m NAVD88]
   locs:
-  - trp # 'CHDMC006' CVP Intake at Tracy Pumping Plant
-  - wci # 'CHSWP003' West Canal near Clifton Court Intake
-  - vcu # 'CHVCT000' Victoria Canal
-  # - uni # 'OLD_MID' Old River near Middle River
-  - obi # 'ROLD024' Old R at Bacon Island
-  # - old # 'ROLD059' Old River at Tracy Blvd 
-  - pct # 'RSAC064' Sacramento River at Port Chicago 
-  - mal # 'RSAC075': Sacramento River at Mallard Island
-  - cse # 'RSAC081' Sacramento River at Collinsville 
+  # CalSim Stations -----------------------------------------
   - emm2 #'RSAC101' Sacramento River at Emmaton
-  - anh # 'RSAN007' San Joaquin at Antioch
+  - rsl # 'ROLD024' Rock Slough at Old River
   - jer # 'RSAN018' Jersey point
-  - sal # 'RSAN032' San Andreas Landing 
-  - ppt # 'RSAN037' Prisoners Point 
-  # - rri2 # 'RSAN058' Rough and Ready Island
-  # - bdt # 'RSAN072' San Joaquin River at Brandt Bridge
-  # - lps # 'RSMKL008' Little Potato Slough at Terminous 
-  # - snc # 'SLCBN002' Chadbourne Slough at Sunrise Duck Club 
-  - dsj # 'SLDUT007' Dutch Sl below Jersey Island
+  - cll # 'RSAC081' Collinsville
+  - anc # 'RSAN007' Antioch
+  - mal # 'RSAC075' Sacramento River at Mallard Island
+  - mrz # 'RSAC054' Sacramento River at Martinez
+  - vcu # 'CHVCT000' Victoria Canal
+  - wci # 'CHSWP003' West Canal near Clifton Court Intake
   - bdl # 'SLMZU011' Montezuma Slough near Beldons Landing  
+  # Other Important Stations  -------------------------------
+  - trp # 'CHDMC006' CVP Intake at Tracy Pumping Plant
+  - obi # 'ROLD024' Old R at Bacon Island
+  - sal # 'RSAN032' San Andreas Landing 
+  - tms # Sacramento River at Threemile Slough
+  - pct # 'RSAC064' Sacramento River at Port Chicago 
+  - srv # 'RSAC101' Sacramento R at Rio Vista
+  - ppt # 'RSAN037' Prisoners Point 
+  - dsj # 'SLDUT007' Dutch Sl below Jersey Island
   - nsl2 # 'SLMZU025' Montezuma Slough at National Steel
   - vol # 'SLSUS012' Suisun Slough 300' south of Volanti Slough
-  # - tss # 'SLTRM004' Threemile Slough near San Joaquin River 
-  # - sss # 'SSS' Steamboat Slough btw Sacramento R and Sutter Sl 
-  # - carqb #'RSAC054' Carquinez Strait at Carquinez Bridge near Crockett
-  # Stations not in DSM2 ------------------------------------
-  - inb # 'SLRCK005' CWD Rock Slough PP
-  - srv # 'RSAC101' Sacramento R at Rio Vista
   - oh4 # 'OH4' Old R near Byron
   - hll # 'HLL' Holland Tract
   - bet # 'BET' Piper Slough at Bethal Tract
   - ibs # 'IBS' Cordelia Slough at Ibis club
   - gys # 'GYS' Goodyear Slough at Morrow Island club
+  - ver # 'VER' Vernalis
+  # - uni # 'OLD_MID' Old River near Middle River
+  # - old # 'ROLD059' Old River at Tracy Blvd 
+  # - cse # 'RSAC081' Sacramento River at Collinsville 
+  # - rri2 # 'RSAN058' Rough and Ready Island
+  # - bdt # 'RSAN072' San Joaquin River at Brandt Bridge
+  # - lps # 'RSMKL008' Little Potato Slough at Terminous 
+  # - snc # 'SLCBN002' Chadbourne Slough at Sunrise Duck Club 
+  # - tss # 'SLTRM004' Threemile Slough near San Joaquin River 
+  # - sss # 'SSS' Steamboat Slough btw Sacramento R and Sutter Sl 
+  # - carqb # Carquinez Strait at Carquinez Bridge near Crockett
+  # Stations not in DSM2 ------------------------------------
+  # - inb # 'SLRCK005' CWD Rock Slough PP
   - mdm # 'MDM' Middle R at Middle River
   # Additional stations of curiousity
-  - mtz # 'MTZ' Martinez
+  - mtz # 'MTZ' Martinez ------------------------------------
   - carqb # 'CARQB' Carquinez Strait at Carquinez Bridge
   - gzm # Grizzly Bay at Head of Montezuma Slough
   - msl # Montezuma Slough at Roaring River
