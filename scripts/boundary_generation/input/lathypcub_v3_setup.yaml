@@ -82,7 +82,6 @@ perturbations:
   model_input: suisgate
   method: read_suisun
   args:
-  args:
     file: ./data_out/MTZSL_markov_pert_v2.csv
     copy_files:
       - ./data_out/suisun_gates/montezuma_radial_lhc_v2.th
@@ -189,3 +188,4 @@ cases:
     - sac_scaled_1.1
     - dcd_pert_v1
     - suisun_mark_pert_v1
+  
