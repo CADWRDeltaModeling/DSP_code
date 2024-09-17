@@ -32,7 +32,7 @@ def process_gate_data(dss_filename, output_file, b_part, c_part, map_zero_one=['
     # now find daily averages of one minute data
     df_daily_avg = df_1min.resample('D', closed='right').mean()
     df_daily_avg = df_daily_avg.rename(columns={df_daily_avg.columns[0]:'gate_pos'})
-    df_daily_avg.to_csv(output_file)
+    df_daily_avg.to_csv(output_file, float_format="%.2f")
 
 def generate_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file, model_ec_file, output_folder,
                         b_part_e_part_dict = None):
@@ -68,7 +68,7 @@ def generate_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_fil
     df_northern_flow.fillna(0, inplace=True)
     df_northern_flow['northern_flow'] = df_northern_flow['RSAC155'] + df_northern_flow['BYOLO040']+df_northern_flow['RMKL070'] +\
         df_northern_flow['RCSM075'] + df_northern_flow['RCAL009']-df_northern_flow['SLBAR002']
-    df_northern_flow.to_csv(output_folder + '/df_northern_flow.csv')
+    df_northern_flow.to_csv(output_folder + '/df_northern_flow.csv', float_format="%.2f")
 
     #############
     # SJR Flow  #
@@ -76,7 +76,7 @@ def generate_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_fil
     b_part_dss_filename_dict = {'RSAN112': hist_dss_file}
     b_part_c_part_dict = {'RSAN112': 'FLOW'}
     df_sjr_flow = get_dss_data(b_part_dss_filename_dict, 'b_part', b_part_c_part_dict)
-    df_sjr_flow.to_csv(output_folder + '/df_sjr_flow.csv')
+    df_sjr_flow.to_csv(output_folder + '/df_sjr_flow.csv', float_format="%.2f")
 
     ###############################################################################################
     # 3. Exports: Sum(Banks, Jones, CCC plants(Rock Sl, Middle R (actually old river), Victoria)) #
@@ -87,7 +87,7 @@ def generate_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_fil
     # df_exports_flow.fillna(0, inplace=True)
     df_exports_flow['exports'] = df_exports_flow['CHSWP003']+df_exports_flow['CHDMC004']+df_exports_flow['CHCCC006']+\
         df_exports_flow['ROLD034']+df_exports_flow['CHVCT001']
-    df_exports_flow.to_csv(output_folder+'/df_exports_flow.csv')
+    df_exports_flow.to_csv(output_folder+'/df_exports_flow.csv', float_format="%.2f")
 
     #############################################
     # 4. DCC gate operation as daily percentage #
@@ -130,7 +130,7 @@ def generate_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_fil
 
     cu_total['cu_total']=cu_total['dcd_divseep_total']+cu_total['smcd_divseep_total']-cu_total['dcd_drain_total']-cu_total['smcd_drain_total']
     # now only save the grand total column to csv
-    cu_total[['cu_total']].to_csv(output_folder+'/df_cu_total.csv')
+    cu_total[['cu_total']].to_csv(output_folder+'/df_cu_total.csv', float_format="%.2f")
 
     ########################################
     # 7. Tidal Energy: daily max-daily min #
@@ -140,13 +140,13 @@ def generate_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_fil
     df_mtz_stage = get_dss_data(b_part_dss_filename_dict, 'b_part', \
         primary_part_c_part_dict=b_part_c_part_dict, daily_avg=False)
     df_nrg = cosine_lanczos((df_mtz_stage-cosine_lanczos(df_mtz_stage.copy(), 
-                                                         cutoff_period ='40D', padtype='odd'))**2, 
-                            cutoff_period ='40D', padtype='odd') # = < (z- <z>)^2 >
+                                                         cutoff_period ='40H', padtype='odd'))**2, 
+                            cutoff_period ='40H', padtype='odd') # = < (z- <z>)^2 >
     df_mtz_tidal_energy = df_nrg.resample('D', closed='right').mean()
     df_mtz_tidal_energy.columns=['tidal_energy']
 
-    df_mtz_stage.to_csv(output_folder+'/df_mtz_stage.csv')    
-    df_mtz_tidal_energy.to_csv(output_folder+'/df_mtz_tidal_energy.csv')
+    df_mtz_stage.to_csv(output_folder+'/df_mtz_stage.csv', float_format="%.2f")    
+    df_mtz_tidal_energy.to_csv(output_folder+'/df_mtz_tidal_energy.csv', float_format="%.2f")
 
     #############################################
     # 8. SJR inflow salinity at vernalis, daily #
@@ -154,7 +154,7 @@ def generate_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_fil
     b_part_dss_filename_dict = {'RSAN112': hist_dss_file}
     b_part_c_part_dict = {'RSAN112': 'EC'}
     df_sjr_ec = get_dss_data(b_part_dss_filename_dict, 'b_part', primary_part_c_part_dict=b_part_c_part_dict)
-    df_sjr_ec.to_csv(output_folder + '/df_sjr_ec.csv')
+    df_sjr_ec.to_csv(output_folder + '/df_sjr_ec.csv', float_format="%.2f")
 
     ##########################
     # 9. Sacramento River EC #
@@ -162,7 +162,7 @@ def generate_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_fil
     b_part_dss_filename_dict = {'RSAC139': hist_dss_file}
     b_part_c_part_dict = {'RSAC139': 'EC'}
     df_sac_ec = get_dss_data(b_part_dss_filename_dict, 'b_part', primary_part_c_part_dict=b_part_c_part_dict)
-    df_sac_ec.to_csv(output_folder + '/df_sac_ec.csv')
+    df_sac_ec.to_csv(output_folder + '/df_sac_ec.csv', float_format="%.2f")
 
     ######################################
     # 10. EC Output for various locations #
@@ -234,7 +234,7 @@ def generate_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_fil
         'RSAC054': 'Martinez_input_dup'}
 
     df_model_ec.rename(columns=col_rename_dict, inplace=True)
-    df_model_ec.to_csv(output_folder + '/df_model_ec.csv')
+    df_model_ec.to_csv(output_folder + '/df_model_ec.csv', float_format="%.2f")
 
 def csv_to_ann_xlsx(csv_dir, xlsx_filepath):
     csv_to_xlsx_dict = { 'base_ec_output':['df_model_ec.csv',None,None],
