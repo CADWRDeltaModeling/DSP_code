@@ -18,7 +18,7 @@ mpi_command: |
   rm -f *.nc;
   python make_links_az.py;
   cd ../;
-  source dsp_slr_{meshname}_{cname}.clinic.sh;
+  source dsp_slr_{meshname}_{cname}.clinic.sh no-interp;
   mpirun -np {num_cores} -f hostfile {mpi_opts} pschism_PREC_EVAP_GOTM_TVD-VL {num_scribes}
 # template for the pool name, which is used to create the pool with appropriate settings
 template_name: "alma87_mvapich2_20240426" # this is the template name for the pool, e.g. "centos7" or "alma8"

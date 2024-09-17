@@ -191,6 +191,7 @@ common_files:
   - '{common_dir}/station.in'
   - '{common_dir}/check_progress_tropic.sh'
   - '{common_dir}/process_x2.sh'
+  - '{common_dir}/restart_from_hotstart.py'
   - '{bds_home}/bdschism/bdschism/x2_bay_sjr.bp'
   - '{bds_home}/bdschism/bdschism/x2_bay_nysjr.bp'
   - '{bds_home}/bdschism/bdschism/x2_bay_mzm.bp'
@@ -203,8 +204,8 @@ versioned_th_files:
   linked_fn: '{dsp_home}/scripts/boundary_generation/data_out/ccfb_gates/ccfb_{cname}.th'
 
 cases_exclude:
-  - lhc_1
-  - lhc_2
+  # - lhc_1
+  # - lhc_2
   - lhc_3
   - lhc_4
   # - lhc_5
@@ -218,6 +219,6 @@ meshcases_exclude:
 
 meshes_exclude:
   # - baseline
-  - suisun
+  # - suisun
   - cache
   - franks

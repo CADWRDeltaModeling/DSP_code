@@ -40,9 +40,9 @@ mod_th_dict: '{exp_dir}/mod_th_dict_CASENAME.yaml'
 
 # mesh parameters
 meshes:
-- name: baseline
+- name: baseline_slr
   indir: '{exp_dir}/baseline_slr_inputs'
-- name: suisun
+- name: suisun_slr
   indir: '{exp_dir}/suisun_slr_inputs'
 # - name: cache
 #   indir: '{exp_dir}/cache_inputs'
@@ -151,11 +151,11 @@ model_config:
   method: read
   
 - model_input: dcdsink
-  th_file: '{dsp_home}/scripts/boundary_generation/data_out/schism_dcd/vsink_{version}_dated.th'
+  th_file: '{dsp_home}/scripts/boundary_generation/data_out/schism_dcd/vsink_{cname}_dated.th'
   method: read_sourcesink
     
 - model_input: dcdsource
-  th_file: '{dsp_home}/scripts/boundary_generation/data_out/schism_dcd/vsource_{version}_dated.th'
+  th_file: '{dsp_home}/scripts/boundary_generation/data_out/schism_dcd/vsource_{cname}_dated.th'
   method: read_sourcesink
 
 linked_th_files:
@@ -191,10 +191,11 @@ common_files:
   - '{common_dir}/station.in'
   - '{common_dir}/check_progress_tropic.sh'
   - '{common_dir}/process_x2.sh'
+  - '{common_dir}/restart_from_hotstart.py'
   - '{bds_home}/bdschism/bdschism/x2_bay_sjr.bp'
   - '{bds_home}/bdschism/bdschism/x2_bay_nysjr.bp'
   - '{bds_home}/bdschism/bdschism/x2_bay_mzm.bp'
-  - '{bds_home}/bdschism/bdschism/x2_bay_sac.bp'
+  - '{bds_home}/bdschism/bdschism/x2_bay_sac.bp' 
   - '{common_dir}/schism.sh'
 
 versioned_th_files:
@@ -203,10 +204,11 @@ versioned_th_files:
   linked_fn: '{dsp_home}/scripts/boundary_generation/data_out/ccfb_gates/ccfb_{cname}.th'
 
 cases_exclude:
+  - lhc_3
   - lhc_4
 
 meshcases_exclude:
   - none
 
 meshes_exclude:
-  - suisun
+  - suisun_slr

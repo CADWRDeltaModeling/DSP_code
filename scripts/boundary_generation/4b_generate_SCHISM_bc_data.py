@@ -327,7 +327,7 @@ class ModelBCGen(object):
         # creating and writing out flux file
         if write_flux:
             print('\t Writing modified flux file out....')
-            flux_in = pd.read_csv(self.flux_file_in, delim_whitespace=True, header=0, index_col='datetime')
+            flux_in = pd.read_csv(self.flux_file_in, sep='/s+', header=0, index_col='datetime')
             
             for fcol in fluxes_out.keys():
                 fdf = fluxes_out[fcol]
@@ -625,7 +625,7 @@ class ModelBCGen(object):
             dat_in.index = dat_in.index.strftime('%Y-%m-%dT%H:%M')
             dat_in.index.name = 'datetime'
 
-            th_head = pd.read_csv(th_file, delim_whitespace=True, nrows=1, header=0)
+            th_head = pd.read_csv(th_file, sep='\s+', nrows=1, header=0)
             schema = {'datetime':str,'install':int,'ndup':int,'op_down':np.float64, 
                         'op_up':np.float64,'elev':np.float64,'width':np.float64,'height':int}
             df = pd.DataFrame(columns=schema.keys()).astype(schema)
@@ -665,15 +665,16 @@ class ModelBCGen(object):
             gate_ver = enc_cp[-1]
             # Suisun needs to copy the three gates (radial, boatlock, and flashboard)
             for gate in ['radial','boat_lock','flash']:
-                th_file = th_file.format_map(locals()) # uses gate and gate_ver
-                shutil.copyfile(th_file, os.path.join(modcase_dir, os.path.basename(th_file)))
-                clip_fn = os.path.join(modcase_dir,f'{os.path.basename(th_file).split("_")[0]}_{gate}.{cname}.th')
-                clip_file_to_start(th_file, 
+                th_file_in = th_file.format_map(locals()) # uses gate and gate_ver
+                shutil.copyfile(th_file_in, os.path.join(modcase_dir, os.path.basename(th_file_in)))
+                clip_fn = os.path.join(modcase_dir,f'{os.path.basename(th_file_in).split("_")[0]}_{gate}.{cname}.th')
+                # print(f'{th_file_in} to {clip_fn}')
+                clip_file_to_start(th_file_in, 
                                 outpath=clip_fn,
                                 start=dt.datetime(year=crange[0].year,
                                                   month=crange[0].month,
                                                   day=crange[0].day))
-                perturbed_th[f'{os.path.basename(th_file).split("_")[0]}_{gate}.th'] = clip_fn # add to list of files that are perturbed
+                perturbed_th[f'{os.path.basename(th_file_in).split("_")[0]}_{gate}.th'] = clip_fn # add to list of files that are perturbed
             
             return perturbed_th
 
@@ -712,12 +713,12 @@ if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
     ## Read in param.tropic and param.clinic and modify
-    if True: # run for azure
+    if False: # run for azure
         yml_fname = "./input/schism_lathypcub_v3_azure.yaml"
 
         mbc = ModelBCGen(yml_fname, 'schism', machine='azure')
     
-    elif False: # run for azure SLR
+    elif True: # run for azure SLR
         yml_fname = "./input/schism_slr_lathypcub_v3_azure.yaml"
 
         mbc = ModelBCGen(yml_fname, 'schism', machine='azure')
