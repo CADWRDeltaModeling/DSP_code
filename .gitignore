@@ -34,3 +34,4 @@ scripts/evap/*
 
 # ignore this shapefile
 scripts/post-processing/input/evaporation_polygons.*
+scripts/**/*.log

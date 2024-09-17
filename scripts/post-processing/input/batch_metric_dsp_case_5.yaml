@@ -1,0 +1,91 @@
+# Batch metrics sample YAML
+# Outputs directories. They should contains station.in or flowlines.yaml.
+# The files used here have extra transects and sampling locations around Franks Tract
+
+# launching looks like this:
+# $ batch_metrics batch_metric_yourname.yaml
+# batch_metrics batch_metric_dsp.yaml
+
+dest_dir: /scratch/tomkovic/DSP_code/scripts/post-processing/plots/lhc_5
+
+outputs_dir:
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_5/outputs/
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_lhc_5/outputs/
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/slr_simulations/baseline_slr_lhc_5/outputs/
+
+# Station database
+# This is correct for flow, the one without _new is correct for station.in
+stations_csv: /home/tomkovic/BayDeltaSCHISM/data/station_dbase.csv
+obs_search_path: 
+ - /scratch/nasbdo/modeling_data/repo/continuous/screened
+
+station_input: 
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_5/station.in
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_lhc_5/station.in
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/slr_simulations/baseline_slr_lhc_5/station.in
+ 
+flow_station_input:
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_5/fluxflag.prop  
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_lhc_5/fluxflag.prop
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/slr_simulations/baseline_slr_lhc_5/fluxflag.prop 
+ 
+# Database of the field data file
+# This is correct for flow. Use the one without _new for station.in
+obs_links_csv: /scratch/nasbdo/modeling_data/repo/continuous/obs_links_screened_20240120.csv
+time_basis:  2006-11-14  # ISO date format (e.g. 2009-05-05)
+# start_inst:  2008-06-01  # 5-15 to 6-15 for gate install flow/elev 9/20-10/10 good
+# end_inst:    2008-07-01  # 11-15 for water levels
+# start_avg:   2007-01-01
+# end_avg:     2008-12-31
+# Times for debugging beginning of run
+start_inst:  2006-12-01 
+end_inst:    2006-12-15
+start_avg:   2006-12-01
+end_avg:     2007-06-30
+variable: salt # one of elev, salt, flow
+labels: # Three labels for field data and two runs
+  - Observed
+  - DSP Baseline
+  - DSP Suisun Restoration
+  - DSP Baseline w SLR
+
+
+selected_stations:
+# CalSim Stations -----------------------------------------
+  - rsl # 'ROLD024' Rock Slough at Old River
+  - jer # 'RSAN018' Jersey point
+  - cll # 'RSAC081' Collinsville
+  - rsl # 'ROLD024' Old River at Rock Slough
+  - anc # 'RSAN007' Antioch
+  - mal # 'RSAC075' Sacramento River at Mallard Island
+  - mrz # 'RSAC054' Sacramento River at Martinez
+  - vcu # 'CHVCT000' Victoria Canal
+  - wci # 'CHSWP003' West Canal near Clifton Court Intake
+  - bdl # 'SLMZU011' Montezuma Slough near Beldons Landing  
+  # Other Important Stations  -------------------------------
+  - trp # 'CHDMC006' CVP Intake at Tracy Pumping Plant
+  - obi # 'ROLD024' Old R at Bacon Island
+  - sal # 'RSAN032' San Andreas Landing 
+  - tms # Sacramento River at Threemile Slough
+  - pct # 'RSAC064' Sacramento River at Port Chicago 
+  - srv # 'RSAC101' Sacramento R at Rio Vista
+  - ppt # 'RSAN037' Prisoners Point 
+  - dsj # 'SLDUT007' Dutch Sl below Jersey Island
+  - nsl2 # 'SLMZU025' Montezuma Slough at National Steel
+  - vol # 'SLSUS012' Suisun Slough 300' south of Volanti Slough
+  - oh4 # 'OH4' Old R near Byron
+  - hll # 'HLL' Holland Tract
+  - bet # 'BET' Piper Slough at Bethal Tract
+  - ibs # 'IBS' Cordelia Slough at Ibis club
+  - gys # 'GYS' Goodyear Slough at Morrow Island club
+  - sffpx # 'SFFPX' 
+  # Stations not in DSM2 ------------------------------------
+  - mdm # 'MDM' Middle R at Middle River
+  # Additional stations of curiousity
+  - mtz # 'MTZ' Martinez ------------------------------------
+  - carqb # 'CARQB' Carquinez Strait at Carquinez Bridge
+  - gzm # Grizzly Bay at Head of Montezuma Slough
+  - msl # Montezuma Slough at Roaring River
+plot_all: False
+max_gap_to_fill: 4h
+remove_outliers: False
