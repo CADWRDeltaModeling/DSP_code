@@ -12,6 +12,7 @@ env_vars:
 - sflux_src_dir: '{schism_dir}/atmos/baydelta_sflux_v20220916'
 - sflux_narr_dir: '{schism_dir}/atmos/NARR_cropped'
 - common_dir: '{exp_dir}' # where to copy common files from
+- simulation_dir: '{exp_dir}/simulations' # where to store simulation data
 
 # auxiliary yaml files
 case_setup: '{dsp_home}/scripts/boundary_generation/input/lathypcub_v3_setup.yaml'
@@ -24,13 +25,13 @@ make_links: '{exp_dir}/make_links_az.py'
 
 slurm_tropic: '{exp_dir}/slurm_MESHNAME_CASENAME.tropic.sh'
 slurm_clinic: '{exp_dir}/slurm_MESHNAME_CASENAME.clinic.sh'
-az_yml_file: '{exp_dir}/run_MESHNAME_CASENAME.yml'
+az_yml_file: '{exp_dir}/run_MESHNAME_CASENAME.from_baseline.yml'
 az_yml_dir: '{exp_dir}/az_yml_files' # where to copy azure yml files for run configurations
 job_name: dsp_2024
 output_log_file_base: dsp_{cname}
 
 bash_tropic: '{exp_dir}/dsp_MESHNAME_CASENAME.tropic.sh' # needs replacing of meshname and casename when copied into case dir
-bash_clinic: '{exp_dir}/dsp_MESHNAME_CASENAME.clinic.sh'
+bash_clinic: '{exp_dir}/dsp_MESHNAME_CASENAME.clinic.from_baseline.sh'
 
 # copied files
 int_vars: '{exp_dir}/interpolate_variables.in' # has runtimedays placeholder for each case
@@ -45,6 +46,8 @@ meshes:
   indir: '{exp_dir}/suisun_inputs'
 - name: cache
   indir: '{exp_dir}/cache_inputs'
+- name: franks
+  indir: '{exp_dir}/franks_inputs'
 
 # files specific to each geometry
 geometry_files: 
@@ -148,15 +151,14 @@ model_config:
   method: read
   
 - model_input: dcdsink
-  th_file: '{dsp_home}/scripts/boundary_generation/data_out/schism_dcd/vsink_{version}_dated.th'
+  th_file: '{dsp_home}/scripts/boundary_generation/data_out/schism_dcd/vsink_{cname}_dated.th'
   method: read_sourcesink
     
 - model_input: dcdsource
-  th_file: '{dsp_home}/scripts/boundary_generation/data_out/schism_dcd/vsource_{version}_dated.th'
+  th_file: '{dsp_home}/scripts/boundary_generation/data_out/schism_dcd/vsource_{cname}_dated.th'
   method: read_sourcesink
 
 linked_th_files:
-  - ccfb_gate.th
   - delta_cross_channel.th
   - flux.th
   - grantline_barrier.th
@@ -189,14 +191,34 @@ common_files:
   - '{common_dir}/station.in'
   - '{common_dir}/check_progress_tropic.sh'
   - '{common_dir}/process_x2.sh'
+  - '{common_dir}/restart_from_hotstart.py'
   - '{bds_home}/bdschism/bdschism/x2_bay_sjr.bp'
   - '{bds_home}/bdschism/bdschism/x2_bay_nysjr.bp'
   - '{bds_home}/bdschism/bdschism/x2_bay_mzm.bp'
   - '{bds_home}/bdschism/bdschism/x2_bay_sac.bp'  
-  # - '{common_dir}/schism.sh'
+  - '{common_dir}/schism.sh'
+
+versioned_th_files:
+- key: ccfb_gate.th
+  # this is unique since these are all already clipped to the start date etc
+  linked_fn: '{dsp_home}/scripts/boundary_generation/data_out/ccfb_gates/ccfb_{cname}.th'
 
 cases_exclude:
+  # - lhc_1
+  # - lhc_2
+  - lhc_3
   - lhc_4
+  # - lhc_5
+  # - lhc_6
+  # - lhc_7
+  # - none
 
 meshcases_exclude:
-  - baseline_lhc_1
+  - none
+#   - baseline_lhc_1
+
+meshes_exclude:
+  # - baseline
+  # - suisun
+  - cache
+  - franks

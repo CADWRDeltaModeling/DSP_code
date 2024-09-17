@@ -4,6 +4,8 @@ import os
 import re
 import math
 
+import shutil
+
 import schimpy.param
 
 def tail(f, n, offset=0):
@@ -47,12 +49,49 @@ class rst_fm_hotstart(object):
 
     def get_last_hotstart(self):
 
-        self.last_hotstart = math.floor(self.crash_timestep / self.nhot_write) * self.nhot_write
+        num_timesteps = math.floor(self.crash_timestep / self.nhot_write) * self.nhot_write
 
-    def combine_hotstart(self, iteration):
+        # hotstart files are written as hotstart_[process_id]_[time_step].nc
+        self.last_hotstart = str(int(num_timesteps))
+
+    def combine_hotstart(self, iteration, machine='hpc5', printout=False):
         
-        os.chdir(os.path.join(self.mod_dir, 'outputs'))
-        proc = subprocess.Popen(['combine_hotstart7', '--iteration', iteration], stdout=subprocess.PIPE)
+        os.chdir('outputs')
+        if machine.lower()=='hpc5':
+            modld = f'module purge; module load intel/2024.0 hmpt/2.29 hdf5/1.14.3 netcdf-c/4.9.2 netcdf-fortran/4.6.1 schism/5.11.1; '
+        else:
+            modld = ''
+        command = f'{modld}combine_hotstart7 --iteration {iteration}'
+
+        ret = subprocess.run(command, capture_output=True, shell=True)
+        os.chdir('../')
+        
+        if printout:
+            print(ret.stdout.decode())
+
+    def param_mod(self, iteration, param_in="param.nml.clinic"):
+
+        # os.chdir(os.path.join(self.mod_dir))
+        
+        # replace hotstart variables ihot 
+        with open(param_in, 'r') as file:
+            param_text = file.read()
+        param_out = re.sub('ihot = \d+','ihot = 2', param_text)
+
+        param_fn_out = f'{param_in}.hot{iteration}'
+        with open(param_fn_out, 'w') as file:
+            file.write(param_out)
+
+        # copy the hotstart file
+        hotstart_fn = f'outputs/hotstart_it={iteration}.nc'
+        hotstart_link_fn = 'hotstart.nc'
+        shutil.copyfile(hotstart_fn, hotstart_fn.replace('outputs/',''))
+
+        # copy the mirror.out file
+        mirr_in = "outputs/mirror.out"
+        if os.path.exists(mirr_in):
+            shutil.copyfile(mirr_in, os.path.join(self.mod_dir, f'{mirr_in}.pre-{iteration}'))
+        
 
 def create_arg_parser():
     import argparse
@@ -61,28 +100,39 @@ def create_arg_parser():
     parser.add_argument('--mod_dir', type=str,
                         help='directory for ', required=True)
     parser.add_argument('--baro', type=str,                        
-                        help='"clinic" or "tropic" mode. Looks at relevant param.nml', default=None)
+                        help='"clinic" or "tropic" mode. Looks at relevant param.nml', default=None, required=True)
+    parser.add_argument('--machine', type=str,                        
+                        help='hpc5 or azure, decides which command to submit to cli', default='hpc5')
+    parser.add_argument('--combine', action='store_true', help="Enable combine mode")
     return parser
+
 
 def main():
     # User inputs override the yaml file inputs.
     parser = create_arg_parser()
     args = parser.parse_args()
+
     rfh = rst_fm_hotstart(args.mod_dir, args.baro)
-    rfh.combine_hotstart()
 
-    print('Combined Hotstart files')
+    if args.combine:
+        rfh.combine_hotstart(rfh.last_hotstart, machine=args.machine)
+        rfh.param_mod(rfh.last_hotstart)
+    else:
+        print(rfh.last_hotstart)
+
+    # print('Combined Hotstart files')
 
 
-# if __name__ == '__main__':
+if __name__ == '__main__':
+    main()
 
-#     mod_dir = '/scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_lhc_4'
+#     os.chdir(os.path.dirname(os.path.abspath(__file__)))
+#     mod_dir = '.'
 #     baro = 'clinic'
 
 #     rfh = rst_fm_hotstart(mod_dir, baro)
+#     print(rfh.last_hotstart)
+#     rfh.combine_hotstart(rfh.last_hotstart, machine='hpc5')
+#     rfh.param_mod(rfh.last_hotstart, param_in=f'param.nml.{baro}')
 
-    
-#     mod_dir = '/scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_3'
-#     baro = 'tropic'
-
-#     rfh = rst_fm_hotstart(mod_dir, baro)
+#     print('Combined Hotstart files')

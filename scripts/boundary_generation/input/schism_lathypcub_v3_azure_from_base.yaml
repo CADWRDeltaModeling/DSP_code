@@ -148,15 +148,14 @@ model_config:
   method: read
   
 - model_input: dcdsink
-  th_file: '{dsp_home}/scripts/boundary_generation/data_out/schism_dcd/vsink_{version}_dated.th'
+  th_file: '{dsp_home}/scripts/boundary_generation/data_out/schism_dcd/vsink_{cname}_dated.th'
   method: read_sourcesink
     
 - model_input: dcdsource
-  th_file: '{dsp_home}/scripts/boundary_generation/data_out/schism_dcd/vsource_{version}_dated.th'
+  th_file: '{dsp_home}/scripts/boundary_generation/data_out/schism_dcd/vsource_{cname}_dated.th'
   method: read_sourcesink
 
 linked_th_files:
-  - ccfb_gate.th
   - delta_cross_channel.th
   - flux.th
   - grantline_barrier.th
@@ -190,17 +189,32 @@ common_files:
   - '{common_dir}/check_progress_tropic.sh'
   # - '{common_dir}/schism.sh'
   - '{common_dir}/process_x2.sh'
+  - '{common_dir}/restart_from_hotstart.py'
   - '{bds_home}/bdschism/bdschism/x2_bay_sjr.bp'
   - '{bds_home}/bdschism/bdschism/x2_bay_nysjr.bp'
   - '{bds_home}/bdschism/bdschism/x2_bay_mzm.bp'
   - '{bds_home}/bdschism/bdschism/x2_bay_sac.bp'  
+versioned_th_files:
+- key: ccfb_gate.th
+  # this is unique since these are all already clipped to the start date etc
+  linked_fn: '{dsp_home}/scripts/boundary_generation/data_out/ccfb_gates/ccfb_{cname}.th'
 
 cases_exclude:
-  - none
+  # - lhc_1
+  # - lhc_2
+  # - lhc_3
+  - lhc_4
+  # - lhc_5
+  # - lhc_6
+  # - lhc_7
+  # - none
 
 meshcases_exclude:
-  - suisun_lhc_4
-  - cache_lhc_4
+  - none
+#   - baseline_lhc_1
 
 meshes_exclude:
   - baseline
+  # - suisun
+  - cache
+  - franks

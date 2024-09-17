@@ -18,6 +18,10 @@ ln -sf {meshname}.{cname}.elev2D.th.nc elev2D.th.nc
 ln -sf bctides.in.2d bctides.in
 ln -sf vgrid.in.2d vgrid.in
 
+# add gr3 links
+ln -sf salinity_nudge_roms.gr3 SAL_nudge.gr3
+ln -sf temperature_nudge_roms.gr3 TEM_nudge.gr3
+
 # modified TH inputs
 {linked_th_file_strings}
 

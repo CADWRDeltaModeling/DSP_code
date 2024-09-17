@@ -194,9 +194,9 @@ class ModelBCGen(object):
         # retrieve and write out cases
         print('Handling cases:')
         for case in self.case_items:
-            if case not in self.cases_exclude:
+            cname = case.get('name')
+            if cname not in self.cases_exclude:
 
-                cname = case.get('name')
                 print(f'CASE: {cname} ==================================================================')
                 # define bundle output dir
                 case_data_dir = os.path.join(self.case_data_dir, cname)
@@ -235,7 +235,7 @@ class ModelBCGen(object):
 
         # specify model output directory
         self.model_dir = os.path.join(self.env_vars['exp_dir'])
-        self.simulations_dir = os.path.join(self.model_dir,'simulations')
+        self.simulations_dir = self.env_vars['simulation_dir']
         if not os.path.exists(self.simulations_dir):
             os.mkdir(self.simulations_dir)
 
@@ -279,9 +279,12 @@ class ModelBCGen(object):
 
                     if has_version:
                         th_file = string.Formatter().vformat(model_setup.get('th_file'),(),
-                                                             SafeDict(({**self.env_vars, **{'version':has_version.group(0)}})))
+                                                             SafeDict(({**self.env_vars, 
+                                                             **locals(),
+                                                             **{'version':has_version.group(0)}})))
                     else:
-                        th_file = string.Formatter().vformat(model_setup.get('th_file'),(),SafeDict((self.env_vars)))
+                        th_file = string.Formatter().vformat(model_setup.get('th_file'),(),SafeDict(({**self.env_vars,
+                                                                                                     **locals()})))
                     method = model_setup.get('method')
                     if 'flux_col' in model_setup.keys():
                         write_flux=True
@@ -324,7 +327,7 @@ class ModelBCGen(object):
         # creating and writing out flux file
         if write_flux:
             print('\t Writing modified flux file out....')
-            flux_in = pd.read_csv(self.flux_file_in, delim_whitespace=True, header=0, index_col='datetime')
+            flux_in = pd.read_csv(self.flux_file_in, sep='/s+', header=0, index_col='datetime')
             
             for fcol in fluxes_out.keys():
                 fdf = fluxes_out[fcol]
@@ -388,6 +391,17 @@ class ModelBCGen(object):
                                                                                                                        month=crange[0].month,
                                                                                                                        day=crange[0].day))
             th_files.append(clip_fn) # account for source/sink files
+
+        for fn in self.versioned_th_files:
+            linked_source = string.Formatter().vformat(fn['linked_fn'],(),SafeDict(({**self.env_vars, **locals()})))
+            linked_fn = os.path.basename(linked_source)       
+            th_file = os.path.join(modcase_dir, linked_fn)         
+            shutil.copyfile(linked_source, th_file)
+            th = fn['key']
+            th_files.append(th_file) # account for any modified files 
+            linked_th_file_strings += f'ln -sf {linked_fn} {th}\n' # link any modified files
+            mod_th_files[''.join(['{',f'{th}','}'])] = linked_fn
+
 
         # TROPIC BASH
         bash_tropic_dict = {**run_time_dict, **{'{year_end}':str(case_end.year),
@@ -572,6 +586,7 @@ class ModelBCGen(object):
         self.geometry_files = self.inputs.get('geometry_files')
         self.common_files = [string.Formatter().vformat(cf,(),SafeDict((self.env_vars))) for cf in self.inputs.get('common_files')]
         self.mod_th_dict = string.Formatter().vformat(self.inputs.get('mod_th_dict'),(),SafeDict((self.env_vars)))
+        self.versioned_th_files = self.inputs.get('versioned_th_files')
 
     def format_schism_th(self, case_data_dir, cp, modcase_dir, crange, pdict, method, th_file, cname, perturbed_th, 
                          fluxes_out=None, fcol=None, enc_cp=None, sign_change=None):
@@ -610,7 +625,7 @@ class ModelBCGen(object):
             dat_in.index = dat_in.index.strftime('%Y-%m-%dT%H:%M')
             dat_in.index.name = 'datetime'
 
-            th_head = pd.read_csv(th_file, delim_whitespace=True, nrows=1, header=0)
+            th_head = pd.read_csv(th_file, sep='\s+', nrows=1, header=0)
             schema = {'datetime':str,'install':int,'ndup':int,'op_down':np.float64, 
                         'op_up':np.float64,'elev':np.float64,'width':np.float64,'height':int}
             df = pd.DataFrame(columns=schema.keys()).astype(schema)
@@ -625,7 +640,7 @@ class ModelBCGen(object):
                 elif float(pdict['args']['set_value']) == 0:
                     dat_out[1] = 0 # schism has height of 0/10
             elif pdict['method'] == 'read':
-                dat_out = dat_in.copy()
+                dat_out = dat_in.copy()*10 # the input is just 0 -> 1 and it needs to be 0 ->10
 
             df['height'] = dat_out[1].to_list()
 
@@ -650,15 +665,16 @@ class ModelBCGen(object):
             gate_ver = enc_cp[-1]
             # Suisun needs to copy the three gates (radial, boatlock, and flashboard)
             for gate in ['radial','boat_lock','flash']:
-                th_file = th_file.format_map(locals()) # uses gate and gate_ver
-                shutil.copyfile(th_file, os.path.join(modcase_dir, os.path.basename(th_file)))
-                clip_fn = os.path.join(modcase_dir,f'{os.path.basename(th_file).split("_")[0]}_{gate}.{cname}.th')
-                clip_file_to_start(th_file, 
+                th_file_in = th_file.format_map(locals()) # uses gate and gate_ver
+                shutil.copyfile(th_file_in, os.path.join(modcase_dir, os.path.basename(th_file_in)))
+                clip_fn = os.path.join(modcase_dir,f'{os.path.basename(th_file_in).split("_")[0]}_{gate}.{cname}.th')
+                # print(f'{th_file_in} to {clip_fn}')
+                clip_file_to_start(th_file_in, 
                                 outpath=clip_fn,
                                 start=dt.datetime(year=crange[0].year,
                                                   month=crange[0].month,
                                                   day=crange[0].day))
-                perturbed_th[f'{os.path.basename(th_file).split("_")[0]}_{gate}.th'] = clip_fn # add to list of files that are perturbed
+                perturbed_th[f'{os.path.basename(th_file_in).split("_")[0]}_{gate}.th'] = clip_fn # add to list of files that are perturbed
             
             return perturbed_th
 
@@ -701,8 +717,13 @@ if __name__ == "__main__":
         yml_fname = "./input/schism_lathypcub_v3_azure.yaml"
 
         mbc = ModelBCGen(yml_fname, 'schism', machine='azure')
+    
+    elif True: # run for azure SLR
+        yml_fname = "./input/schism_slr_lathypcub_v3_azure.yaml"
+
+        mbc = ModelBCGen(yml_fname, 'schism', machine='azure')
         
-    elif True: # run for azure
+    elif False: # run for azure
         yml_fname = "./input/schism_lathypcub_v3_azure_from_base.yaml"
 
         mbc = ModelBCGen(yml_fname, 'schism', machine='azure')

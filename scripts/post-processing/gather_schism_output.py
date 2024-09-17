@@ -102,6 +102,19 @@ def get_headers(infile, no_index=True):
 
     return headers
 
+# load case date ranges
+def load_case_dts(case_setup_yaml):
+    
+    with open(case_setup_yaml, 'r') as f:
+        case_inputs = schism_yaml.load(f)
+    cases = case_inputs['cases']
+
+    case_dts = {}
+    for case in cases:
+        case_dts[case['name']] = [case['case_start'], case['case_end']]
+
+    return case_dts
+
 #### class definition ===============================================================================
 # TODO make the ANNBCECGen object able to take in DSM2 input yamls and output DSM2 inputs/outputs for ANN
 class ANNBCECGen(object):
@@ -121,6 +134,9 @@ class ANNBCECGen(object):
         self.in_vars = self.inputs.get('in_vars')
         self.comb_in_vars = self.inputs.get('comb_in_vars')
         self.out_vars = self.inputs.get('out_vars')
+
+        # define case parameters:
+        self.case_dts = load_case_dts(self.inputs.get('case_setup').format(**self.env_vars))
 
         # set station inputs and flow transect inputs
         # self.station_fpath = string.Formatter().vformat(self.inputs['station_in'],(),
@@ -179,7 +195,9 @@ class ANNBCECGen(object):
                                                  SafeDict(({**self.env_vars, 
                                                             **locals()})))
         station_inpath = os.path.join(meshcase_dir,'station.in')
+        # station_inpath = os.path.join(self.env_vars['exp_dir'],'station_285.in')
         time_basis = get_start_date_from_param(param_fpath)
+        date_range = self.case_dts[f'lhc_{case_num}']
 
         # Inputs ---------------------------------------------------------------------------------------
         invar_df = pd.DataFrame()
@@ -205,6 +223,7 @@ class ANNBCECGen(object):
                                                                                     **{"meshcase_dir": meshcase_dir},
                                                                                     **mesh_mod_th_dict}),
                                                         time_basis,
+                                                        date_range,
                                                         invar['th_header'].format_map({**self.env_vars,
                                                                                     **locals(),
                                                                                     **{"meshcase_dir": meshcase_dir},
@@ -237,6 +256,8 @@ class ANNBCECGen(object):
                 raise ValueError(f'There is no current process/function for {invar["method"]}')
 
         print('Done collecting inputs')
+        # truncate to model period
+        invar_df = invar_df.loc[date_range[0]:date_range[1]]
 
         # Combined Inputs ---------------------------------
         combinvar_df = pd.DataFrame()
@@ -252,15 +273,19 @@ class ANNBCECGen(object):
 
             in_name = outvar['name']
             if outvar['method'] == "assign_multiple_ec":
+
+                staout_fpath = outputs_fpath.format(stanum=6)
                 
-                ec_out_df, z_outs = self.get_multiple_staout(outputs_fpath, station_inpath, time_basis, outvar['locs'])
+                ec_out_df, z_outs = self.get_multiple_staout(staout_fpath, station_inpath, time_basis, outvar['locs'])
 
                 for c, col in enumerate(ec_out_df.columns):
                     outvar_df[f"{col.split('_')[0]} z={z_outs[c]} {in_name}"] = ec_out_df.loc[:,col]
                 
             elif outvar['method'] == "assign_multiple_wse":
+
+                staout_fpath = outputs_fpath.format(stanum=1)
                 
-                wse_out_df, z_outs = self.get_multiple_staout(outputs_fpath, station_inpath, time_basis, outvar['locs'])
+                wse_out_df, z_outs = self.get_multiple_staout(staout_fpath, station_inpath, time_basis, outvar['locs'])
 
                 for col in wse_out_df.columns:
                     outvar_df[f"{col} {in_name}"] = wse_out_df.loc[:,col]
@@ -278,8 +303,8 @@ class ANNBCECGen(object):
                 raise ValueError(f'There is no current process/function for {outvar["method"]}')
 
         # Total output -------------------------------------
-        tot_df = pd.merge(invar_df, combinvar_df, left_index=True, right_index=True, how='inner')
-        tot_df = pd.merge(tot_df, outvar_df, left_index=True, right_index=True, how='inner')
+        tot_df = pd.merge(invar_df, combinvar_df, left_index=True, right_index=True, how='outer')
+        tot_df = pd.merge(tot_df, outvar_df, left_index=True, right_index=True, how='outer')
         tot_df.to_csv(os.path.join(self.out_dir,f'{mesh}_lhc_{case_num}.csv'), index=True)
 
     def read_multiple_column_th(self, th_file, time_basis, th_header, inputs):
@@ -302,11 +327,22 @@ class ANNBCECGen(object):
 
         return out_df
     
-    def read_single_column_th(self, th_file, time_basis, th_header, in_col):
+    def read_single_column_th(self, th_file, time_basis, case_dts, th_header, in_col):
         
         # read single th file and a single column
         th_df = get_ts_from_th(th_file, time_basis)
-        th_df.columns = get_headers(th_header)
+        # add first row of time if not present
+        if th_df.index[0] != time_basis:
+            first_row = th_df.iloc[0].copy()
+            th_df = pd.concat([pd.DataFrame([first_row], index=[time_basis]), th_df])
+        end_date = pd.to_datetime(case_dts[1])
+        if th_df.index[-1] < end_date:
+            last_row = th_df.iloc[-1].copy()
+            th_df = pd.concat([th_df, pd.DataFrame([last_row], index=[end_date])])
+        headers = get_headers(th_header) # add headers for in_col indexing
+        if len(headers) != len(th_df.columns):
+            raise Warning(f"{os.path.basename(th_file)} has {len(th_df.columns)} columns and the header calls for {len(headers)}! Check that this isn't an issue")
+        th_df.columns = headers
         if isinstance(in_col, list) and len(in_col) == 1:
             in_col = in_col[0]
 
@@ -322,13 +358,16 @@ class ANNBCECGen(object):
         return out_df
     
     def calc_dcu(self, th_files, time_basis):
-        warnings.warn("'calc_dcu' method assumes an order to th_files of 1) source 2) sink")
+        # warnings.warn("'calc_dcu' method assumes an order to th_files of 1) source 2) sink")
         src = get_ts_from_th(th_files[0], time_basis)
         src = src.sum(axis=1)
         sink = get_ts_from_th(th_files[1], time_basis)
         sink = sink.sum(axis=1)
 
         net = src + sink
+        # print(src.head(10))
+        # print(sink.head(10))
+        # print(net.head(10))
         net = net.resample('15min').ffill()
 
         return net
@@ -342,18 +381,26 @@ class ANNBCECGen(object):
             wse_ts.index = wse_ts.index.to_period()
 
         df_nrg = cosine_lanczos((wse_ts-cosine_lanczos(wse_ts.copy(), 
-                                                       cutoff_period ='40D', padtype='odd'))**2, 
-                                cutoff_period ='40D', padtype='odd') # = < (z- <z>)^2 >
+                                                       cutoff_period ='40H', padtype='odd'))**2, 
+                                cutoff_period ='40H', padtype='odd') # = < (z- <z>)^2 >
+        if not isinstance(df_nrg.index, pd.DatetimeIndex):
+            df_nrg.index = df_nrg.index.to_timestamp() 
         df_tidal_energy = df_nrg.resample('D', closed='right').mean()
         df_tidal_energy.columns=['tidal_energy']
-        df_tidal_energy.index = df_tidal_energy.index.to_timestamp()
+        # df_tidal_energy.index = df_tidal_energy.index.to_timestamp()
         df_tidal_energy = df_tidal_energy.resample('15min').ffill()
 
         return df_tidal_energy
     
     def get_single_staout(self, outputs_fpath, station_inpath, time_basis, loc, depth='upper'):
 
-        all_ts = read_staout(outputs_fpath, station_inpath, time_basis)
+        try:
+            all_ts = read_staout(outputs_fpath, station_inpath, time_basis)
+        except ValueError:
+            with open(station_inpath, 'r') as file:
+                lines = file.readlines()  # Read all lines into a list
+                station_ins = int(lines[1].strip())
+            raise ValueError(f'{outputs_fpath} has {len(get_headers(outputs_fpath))} stations and {station_inpath} has {station_ins}')
         station_df = read_station_in(station_inpath)
 
         if isinstance(loc, list):
@@ -412,6 +459,15 @@ if __name__ == '__main__':
     from schimpy import schism_yaml
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
+    # in_fname = "./input/pull_slr_output_lathypcub_v3_schism.yaml"
+    
+    # for case in [2,4,5,6,7]: # cases 1-7 range(1,8)
+    #     annbc = ANNBCECGen(in_fname, model_type="SCHISM")
+    #     annbc.get_meshcase_inouts('baseline', case)
+
     in_fname = "./input/pull_output_lathypcub_v3_schism.yaml"
-    annbc = ANNBCECGen(in_fname, model_type="SCHISM")
-    annbc.get_meshcase_inouts('baseline', 1)
+        
+    for case in [1]: #range(1,8):
+        print(f"\n\n\t\t---------  Runnning Case {case} ----------")
+        annbc = ANNBCECGen(in_fname, model_type="SCHISM")
+        annbc.get_meshcase_inouts('baseline', case)
