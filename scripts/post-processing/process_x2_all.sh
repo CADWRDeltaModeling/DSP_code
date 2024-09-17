@@ -17,23 +17,12 @@ add_days_to_start_date()
 {
     # Add days to the start date
     # The start date is of the form 2005-01-24
-    # The number of days to add is an integer
+    # The number of days to add is 100
     start_date=$1
     days=$2
     days=$((days-1))
     new_date=$(date -d "$start_date + $days days" +%Y-%m-%d)
     echo $new_date
-}
-
-# Function ---------------------------------------------
-get_start_date()
-{
-    param="$(readlink -f $1)"
-    start_year=$(cat $param | grep 'start_year = ' | grep -Eo '[0-9]*')
-    start_month=$(cat $param | grep 'start_month = ' | grep -Eo '[0-9]*')
-    start_day=$(cat $param | grep 'start_day = ' | grep -Eo '[0-9]*')
-
-    echo "${start_year}-${start_month}-${start_day}"
 }
 
 # Function ------------------------------------------
@@ -44,8 +33,6 @@ process_x2()
     file_num=$1
     date_to_process=$2
     station_bp=$3 # the station.bp filename
-    model_start_date=$4
-
     echo "Processing X2 for file number $file_num for date $date_to_process"
     # run for the file_num
     ulimit -s unlimited
@@ -60,7 +47,7 @@ salinity
 $file_num $file_num
 1
 EOF
-    python $BAY_DELTA_SCHISM_HOME/bdschism/bdschism/x2_time_series.py --salt_data_file fort.18 --start $date_to_process --x2route station.bp --output x2_$file_num.csv --model_start $model_start_date
+    python $BAY_DELTA_SCHISM_HOME/bdschism/bdschism/x2_time_series.py --salt_data_file fort.18 --start $date_to_process --x2route station.bp --output x2_$file_num.csv 
     # we expect 1 line of output per file and we want to append to x2.out
     tail -1 x2_$file_num.csv >> $station_bp.out
     # cleanup
@@ -78,22 +65,42 @@ get_start_date()
     echo "${start_year}-${start_month}-${start_day}"
 }
 
-file_num="$1" # integer corresponding to salinity_##.nc file
+# Run all ---------------------------------------------------
+
 simulation_start_date=`get_start_date param.nml` # of the form 2005-01-24
-echo "Simulation start date from param.nml.clinic is $simulation_start_date"
-date_to_process=`add_days_to_start_date $simulation_start_date $file_num`
-echo "Model date to be processed is $date_to_process"
+
+# Get highest salinity file in outputs
+highest=-1
+for file in outputs/salinity_*.nc
+do
+  if [[ $file =~ salinity_([0-9]+).* ]]
+  then
+    [[ "${BASH_REMATCH[1]}" -gt "$highest" ]] && highest=${BASH_REMATCH[1]}
+  fi
+done
 
 cd outputs;
+echo "Simulation start date from param.nml is $simulation_start_date"
 
-echo "Processing Bay-SJR X2 route............................................"
-process_x2 "$file_num" "$date_to_process" x2_bay_sjr "$simulation_start_date"
+for NUMBER in $(seq 1 $highest); # all salinity
+do
+    fname="salinity_${NUMBER}.nc" # of the form salinity_100.nc
+    
+    file_num=`extract_simulation_day $fname`
+    date_to_process=`add_days_to_start_date $simulation_start_date $file_num`
+    echo "Model date to be processed is $date_to_process"
 
-echo "Processing Bay-NY-SJR X2 route............................................"
-process_x2 "$file_num" "$date_to_process" x2_bay_nysjr "$simulation_start_date"
+    echo "Processing Bay-SJR X2 route............................................"
+    process_x2 "$file_num" "$date_to_process" x2_bay_sjr
 
-echo "Processing Bay-Suisun X2 route............................................"
-process_x2 "$file_num" "$date_to_process" x2_bay_mzm "$simulation_start_date"
+    echo "Processing Bay-NY-SJR X2 route............................................"
+    process_x2 "$file_num" "$date_to_process" x2_bay_nysjr
 
-echo "Processing Bay-Sacramento X2 route............................................"
-process_x2 "$file_num" "$date_to_process" x2_bay_sac "$simulation_start_date"
+    echo "Processing Bay-Suisun X2 route............................................"
+    process_x2 "$file_num" "$date_to_process" x2_bay_mzm
+
+    echo "Processing Bay-Sacramento X2 route............................................"
+    process_x2 "$file_num" "$date_to_process" x2_bay_sac
+done
+
+    
