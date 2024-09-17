@@ -30,7 +30,7 @@ TEMPDIR                  z:/temp                                #Spacious direct
 STUDYDIR                 .
 TSINPUTDIR               ../../2021DSM2FP_202301/timeseries
 MODINPUT    			 ./CCF_inputs			#** Folder where all the modified files related to CCF are
-CCF_INPUTS               ${MODINPUT}/CCF_gate_op.dss			#** Priority schedule for Clifton Court
+CCF_INPUTS               ${MODINPUT}/CCF_gate_op_5.dss			#** Priority schedule for Clifton Court
 BNDRYINPUT               ./timeseries/${DSM2MODIFIER}_hist.dss
 GATEFILE                 ./timeseries/${DSM2MODIFIER}_gates.dss
 DICUFILE                 ./timeseries/${DSM2MODIFIER}_dcd.dss
