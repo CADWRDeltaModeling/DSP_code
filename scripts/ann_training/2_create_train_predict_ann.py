@@ -114,8 +114,12 @@ def build_layer_from_string_def(s='i120', width_multiplier=1,
     if s[0:4] == 'lstm':
         units=int(s[4:]) 
         print("building with return_sequences ",return_sequences_rnn)
-        retval = layers.LSTM(units, return_sequences=return_sequences_rnn,  # was 12
+        #retval = layers.LSTM(units, return_sequences=return_sequences_rnn,  # was 12
+        #                   activation='sigmoid')
+        
+        retval = layers.GRU(units, return_sequences=return_sequences_rnn,  # was 12
                            activation='sigmoid')
+                
         return retval
 
     elif s[0:3] == 'res':
