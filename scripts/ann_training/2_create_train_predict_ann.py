@@ -220,11 +220,12 @@ class ModelANN(object):
         x = None
         prev_conv_output_num_of_channels = None
         return_sequences_rnn = True
+        print(layer_strings)
         for block, f in enumerate(layer_strings[1:-1]):
+            print(f"Block: {block} f: {f}")
             if x is None:
                 if ('lstm' in strdef) or ('g' in strdef):
                     # these layers require 2D inputs and permutation
-                    print("yo",return_sequences_rnn)
                     x = layers.Reshape((self.ndays + self.nwindows, self.NFEATURES))(inputs)
                     prev_conv_output_num_of_channels = self.NFEATURES
                     #x = layers.Permute((2, 1))(x)
@@ -252,19 +253,19 @@ class ModelANN(object):
         outputs = keras.layers.Dense(out_dense_size, activation='linear')(x)
         model = keras.Model(inputs=inputs, outputs=outputs)
         model.compile(optimizer=keras.optimizers.Adam(
-            learning_rate=self.initial_lr), loss="mse")
+            learning_rate=self.initial_lr), loss=mse_loss_masked)
         return model
 
     def build_or_load_model(self, model_path, model_str_def, output_shape):
         xscaler = None
         yscaler = None
         if os.path.exists(model_path + '.h5'):
-            loaded_model = annutils.load_model(model_path,
+            loaded_model = ann_tools.load_model(model_path,
                                             custom_objects={"mse_loss_masked": mse_loss_masked})
             model = loaded_model.model
             xscaler = loaded_model.xscaler
             yscaler = loaded_model.yscaler
-            print('Ignored defined model arc and loaded pre-trained model from %s.h5' % model_path)
+            print('Ignored defined model arc and loaded pre-trained model from %s.keras' % model_path)
 
         len_stations = output_shape[1]
         print("len_stations: ", len_stations)
@@ -354,7 +355,7 @@ class ModelANN(object):
             if(xscaler is None or yscaler is None):
                 print("Creating new scalers")
 
-            xscaler, yscaler = annutils.create_or_update_xyscaler(xscaler, yscaler, self.train_X, self.train_Y)
+            xscaler, yscaler = ann_tools.create_or_update_xyscaler(xscaler, yscaler, self.train_X, self.train_Y)
             print("Xscaler Min[0]: %s" % xscaler.min_val[0])
             print("Xscaler Max[0]: %s" % xscaler.max_val[0])
 
@@ -385,7 +386,7 @@ class ModelANN(object):
 
             model_savepath = os.path.join(local_root_path, "Experiments", self.experiment, 'models', model_path_prefix)
             # tf.saved_model.save(model, model_savepath)
-            annutils.save_model(model_savepath, model, xscaler, yscaler)
+            ann_tools.save_model(model_savepath, model, xscaler, yscaler)
             print('Model saved to %s' % model_savepath)
             print('Training time: %d min' % ((time.time() - start) / 60))
 

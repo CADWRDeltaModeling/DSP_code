@@ -4,21 +4,39 @@ channels:
   - nodefaults               # For predictable behavior, set your conda config
   - cadwr-dms
 dependencies:
-  - python=3.8
-  - schimpy
-  - dms-datastore
+  - python>=3.9,<3.11
+  - schimpy>=1.6.4         # Recommended for compatibiltiy with current code
+  - vtools3>=3.7.5
+  - dms-datastore>=0.1.0
+  - numpy<2
+  - libgdal
+  - pyogrio
+  - pydelmod
   - pyhecdss
-  - pip
-  - matplotlib
-  - pandas
-  - dask
-  - xarray
-  - scipy
-  - holoviews
-  - hvplot
-  - panel
-#  - ipykernel  
-  - pillow == 9.0.1 
+  - suxarray  
+  - pandas>=2            # Below here minimum versions are to reduce solve space
+  - numpy>=1.20
+  - xarray>=2022.11
+  - netcdf4>=1.5.7
+  - dask>=2022.11
+  - numba>=0.56
+  - scipy>=1.8
+  - scikit-learn>=1.1.0
+  - bokeh>=2.4
+  - hvplot>=0.8
+  - statsmodels>=0.13.2
+  - pip>=22.2 
+  - geopandas>0.9
+  - cfunits
+  - nodepy  
+  - sympy
+  - palettable
+  #- openpyxl
+  - seaborn
+  - bleach
+  - pyhecdss
+  - ipykernel
+
   
 # Install the following with command line
 #  pip install -e git+https://github.com/CADWRDeltaModeling/pydelmod#egg=pydelmod
@@ -26,6 +44,6 @@ dependencies:
 
 # pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org tensorflow
 # pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org keras-tuner
-# pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org openpyxl==3.0.7
+# pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org openpyxl==3.1.0
 
 # - scikit-learn
