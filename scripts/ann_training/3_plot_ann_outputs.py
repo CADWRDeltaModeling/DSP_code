@@ -26,8 +26,8 @@ class PlotANN(object):
 	Default stations are: 'Rock Slough','Jersey Point',	'Emmaton',	'Collinsville',	'Chipps',	'San Andreas Landing'
     """
     def __init__(self, dsp_home, experiments, save_dir,
-				 stations = ['ROLD024', 'RSAN018', 'RSAC092', 'RSAC081', 'RSAC075', 'RSAN032'],
-				 model_file = "mtl_i118_lstm14_lstm14_f_o1.h5",
+				 stations = ['ROLD024', 'RSAN018', 'RSAC092', 'RSAC081', 'RSAC075', 'RSAN032','RSAN007','SLMZU011'],
+				 model_file="mtl_i90_lstm14_lstm14_f_o1.h5",
                  compression_opts=None, #or dict(method='zip', archive_name='out.csv')
 				 local_root_path =  './'):
                  
@@ -68,7 +68,7 @@ class PlotANN(object):
             model_prediction_dir = os.path.join(experiment_dir, "results", "prediction", self.model_name)
             prediction_file = os.path.join(model_prediction_dir, file_name)
             if not os.path.exists(prediction_file):
-                raise(f"prediction_file {prediction_file} does not exist")
+                raise ValueError(f"prediction_file {prediction_file} does not exist")
             else:
                 prediction = read_df(prediction_file, self.compression_opts)
                 plot_tuples.append((prediction, prediction.columns[self.col_num], experiment + "_" + self.model_name))
@@ -225,17 +225,17 @@ if __name__ == '__main__':
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
     dsp_home = "./"
-    experiments = ["latinhypercube_v1p1","latinhypercube_v2"]
-    save_dir = 'plots/lathypcub_v2'
+    experiments = ["latinhypercube_v3"]
+    save_dir = 'plots/lathypcub_v3'
 
     # initialize PlotANN object
-    annplt = PlotANN(dsp_home, experiments, save_dir)
+    annplt = PlotANN(dsp_home, experiments, save_dir,model_file="mtl_i90_lstm12_lstm12_f_o1.h5")
 
     # create plot tuples
     annplt.store_tuples()
 
     # create roving RMSE tuples
-    annplt.load_RMSE(rmse_calced=True)
+    annplt.load_RMSE(rmse_calced=False)
 
     # create plots 
     for station in annplt.stations:

@@ -5,13 +5,14 @@ import pandas as pd
 from pydelmod.create_ann_inputs import get_dss_data
 import pyhecdss
 
-
-output_dir = r"D:\projects\delta_salinity\scripts\DSP_code\scripts\boundary_generation\data_out"
+#dsp_home = "D:/projects/delta_salinity/scripts/DSP_Code"
+dsp_home = "F:/ann_workspace/DSP_code"
+output_dir = rf"{dsp_home}\scripts\boundary_generation\data_out"
 
 # the modified input file generated from step 2a
 mod_in_file = os.path.join(output_dir, "Exports_2006-2016_perturb_historical.csv")
 
-dsp_home = "D:/projects/delta_salinity/scripts/DSP_Code"
+
 
 # Define DSS data/parameters
 in_dss_dir = f"{dsp_home}/model/dsm2/2021DSM2FP_202301/timeseries"

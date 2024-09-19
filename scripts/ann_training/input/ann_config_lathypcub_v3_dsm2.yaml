@@ -1,5 +1,6 @@
-dsp_home: /scratch/tomkovic/DSP_code # where the main folder of this project is (HPC4/5)
+#dsp_home: /scratch/tomkovic/DSP_code # where the main folder of this project is (HPC4/5)
 
+dsp_home: F:/ann_workspace/DSP_code
 experiment: latinhypercube_v3 # name of folder to look inside of test_file dir
 
 base_study_folder: '{dsp_home}/model/dsm2/2021DSM2FP_202301'
