@@ -166,7 +166,7 @@ class ModelANN(object):
     """
     def __init__(self, dsp_home, 
                  compression_opts=None, #or dict(method='zip', archive_name='out.csv')
-                 ndays=118, NFEATURES=8, initial_lr = 0.01,
+                 ndays=90, NFEATURES=8, initial_lr = 0.01,
                  stas_include=None):
                  
         self.dsp_home = dsp_home
@@ -210,7 +210,7 @@ class ModelANN(object):
                         'NMR: N FORK MOKELUMNE R NEAR WALNUT GROVE', 'IBS-CORDELIA SLOUGH @ IBIS CLUB',
                         'GYS-GOODYEAR SLOUGH AT MORROW ISLAND CLUB', 'BKS-SLBAR002-North Bay Aqueduct/Barker Sl']
 
-        self.output_stations, self.name_mapping = annutils.read_output_stations(self.output_stations, self.observed_stations_ordered_by_median)
+        self.output_stations, self.name_mapping = ann_tools.read_output_stations(self.output_stations, self.observed_stations_ordered_by_median)
         print(self.output_stations)
         print(self.name_mapping)
     
@@ -286,14 +286,14 @@ class ModelANN(object):
             if not os.path.exists(infile):
                 print("local root: ",local_root_path)
                 raise ValueError(f"Data path {infile} does not exist")
-            dfinps, dfouts = annutils.read_and_split(infile, self.num_sheets, self.observed_stations_ordered_by_median, vars_include=self.vars_include)
+            dfinps, dfouts = ann_tools.read_and_split(infile, self.num_sheets, self.observed_stations_ordered_by_median, vars_include=self.vars_include)
             print("\nread_split",dfinps.first_valid_index())
             
-            dfinps = annutils.create_antecedent_inputs(dfinps,ndays=self.ndays,window_size=self.window_size,nwindows=self.nwindows)
-            dfinps, dfouts = annutils.synchronize(dfinps, dfouts)
+            dfinps = ann_tools.create_antecedent_inputs(dfinps,ndays=self.ndays,window_size=self.window_size,nwindows=self.nwindows)
+            dfinps, dfouts = ann_tools.synchronize(dfinps, dfouts)
             
-            dfinps = annutils.include(dfinps, window)
-            dfouts = annutils.include(dfouts, window)
+            dfinps = ann_tools.include(dfinps, window)
+            dfouts = ann_tools.include(dfouts, window)
             X_df = pd.concat([X_df, dfinps], axis=0)
             Y_df = pd.concat([Y_df, dfouts], axis=0)
 
@@ -332,7 +332,7 @@ class ModelANN(object):
 
         print(f"Finished compiling inputs for {experiment} experiment")
 
-    def train_models(self, models):
+    def train_models(self, models, epochs=50):
         print("experiment: ", self.experiment)
 
         # create folders to save results
@@ -350,8 +350,6 @@ class ModelANN(object):
 
             model_path_prefix = "mtl_%s" % (full_model_str_def)
             model, xscaler, yscaler = self.build_or_load_model(model_path_prefix, full_model_str_def, self.train_Y.shape)
-
-            epochs = 50
 
             print("Model summary:")
             print(model.summary())
@@ -402,17 +400,19 @@ class ModelANN(object):
 
         model_dir = os.path.join(experiment_dir, "models")
         model_files = [f for f in os.listdir(model_dir) if f.endswith(".h5")]
+        if len(model_files) == 0:
+            raise ValueError("No model files identified")
 
         print("Local root: ",local_root_path)
         for data_file in tqdm(excel_files):
-            print("Data file: %s" % data_file)
+            print(f"Local root path: {local_root_path}, Data file: {data_file}")
             data_path = os.path.join(local_root_path,data_file)
-            dfinps, dfouts = annutils.read_and_split(data_path, self.num_sheets, self.observed_stations_ordered_by_median, vars_include=self.vars_include)
+            dfinps, dfouts = ann_tools.read_and_split(data_path, self.num_sheets, self.observed_stations_ordered_by_median, vars_include=self.vars_include)
             for cn in dfinps.columns:
                 print("Col "+cn)
 
-            dfinps = annutils.create_antecedent_inputs(dfinps,ndays=self.ndays,window_size=self.window_size,nwindows=self.nwindows)
-            dfinps, dfouts = annutils.synchronize(dfinps, dfouts)
+            dfinps = ann_tools.create_antecedent_inputs(dfinps,ndays=self.ndays,window_size=self.window_size,nwindows=self.nwindows)
+            dfinps, dfouts = ann_tools.synchronize(dfinps, dfouts)
 
 
             #get the name of the file without the extension
@@ -571,10 +571,14 @@ if __name__ == '__main__':
     import numpy as np
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
-    in_fname = "./input/lathypcub_v2_ann_config.yaml"
+    in_fname = "./input/lathypcub_v3_ann_config.yaml"
 
-    ann_mod = run_mod_ann(in_fname, inputs_compiled=False, trained=False, make_pred=True)
+    inputs_compiled=True
+    trained=False
+    do_pred=True
+    ann_mod = run_mod_ann(in_fname, inputs_compiled=inputs_compiled, 
+                          trained=trained, make_pred=do_pred, epochs=100)
 
     # ann_mod = run_mod_ann(in_fname, inputs_compiled=True, trained=True, make_pred=False)
-    # ann_mod.load_save_ann('mtl_i118_lstm14_lstm14_f_o1.h5', 
+    # ann_mod.load_save_ann('mtl_i118_lstm14_lstm14_f_o1.keras', 
     #                       r'D:\projects\delta_salinity\scripts\DSP_code\scripts\ann_training\Experiments\latinhypercube_v2\models\bundle')
