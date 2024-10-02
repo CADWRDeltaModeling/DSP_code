@@ -78,7 +78,7 @@ class rst_fm_hotstart(object):
             param_text = file.read()
         param_out = re.sub('ihot = \d+','ihot = 2', param_text)
 
-        param_fn_out = f'{param_in}.hot{iteration}'
+        param_fn_out = f'{param_in}.hot'
         with open(param_fn_out, 'w') as file:
             file.write(param_out)
 
@@ -116,11 +116,11 @@ def main():
 
     if args.combine:
         rfh.combine_hotstart(rfh.last_hotstart, machine=args.machine)
-        rfh.param_mod(rfh.last_hotstart)
+        rfh.param_mod(rfh.last_hotstart, param_in=f"param.nml.{args.baro}")
+        print(f'Combined Hotstart files for timestep {rfh.last_hotstart}')
     else:
         print(rfh.last_hotstart)
 
-    # print('Combined Hotstart files')
 
 
 if __name__ == '__main__':
