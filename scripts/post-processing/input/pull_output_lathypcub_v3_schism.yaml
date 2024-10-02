@@ -36,6 +36,15 @@ in_vars:
     - -northbay # North Bay Aqueduct (negative) -  SLBAR002
   method: read_multiple_column_th
 
+- name: Yolo In [cms] #{'RSAC155': hist_dss_file, 'BYOLO040': hist_dss_file, 'RMKL070': hist_dss_file, 'RCSM075': hist_dss_file, 'RCAL009': hist_dss_file, 'SLBAR002': hist_dss_file}
+  th_files: 
+    - '{flux_file}'
+  th_header: '{bds_home}/data/time_history/flux.th' # use this to get the headers to match the inputs
+  inputs:
+    - yolo # Yolo Bypass
+    - yolo_toedrain # Yolo Toe Drain - BYOLO040
+  method: read_multiple_column_th
+
 # Sacramento and San Joaquin Inflow.  Compare daily (or weekly) average time series from boundary inflows.
 - name: sac In [cms] #{'RSAC155': hist_dss_file, 'BYOLO040': hist_dss_file, 'RMKL070': hist_dss_file, 'RCSM075': hist_dss_file, 'RCAL009': hist_dss_file, 'SLBAR002': hist_dss_file}
   th_files: 
@@ -52,6 +61,15 @@ in_vars:
   th_header: '{bds_home}/data/time_history/flux.th' # use this to get the headers to match the inputs
   inputs:
     - sjr
+  method: read_single_column_th
+
+# Calaveras Inflow.  Compare daily (or weekly) average time series from boundary inflows.
+- name: calaveras In [cms]
+  th_files: 
+    - '{flux_file}'
+  th_header: '{bds_home}/data/time_history/flux.th' # use this to get the headers to match the inputs
+  inputs:
+    - calaveras # Calaveras - RCAL009
   method: read_single_column_th
 
 # ANN
@@ -171,8 +189,8 @@ in_vars:
 # South Delta temporary barriers schedule (if used in the restoration scenarios)
 - name: Old River Barrier In
   th_files: 
-    - '{meshcase_dir}/oldr_head_barrier.th'
-  th_header: '{bds_home}/data/time_history/oldr_head_barrier.th' # use this to get the headers to match the inputs
+    - '{meshcase_dir}/oldr_tracy_weir.th'
+  th_header: '{bds_home}/data/time_history/oldr_tracy_weir.th' # use this to get the headers to match the inputs
   inputs:
     - install # TODO: determine the appropriate header and condition to evaluate for barrier operation
   method: read_single_column_th
@@ -199,7 +217,7 @@ out_vars:
 - name: EC Out [psu]
   locs:
   # CalSim Stations -----------------------------------------
-  - emm2 #'RSAC101' Sacramento River at Emmaton
+  - emm2 #'RSAC092' Sacramento River at Emmaton
   - rsl # 'ROLD024' Rock Slough at Old River
   - jer # 'RSAN018' Jersey point
   - cll # 'RSAC081' Collinsville
@@ -226,15 +244,16 @@ out_vars:
   - ibs # 'IBS' Cordelia Slough at Ibis club
   - gys # 'GYS' Goodyear Slough at Morrow Island club
   - ver # 'VER' Vernalis
-  # - uni # 'OLD_MID' Old River near Middle River
-  # - old # 'ROLD059' Old River at Tracy Blvd 
+  # Needed for ANN .xlsx  -------------------------------
+  - uni # 'OLD_MID' Old River near Middle River
+  - old # 'ROLD059' Old River at Tracy Blvd 
   # - cse # 'RSAC081' Sacramento River at Collinsville 
-  # - rri2 # 'RSAN058' Rough and Ready Island
-  # - bdt # 'RSAN072' San Joaquin River at Brandt Bridge
-  # - lps # 'RSMKL008' Little Potato Slough at Terminous 
-  # - snc # 'SLCBN002' Chadbourne Slough at Sunrise Duck Club 
-  # - tss # 'SLTRM004' Threemile Slough near San Joaquin River 
-  # - sss # 'SSS' Steamboat Slough btw Sacramento R and Sutter Sl 
+  - rri2 # 'RSAN058' Rough and Ready Island
+  - bdt # 'RSAN072' San Joaquin River at Brandt Bridge
+  - lps # 'RSMKL008' Little Potato Slough at Terminous 
+  - snc # 'SLCBN002' Chadbourne Slough at Sunrise Duck Club 
+  - tss # 'SLTRM004' Threemile Slough near San Joaquin River 
+  - sss # 'SSS' Steamboat Slough btw Sacramento R and Sutter Sl 
   # - carqb # Carquinez Strait at Carquinez Bridge near Crockett
   # Stations not in DSM2 ------------------------------------
   # - inb # 'SLRCK005' CWD Rock Slough PP
@@ -320,7 +339,7 @@ out_vars:
 - name: WSE Out [m NAVD88]
   locs:
   # CalSim Stations -----------------------------------------
-  - emm2 #'RSAC101' Sacramento River at Emmaton
+  - emm2 #'RSAC092' Sacramento River at Emmaton
   - rsl # 'ROLD024' Rock Slough at Old River
   - jer # 'RSAN018' Jersey point
   - cll # 'RSAC081' Collinsville
@@ -347,18 +366,18 @@ out_vars:
   - ibs # 'IBS' Cordelia Slough at Ibis club
   - gys # 'GYS' Goodyear Slough at Morrow Island club
   - ver # 'VER' Vernalis
-  # - uni # 'OLD_MID' Old River near Middle River
-  # - old # 'ROLD059' Old River at Tracy Blvd 
+  - uni # 'OLD_MID' Old River near Middle River
+  - old # 'ROLD059' Old River at Tracy Blvd 
   # - cse # 'RSAC081' Sacramento River at Collinsville 
-  # - rri2 # 'RSAN058' Rough and Ready Island
-  # - bdt # 'RSAN072' San Joaquin River at Brandt Bridge
-  # - lps # 'RSMKL008' Little Potato Slough at Terminous 
-  # - snc # 'SLCBN002' Chadbourne Slough at Sunrise Duck Club 
-  # - tss # 'SLTRM004' Threemile Slough near San Joaquin River 
-  # - sss # 'SSS' Steamboat Slough btw Sacramento R and Sutter Sl 
+  - rri2 # 'RSAN058' Rough and Ready Island
+  - bdt # 'RSAN072' San Joaquin River at Brandt Bridge
+  - lps # 'RSMKL008' Little Potato Slough at Terminous 
+  - snc # 'SLCBN002' Chadbourne Slough at Sunrise Duck Club 
+  - tss # 'SLTRM004' Threemile Slough near San Joaquin River 
+  - sss # 'SSS' Steamboat Slough btw Sacramento R and Sutter Sl 
   # - carqb # Carquinez Strait at Carquinez Bridge near Crockett
   # Stations not in DSM2 ------------------------------------
-  # - inb # 'SLRCK005' CWD Rock Slough PP
+  - inb # 'SLRCK005' CWD Rock Slough PP
   - mdm # 'MDM' Middle R at Middle River
   # Additional stations of curiousity
   - mtz # 'MTZ' Martinez ------------------------------------
