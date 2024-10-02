@@ -1,132 +1,150 @@
 # Define Environmental Variables  ---------------------------------------------------------------
-
-env_vars: # env_vars are used to populate the rest of the variables below
+# env_vars are used to populate the rest of the variables below
+env_vars: 
 - dsp_home: /scratch/tomkovic/DSP_code # where the main folder of this project is (HPC4)
 - bds_home: /home/tomkovic/BayDeltaSCHISM # where the BayDeltaSCHISM repository is housed
 - experiment: lhc_v3 # name of folder to look inside of test_file for azure setup
-- schism_dir: '{dsp_home}/model/schism'
-- exp_dir: '{schism_dir}/azure_dsp_2024_{experiment}'
-- common_dir: '{exp_dir}'
-- mc_dir: '{exp_dir}/simulations/{mesh}_lhc_{case_num}'
+- schism_out_dir: '{dsp_home}/scripts/post-processing/data_out/schism_{experiment}' # where the SCHISM data comes from
+- out_dir: '{dsp_home}/scripts/ann_training/data_out/schism_{experiment}'
 
-mod_th_dict: '{meshcase_dir}/mod_th_dict_lhc_{case_num}.yaml'
-
-out_dir: '{dsp_home}/scripts/ann_training/data_out/schism_{experiment}' # where the ANN-ready data will go
-
-station_in: '{exp_dir}/station.in'
-flux_in: '{exp_dir}/flow_station_xsects.yaml'
+csv_fmt: '{schism_out_dir}/{mesh}_lhc_{case_num}.csv'
 
 # Input Variables to the ANN --------------------------------------------------------------------
 
-in_vars:
-- name: Northern Flow #{'RSAC155': hist_dss_file, 'BYOLO040': hist_dss_file, 'RMKL070': hist_dss_file, 'RCSM075': hist_dss_file, 'RCAL009': hist_dss_file, 'SLBAR002': hist_dss_file}
-  th_files: 
-    - '{flux_file}'
-  th_header: '{bds_home}/data/time_history/flux.th' # use this to get the headers to match the inputs
-  inputs:
-    - sac # Sacramento River - RSAC155
-    - yolo # Yolo Bypass
-    - yolo_toedrain # Yolo Toe Drain - BYOLO040
-    - east # Mokelumne/Cosumnes - RMKL070 & RCSM075
-    - calaveras # Calaveras - RCAL009
-    - -northbay # North Bay Aqueduct (negative) -  SLBAR002
-  method: read_multiple_column_th
+vars_map:
+- sheet_name: northern_flow
+  sheet_colnames:
+    - northern_flow
+  csv_headers: 
+    - Northern Flow In [cms]
 
-- name: SJR Flow
-  th_files: 
-    - '{flux_file}'
-  th_header: '{bds_home}/data/time_history/flux.th' # use this to get the headers to match the inputs
-  inputs:
-    - sjr
-  method: read_single_column_th
+- sheet_name: sjr_flow
+  sheet_colnames:
+    - sjr_flow
+  csv_headers: 
+    - sjr In [cms]
 
-- name: Exports # Sum(Banks, Jones, CCC plants(Rock Sl, Middle R (actually old river), Victoria))
-  th_files: 
-    - '{flux_file}'
-  header_in:
-    - '{meshcase_dir}/flow_station_xsects.yaml'
-  th_header: '{bds_home}/data/time_history/flux.th' # use this to get the headers to match the inputs
-  inputs:
-    - swp # Banks
-    - cvp # Jones
-    - ccc_rock # CCC Rock Sl
-    - ccc_old # CCC Middle R/Old R
-    - ccc_victoria # CCC Victoria
-  method: read_multiple_column_th
+- sheet_name: exports
+  sheet_colnames:
+    - exports
+  csv_headers: 
+    - Exports Combined In [cms]
 
-- name: DCC Gate
-  th_files: 
-    - '{dcc_file}'
-  th_header: '{bds_home}/data/time_history/delta_cross_channel.th' # use this to get the headers to match the inputs
-  inputs:
-    - op_up # this is what will consider the operation of the gate (1=Open, 0=Closed)
-  method: read_single_column_th
+- sheet_name: dxc_gate_fraction
+  sheet_colnames:
+    - gate_pos
+  csv_headers: 
+    - DCC Gate In
 
-- name: Suisun Gate
-  th_files: 
-    - '{smscg_file}'
-  th_header: '{bds_home}/data/time_history/montezuma_radial.th' # use this to get the headers to match the inputs
-  inputs:
-    - op_up # this is what will consider the operation of the gate (1=Open, 0=Tidally Operated)
-  method: read_single_column_th
+- sheet_name: suisun_gate_fraction
+  sheet_colnames:
+    - s_gate_pos
+  csv_headers: 
+    - Suisun Radial In
 
-- name: Net Delta CU # daily (DIV+SEEP-DRAIN) for DCD and SMCD 
-  th_files: 
-    - '{vsource_file}'
-    - '{vsink_file}'
-  method: calc_dcu
+- sheet_name: net_delta_cu
+  sheet_colnames:
+    - div+seep-drain_dcd+smcd
+  csv_headers: 
+    - Net Delta CU In [cms]
 
-- name: Tidal Energy
-  station_output: '{meshcase_dir}/outputs/staout_1'
-  loc:
-    - sffpx # San Francisco
-  method: calc_tidal_energy
+- sheet_name: mtz_tidal_nrg
+  sheet_colnames:
+    - daily_nrg
+  csv_headers: 
+    - Tidal Energy In
 
-- name: Rio Vista Outflow
-  flux_output: '{meshcase_dir}/outputs/flux.out'
-  loc:
-    - srv # Rio Vista
-  method: read_single_flux
+- sheet_name: sjr_vernalis_ec
+  sheet_colnames:
+    - sjr_vernalis_ec
+  csv_headers: 
+    - ver z=-0.5 EC Out [psu]
 
-# Output Variables to the ANN -------------------------------------------------------------------
-
-out_vars:
-- station_output: '{meshcase_dir}/outputs/staout_6'
-- param_clinic: '{meshcase_dir}/param.nml.clinic'
-- ec_locs:
-  - trp # 'CHDMC006' CVP Intake at Tracy Pumping Plant
-  - wci # 'CHSWP003' West Canal near Clifton Court Intake
-  - vcu # 'CHVCT000' Victoria Canal
-  # - uni # 'OLD_MID' Old River near Middle River
-  - obi # 'ROLD024' Old R at Bacon Island
-  # - old # 'ROLD059' Old River at Tracy Blvd 
-  - pct # 'RSAC064' Sacramento River at Port Chicago 
-  - mal # 'RSAC075': Sacramento River at Mallard Island
-  - cse # 'RSAC081' Sacramento River at Collinsville 
-  - emm2 #'RSAC101' Sacramento River at Emmaton
-  - anh # 'RSAN007' San Joaquin at Antioch
-  - jer # 'RSAN018' Jersey point
-  - sal # 'RSAN032' San Andreas Landing 
-  - ppt # 'RSAN037' Prisoners Point 
-  # - rri2 # 'RSAN058' Rough and Ready Island
-  # - bdt # 'RSAN072' San Joaquin River at Brandt Bridge
-  # - lps # 'RSMKL008' Little Potato Slough at Terminous 
-  # - snc # 'SLCBN002' Chadbourne Slough at Sunrise Duck Club 
-  - dsj # 'SLDUT007' Dutch Sl below Jersey Island
-  - bdl # 'SLMZU011' Montezuma Slough near Beldons Landing  
-  - nsl2 # 'SLMZU025' Montezuma Slough at National Steel
-  - vol # 'SLSUS012' Suisun Slough 300' south of Volanti Slough
-  # - tss # 'SLTRM004' Threemile Slough near San Joaquin River 
-  # - sss # 'SSS' Steamboat Slough btw Sacramento R and Sutter Sl 
-  # - carqb #'RSAC054' Carquinez Strait at Carquinez Bridge near Crockett
-  # Stations not in DSM2 ------------------------------------
-  - inb # 'SLRCK005' CWD Rock Slough PP
-  - srv # 'RSAC101' Sacramento R at Rio Vista
-  - oh4 # 'OH4' Old R near Byron
-  - hll # 'HLL' Holland Tract
-  - bet # 'BET' Piper Slough at Bethal Tract
-  - ibs # 'IBS' Cordelia Slough at Ibis club
-  - gys # 'GYS' Goodyear Slough at Morrow Island clu
+- sheet_name: sac_ec
+  sheet_colnames:
+    - sac_greens_ec
+  csv_headers: 
+    - emm2 z=-0.5 EC Out [psu]
+  
+- sheet_name: base_ec_output
+  sheet_colnames:
+    - 'Unnamed: 0'
+    - CHDMC006-CVP INTAKE
+    - CHSWP003-CCFB_INTAKE
+    - CHVCT000-VICTORIA INTAKE
+    - OLD_MID-OLD RIVER NEAR MIDDLE RIVER
+    - ROLD024-OLD RIVER AT BACON ISLAND
+    - ROLD059-OLD RIVER AT TRACY BLVD
+    - RSAC064-SACRAMENTO R AT PORT CHICAGO
+    - RSAC075-MALLARDISLAND
+    - RSAC081-COLLINSVILLE
+    - RSAC092-EMMATON
+    - RSAC101-SACRAMENTO R AT RIO VISTA
+    - RSAN007-ANTIOCH
+    - RSAN018-JERSEYPOINT
+    - RSAN032-SACRAMENTO R AT SAN ANDREAS LANDING
+    - RSAN037-SAN JOAQUIN R AT PRISONERS POINT
+    - RSAN058-ROUGH AND READY ISLAND
+    - RSAN072-SAN JOAQUIN R AT BRANDT BRIDGE
+    - RSMKL008-S FORK MOKELUMNE AT TERMINOUS
+    - SLCBN002-CHADBOURNE SLOUGH NR SUNRISE DUCK CLUB
+    - SLDUT007-DUTCH SLOUGH
+    - SLMZU011-MONTEZUMA SL AT BELDONS LANDING
+    - SLMZU025-MONTEZUMA SL AT NATIONAL STEEL
+    - SLSUS012-SUISUN SL NEAR VOLANTI SL
+    - SLTRM004-THREE MILE SLOUGH NR SAN JOAQUIN R
+    - SSS-STEAMBOAT SL
+    - Martinez_input_dup
+    - Antioch_dup
+    - CCFB_Intake_dup
+    - Collinsville_dup
+    - CVP_Intake_dup
+    - Emmaton_dup
+    - Jersey_Point_dup
+    - Mallard_Island_dup
+    - Old_River_Hwy_4
+    - CCWD_Rock
+    - CCWD_Victoria_dup
+    - Martinez_input
+  csv_headers: 
+    - 0
+    - trp z=-0.5 EC Out [psu] # CHDMC006-CVP INTAKE
+    - wci z=-0.5 EC Out [psu] # CHSWP003-CCFB_INTAKE
+    - vcu z=-0.5 EC Out [psu] # CHVCT000-VICTORIA INTAKE
+    - uni z=-0.5 EC Out [psu] # OLD_MID-OLD RIVER NEAR MIDDLE RIVER
+    - rsl z=-0.5 EC Out [psu] # ROLD024-OLD RIVER AT BACON ISLAND
+    - old z=-0.5 EC Out [psu] # ROLD059-OLD RIVER AT TRACY BLVD
+    - pct z=-0.5 EC Out [psu] # RSAC064-SACRAMENTO R AT PORT CHICAGO
+    - mal_upper WSE Out [m NAVD88] # RSAC075-MALLARDISLAND
+    - cll z=-0.5 EC Out [psu] # RSAC081-COLLINSVILLE
+    - emm2_upper WSE Out [m NAVD88] # RSAC092-EMMATON
+    - srv z=-0.5 EC Out [psu] # RSAC101-SACRAMENTO R AT RIO VISTA
+    - anc z=-0.5 EC Out [psu] # RSAN007-ANTIOCH
+    - jer z=-0.5 EC Out [psu] # RSAN018-JERSEYPOINT
+    - sal z=-0.5 EC Out [psu] # RSAN032-SACRAMENTO R AT SAN ANDREAS LANDING
+    - ppt z=-0.5 EC Out [psu] # RSAN037-SAN JOAQUIN R AT PRISONERS POINT
+    - rri2 z=-0.5 EC Out [psu] # RSAN058-ROUGH AND READY ISLAND
+    - bdt z=-0.5 EC Out [psu] # RSAN072-SAN JOAQUIN R AT BRANDT BRIDGE
+    - lps z=-0.5 EC Out [psu] # RSMKL008-S FORK MOKELUMNE AT TERMINOUS
+    - snc z=-0.5 EC Out [psu] # SLCBN002-CHADBOURNE SLOUGH NR SUNRISE DUCK CLUB
+    - dsj z=-0.5 EC Out [psu] # SLDUT007-DUTCH SLOUGH
+    - bdl z=-0.5 EC Out [psu] # SLMZU011-MONTEZUMA SL AT BELDONS LANDING
+    - nsl2 z=-0.5 EC Out [psu] # SLMZU025-MONTEZUMA SL AT NATIONAL STEEL
+    - vol z=-0.5 EC Out [psu] # SUISUN SL NEAR VOLANTI SL
+    - tss z=-0.5 EC Out [psu] # SLTRM004-THREE MILE SLOUGH NR SAN JOAQUIN R
+    - sss z=-0.5 EC Out [psu] # SSS-STEAMBOAT SL
+    - mtz z=-0.5 EC Out [psu] # Martinez_input_dup
+    - anc z=-0.5 EC Out [psu] # Antioch_dup
+    - wci z=-0.5 EC Out [psu] # CCFB_Intake_dup
+    - cll z=-0.5 EC Out [psu] # Collinsville_dup
+    - trp z=-0.5 EC Out [psu] # CVP_Intake_dup
+    - emm2_upper WSE Out [m NAVD88] # Emmaton_dup
+    - jer z=-0.5 EC Out [psu] # Jersey_Point_dup
+    - mal_upper WSE Out [m NAVD88] # Mallard_Island_dup
+    - oh4 z=-0.5 EC Out [psu] # Old_River_Hwy_4
+    - rsl z=-0.5 EC Out [psu]  # CCWD_Rock
+    - vcu z=-0.5 EC Out [psu] # CCWD_Victoria_dup
+    - mtz z=-0.5 EC Out [psu] # Martinez_input
 
 # Model Meshes ----------------------------------------------------------------------------------
 
