@@ -1,5 +1,7 @@
-dsp_home: D:/projects/delta_salinity/scripts/DSP_code # where the main folder of this project is
 
+#dsp_home: D:/projects/delta_salinity/scripts/DSP_code # where the main folder of this project is
+
+dsp_home: F:/ann_workspace/DSP_code
 experiment: rsacminus20p # name of folder to look inside of test_file dir
 
 base_study_folder: '{dsp_home}/model/dsm2/2021DSM2FP_202301'

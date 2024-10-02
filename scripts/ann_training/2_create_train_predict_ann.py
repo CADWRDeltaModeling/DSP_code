@@ -114,8 +114,12 @@ def build_layer_from_string_def(s='i120', width_multiplier=1,
     if s[0:4] == 'lstm':
         units=int(s[4:]) 
         print("building with return_sequences ",return_sequences_rnn)
-        retval = layers.LSTM(units, return_sequences=return_sequences_rnn,  # was 12
+        #retval = layers.LSTM(units, return_sequences=return_sequences_rnn,  # was 12
+        #                   activation='sigmoid')
+        
+        retval = layers.GRU(units, return_sequences=return_sequences_rnn,  # was 12
                            activation='sigmoid')
+                
         return retval
 
     elif s[0:3] == 'res':
@@ -162,7 +166,7 @@ class ModelANN(object):
     """
     def __init__(self, dsp_home, 
                  compression_opts=None, #or dict(method='zip', archive_name='out.csv')
-                 ndays=118, NFEATURES=8, initial_lr = 0.01,
+                 ndays=90, NFEATURES=8, initial_lr = 0.01,
                  stas_include=None):
                  
         self.dsp_home = dsp_home
@@ -206,7 +210,7 @@ class ModelANN(object):
                         'NMR: N FORK MOKELUMNE R NEAR WALNUT GROVE', 'IBS-CORDELIA SLOUGH @ IBIS CLUB',
                         'GYS-GOODYEAR SLOUGH AT MORROW ISLAND CLUB', 'BKS-SLBAR002-North Bay Aqueduct/Barker Sl']
 
-        self.output_stations, self.name_mapping = annutils.read_output_stations(self.output_stations, self.observed_stations_ordered_by_median)
+        self.output_stations, self.name_mapping = ann_tools.read_output_stations(self.output_stations, self.observed_stations_ordered_by_median)
         print(self.output_stations)
         print(self.name_mapping)
     
@@ -220,11 +224,12 @@ class ModelANN(object):
         x = None
         prev_conv_output_num_of_channels = None
         return_sequences_rnn = True
+        print(layer_strings)
         for block, f in enumerate(layer_strings[1:-1]):
+            print(f"Block: {block} f: {f}")
             if x is None:
                 if ('lstm' in strdef) or ('g' in strdef):
                     # these layers require 2D inputs and permutation
-                    print("yo",return_sequences_rnn)
                     x = layers.Reshape((self.ndays + self.nwindows, self.NFEATURES))(inputs)
                     prev_conv_output_num_of_channels = self.NFEATURES
                     #x = layers.Permute((2, 1))(x)
@@ -252,19 +257,19 @@ class ModelANN(object):
         outputs = keras.layers.Dense(out_dense_size, activation='linear')(x)
         model = keras.Model(inputs=inputs, outputs=outputs)
         model.compile(optimizer=keras.optimizers.Adam(
-            learning_rate=self.initial_lr), loss="mse")
+            learning_rate=self.initial_lr), loss=mse_loss_masked)
         return model
 
     def build_or_load_model(self, model_path, model_str_def, output_shape):
         xscaler = None
         yscaler = None
         if os.path.exists(model_path + '.h5'):
-            loaded_model = annutils.load_model(model_path,
+            loaded_model = ann_tools.load_model(model_path,
                                             custom_objects={"mse_loss_masked": mse_loss_masked})
             model = loaded_model.model
             xscaler = loaded_model.xscaler
             yscaler = loaded_model.yscaler
-            print('Ignored defined model arc and loaded pre-trained model from %s.h5' % model_path)
+            print('Ignored defined model arc and loaded pre-trained model from %s.keras' % model_path)
 
         len_stations = output_shape[1]
         print("len_stations: ", len_stations)
@@ -281,14 +286,14 @@ class ModelANN(object):
             if not os.path.exists(infile):
                 print("local root: ",local_root_path)
                 raise ValueError(f"Data path {infile} does not exist")
-            dfinps, dfouts = annutils.read_and_split(infile, self.num_sheets, self.observed_stations_ordered_by_median, vars_include=self.vars_include)
+            dfinps, dfouts = ann_tools.read_and_split(infile, self.num_sheets, self.observed_stations_ordered_by_median, vars_include=self.vars_include)
             print("\nread_split",dfinps.first_valid_index())
             
-            dfinps = annutils.create_antecedent_inputs(dfinps,ndays=self.ndays,window_size=self.window_size,nwindows=self.nwindows)
-            dfinps, dfouts = annutils.synchronize(dfinps, dfouts)
+            dfinps = ann_tools.create_antecedent_inputs(dfinps,ndays=self.ndays,window_size=self.window_size,nwindows=self.nwindows)
+            dfinps, dfouts = ann_tools.synchronize(dfinps, dfouts)
             
-            dfinps = annutils.include(dfinps, window)
-            dfouts = annutils.include(dfouts, window)
+            dfinps = ann_tools.include(dfinps, window)
+            dfouts = ann_tools.include(dfouts, window)
             X_df = pd.concat([X_df, dfinps], axis=0)
             Y_df = pd.concat([Y_df, dfouts], axis=0)
 
@@ -327,7 +332,7 @@ class ModelANN(object):
 
         print(f"Finished compiling inputs for {experiment} experiment")
 
-    def train_models(self, models):
+    def train_models(self, models, epochs=50):
         print("experiment: ", self.experiment)
 
         # create folders to save results
@@ -346,15 +351,13 @@ class ModelANN(object):
             model_path_prefix = "mtl_%s" % (full_model_str_def)
             model, xscaler, yscaler = self.build_or_load_model(model_path_prefix, full_model_str_def, self.train_Y.shape)
 
-            epochs = 50
-
             print("Model summary:")
             print(model.summary())
 
             if(xscaler is None or yscaler is None):
                 print("Creating new scalers")
 
-            xscaler, yscaler = annutils.create_or_update_xyscaler(xscaler, yscaler, self.train_X, self.train_Y)
+            xscaler, yscaler = ann_tools.create_or_update_xyscaler(xscaler, yscaler, self.train_X, self.train_Y)
             print("Xscaler Min[0]: %s" % xscaler.min_val[0])
             print("Xscaler Max[0]: %s" % xscaler.max_val[0])
 
@@ -385,7 +388,7 @@ class ModelANN(object):
 
             model_savepath = os.path.join(local_root_path, "Experiments", self.experiment, 'models', model_path_prefix)
             # tf.saved_model.save(model, model_savepath)
-            annutils.save_model(model_savepath, model, xscaler, yscaler)
+            ann_tools.save_model(model_savepath, model, xscaler, yscaler)
             print('Model saved to %s' % model_savepath)
             print('Training time: %d min' % ((time.time() - start) / 60))
 
@@ -397,17 +400,19 @@ class ModelANN(object):
 
         model_dir = os.path.join(experiment_dir, "models")
         model_files = [f for f in os.listdir(model_dir) if f.endswith(".h5")]
+        if len(model_files) == 0:
+            raise ValueError("No model files identified")
 
         print("Local root: ",local_root_path)
         for data_file in tqdm(excel_files):
-            print("Data file: %s" % data_file)
+            print(f"Local root path: {local_root_path}, Data file: {data_file}")
             data_path = os.path.join(local_root_path,data_file)
-            dfinps, dfouts = annutils.read_and_split(data_path, self.num_sheets, self.observed_stations_ordered_by_median, vars_include=self.vars_include)
+            dfinps, dfouts = ann_tools.read_and_split(data_path, self.num_sheets, self.observed_stations_ordered_by_median, vars_include=self.vars_include)
             for cn in dfinps.columns:
                 print("Col "+cn)
 
-            dfinps = annutils.create_antecedent_inputs(dfinps,ndays=self.ndays,window_size=self.window_size,nwindows=self.nwindows)
-            dfinps, dfouts = annutils.synchronize(dfinps, dfouts)
+            dfinps = ann_tools.create_antecedent_inputs(dfinps,ndays=self.ndays,window_size=self.window_size,nwindows=self.nwindows)
+            dfinps, dfouts = ann_tools.synchronize(dfinps, dfouts)
 
 
             #get the name of the file without the extension
@@ -566,10 +571,14 @@ if __name__ == '__main__':
     import numpy as np
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
-    in_fname = "./input/lathypcub_v2_ann_config.yaml"
+    in_fname = "./input/lathypcub_v3_ann_config.yaml"
 
-    ann_mod = run_mod_ann(in_fname, inputs_compiled=False, trained=False, make_pred=True)
+    inputs_compiled=True
+    trained=False
+    do_pred=True
+    ann_mod = run_mod_ann(in_fname, inputs_compiled=inputs_compiled, 
+                          trained=trained, make_pred=do_pred, epochs=100)
 
     # ann_mod = run_mod_ann(in_fname, inputs_compiled=True, trained=True, make_pred=False)
-    # ann_mod.load_save_ann('mtl_i118_lstm14_lstm14_f_o1.h5', 
+    # ann_mod.load_save_ann('mtl_i118_lstm14_lstm14_f_o1.keras', 
     #                       r'D:\projects\delta_salinity\scripts\DSP_code\scripts\ann_training\Experiments\latinhypercube_v2\models\bundle')

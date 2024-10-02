@@ -1,4 +1,6 @@
-dsp_home: D:/projects/delta_salinity/scripts/DSP_code # where the main folder of this project is
+#dsp_home: D:/projects/delta_salinity/scripts/DSP_code # where the main folder of this project is
+
+dsp_home: F:/ann_workspace/DSP_code
 
 experiment: latinhypercube_v3 # name of folder to look inside of test_file dir
 
@@ -27,18 +29,37 @@ vars_include:
 - mtz_tidal_nrg
 - base_ec_output
 
+# stas_include:
+# - CHDMC006
+# - CHSWP003
+# - CHVCT000
+# - ROLD024
+# - RSAC075
+# - RSAC081
+# - RSAC092
+# - RSAN018
+# - SLMZU011
+# - SLRCK005
+# - RSAN032
+
 stas_include:
-- CHDMC006
-- CHSWP003
-- CHVCT000
-- ROLD024
-- RSAC075
-- RSAC081
-- RSAC092
-- RSAN018
-- SLMZU011
-- SLRCK005
-- RSAN032
+- CHDMC006 # CVP
+- CHSWP003 # SWP
+- CHVCT000 # CCV
+- ROLD024 # BAC
+- RSAC075 # Mallard
+- RSAC081 # cll
+- RSAC092 # emm
+- RSAN018 # jer
+- SLMZU011 # BDL
+- SLRCK005 # Rock Slough
+- RSAN032 # san andreas
+- RSAC101 # SRV
+- RSAN007 # ANT
+#- ROLD034 # OH4
+#- TMS # Needs to be added to DSM2 output for TMS
+
+
 
 train_config: # a dictinoary to take the place of train_files and train_windows
 - num: 0
@@ -86,7 +107,7 @@ train_config: # a dictinoary to take the place of train_files and train_windows
 models: 
 - name: lstm
   params:
-    - 14
+    - 12
 
 excel_files:
 - '{dsp_home}/model/dsm2/DSP_DSM2_202307/historical/anninputs/dsm2_ann_inputs_historical.xlsx'
