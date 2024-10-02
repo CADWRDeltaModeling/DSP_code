@@ -12,6 +12,7 @@ outputs_dir:
  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_4/outputs/
  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/franks_lhc_4/outputs/
  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_lhc_4/outputs/
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/slr_simulations/baseline_slr_lhc_4/outputs/
 #  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_basebc_lhc_4/outputs/
 
 # Station database
@@ -24,12 +25,14 @@ station_input:
  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_4/station.in
  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/franks_lhc_4/station.in
  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_lhc_4/station.in
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/slr_simulations/baseline_slr_lhc_4/station.in
 #  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_basebc_lhc_4/station.in
  
 flow_station_input:
  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_4/fluxflag.prop  
  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/franks_lhc_4/fluxflag.prop 
  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_lhc_4/fluxflag.prop 
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/slr_simulations/baseline_slr_lhc_4/fluxflag.prop 
 #  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_basebc_lhc_4/fluxflag.prop
  
 # Database of the field data file
@@ -41,16 +44,17 @@ time_basis:  2006-11-14  # ISO date format (e.g. 2009-05-05)
 # start_avg:   2007-01-01
 # end_avg:     2008-12-31
 # Times for debugging beginning of run
-start_inst:  2006-12-01 
-end_inst:    2006-12-20
-start_avg:   2006-12-01
-end_avg:     2007-06-30
+start_inst:  2008-10-01 
+end_inst:    2008-10-20
+start_avg:   2008-08-01
+end_avg:     2008-12-31
 variable: salt # one of elev, salt, flow
 labels: # Three labels for field data and two runs
   - Observed
   - DSP Baseline
   - DSP Franks Tract
   - DSP Suisun Restoration
+  - DSP Baseline w/ SLR
   # - DSP SuisunBaseBC Restoration
 
 
