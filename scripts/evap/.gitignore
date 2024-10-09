@@ -1,0 +1,12 @@
+
+# SCHISM shapefiles
+*.shp
+*.sbx
+*.sbn
+*.shp.xml
+*.shx
+*.dbf
+*.cpg
+*.prj
+*.qpj
+*.CPG

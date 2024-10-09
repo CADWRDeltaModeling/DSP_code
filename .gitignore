@@ -30,7 +30,7 @@ scripts/post-processing/**/*.png
 scripts/post-processing/plots/*
 
 # ignore evap folder for now
-scripts/evap/*
+# scripts/evap/*
 
 # ignore this shapefile
 scripts/post-processing/input/evaporation_polygons.*
