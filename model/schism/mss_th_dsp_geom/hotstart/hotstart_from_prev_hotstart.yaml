@@ -1,0 +1,50 @@
+hotstart: 
+    date: 2021-01-01
+    run_start: default
+    time_step: 90
+    hgrid_input_file: ../hgrid.gr3                     # hgrid needs to be in utm coordinates. 
+    vgrid_input_file: ../vgrid.in.3d  
+    vgrid_version: "5.10" 
+    # elevation:  
+    #     initializer: 
+    #         simple_trend: 
+    #             value: max(0.97,-z-0.01)      #x, y, and z coordinate based equation (x and y are utm based)
+    elevation:
+        initializer: 
+            hotstart_nc:
+                data_source: /scratch/projects/mss/setup/hotstart/beta11/interpolate_hotstart/hans_20210101/hotstart.20210101.0.nc
+                source_hgrid: /scratch/projects/mss/setup/hotstart/beta11/interpolate_hotstart/hans_20210101/hgrid_b11.gr3             #only assign it if source_hgrid is different from hgrid_input_file. 
+                source_vgrid: /scratch/projects/mss/setup/hotstart/beta11/interpolate_hotstart/hans_20210101/vgrid_b11.in.3d            #only assign it if source_vgrid is different from vgrid_input_file. 
+                source_vgrid_version: "5.10" 
+                distance_threshold: 10
+                method: nearest  
+    temperature:
+        initializer: 
+            hotstart_nc:
+                data_source: /scratch/projects/mss/setup/hotstart/beta11/interpolate_hotstart/hans_20210101/hotstart.20210101.0.nc 
+                source_hgrid: /scratch/projects/mss/setup/hotstart/beta11/interpolate_hotstart/hans_20210101/hgrid_b11.gr3  
+                source_vgrid: /scratch/projects/mss/setup/hotstart/beta11/interpolate_hotstart/hans_20210101/vgrid_b11.in.3d    
+                source_vgrid_version: "5.10" 
+                distance_threshold: 10
+                method: nearest            
+    salinity:
+        initializer: 
+            hotstart_nc:
+                data_source: /scratch/projects/mss/setup/hotstart/beta11/interpolate_hotstart/hans_20210101/hotstart.20210101.0.nc                 
+                source_hgrid: /scratch/projects/mss/setup/hotstart/beta11/interpolate_hotstart/hans_20210101/hgrid_b11.gr3    
+                source_vgrid: /scratch/projects/mss/setup/hotstart/beta11/interpolate_hotstart/hans_20210101/vgrid_b11.in.3d    
+                source_vgrid_version: "5.10" 
+                distance_threshold: 10
+                method: nearest                                
+    velocity_u:
+        initializer: 
+            simple_trend:
+                value: 0.0
+    velocity_v:
+        initializer: 
+            simple_trend:
+                values: 0.0  
+    velocity_w:
+        initializer: 
+            simple_trend:
+                values: 0.0    
