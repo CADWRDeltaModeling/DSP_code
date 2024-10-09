@@ -1,0 +1,159 @@
+# Define Environmental Variables  ---------------------------------------------------------------
+# env_vars are used to populate the rest of the variables below
+env_vars: 
+- dsp_home: /scratch/tomkovic/DSP_code # where the main folder of this project is (HPC4)
+- bds_home: /home/tomkovic/BayDeltaSCHISM # where the BayDeltaSCHISM repository is housed
+- experiment: lhc_v3 # name of folder to look inside of test_file for azure setup
+- schism_out_dir: '{dsp_home}/scripts/post-processing/data_out/schism_{experiment}' # where the SCHISM data comes from
+- out_dir: '{dsp_home}/scripts/ann_training/data_out/schism_{experiment}'
+
+csv_fmt: '{schism_out_dir}/{mesh}_{case_name}.csv'
+
+# Input Variables to the ANN --------------------------------------------------------------------
+  # CalSim configuration:
+  # Delta_X channel operation: DXC -  (1-open first opening days for a month 0- closed rest of the days in a month)
+  # Exports: (C_CAA003_TD+C_DMC000_TD+d408+D_SJR028_WTPDWS) - SWP+CVP+CCWD+COSMA
+  # Northern Flow: (C_SAC041+C_CSL004A+C_MOK019+C_CLV004)- SAC+YOLO_BP+MOKEL+CALVER
+  # SJR flow: (C_SJR070)
+  # SF Tide Daily Amplitude difference(Max- Min): (STAGE-max-min - F-ASTRO_NAVD_20170607) – separately from tide file
+  # Net DICU/DCD: (NET_DICU) – separately from DICU file
+  # SMSCG: (SMSCG_OP) -  operations (1-tidally operate, 0-open)
+vars_map:
+- ann_colname: northern_flow # Northern Flow according to Malinda
+  unit_conv: -35.3147
+  csv_header: Northern Flow In [cms]
+
+- ann_colname: sjr_flow # SJR flow according to Malinda
+  unit_conv: -35.3147
+  csv_header: sjr In [cms]
+
+- ann_colname: exports # Exports according to Malinda
+  unit_conv: 35.3147
+  csv_header: Exports Combined In [cms]
+
+- ann_colname: dxc_gate_fraction # Delta_X according to Malinda
+  unit_conv: 
+    - 10: 1 # open
+    - 0: 0 # closed
+  csv_header: DCC Gate In
+
+- ann_colname: suisun_gate_fraction # SMSCG according to Malinda
+  unit_conv: 
+    - 0: 1  # tidally operate
+    - 1: 0
+  csv_header: Suisun Radial In
+
+# - sheet_name: net_delta_cu
+#   sheet_colnames:
+#     - div+seep-drain_dcd+smcd
+#   csv_header: Net Delta CU In [cms]
+
+- ann_colname: sf_tidal_nrg # new variable (no CalSim standard)
+  unit_conv: 1 # none handled conversion in gather_schism_output.py
+  csv_header: SF Tidal Energy Out
+
+# - sheet_name: sjr_vernalis_ec
+#   sheet_colnames:
+#     - sjr_vernalis_ec
+#   csv_header: ver z=-0.5 EC Out [psu]
+
+# - sheet_name: sac_ec
+#   sheet_colnames:
+#     - sac_greens_ec
+#   csv_header: emm2 z=-0.5 EC Out [psu]
+
+out_ec_locs:
+- ann_colnames:
+    - CHDMC006-CVP INTAKE
+    - CHSWP003-CCFB_INTAKE
+    - CHVCT000-VICTORIA INTAKE
+    - OLD_MID-OLD RIVER NEAR MIDDLE RIVER
+    - ROLD024-OLD RIVER AT BACON ISLAND
+    - ROLD059-OLD RIVER AT TRACY BLVD
+    - RSAC064-SACRAMENTO R AT PORT CHICAGO
+    - RSAC075-MALLARDISLAND
+    - RSAC081-COLLINSVILLE
+    - RSAC092-EMMATON
+    - RSAC101-SACRAMENTO R AT RIO VISTA
+    - RSAN007-ANTIOCH
+    - RSAN018-JERSEYPOINT
+    - RSAN032-SACRAMENTO R AT SAN ANDREAS LANDING
+    - RSAN037-SAN JOAQUIN R AT PRISONERS POINT
+    - RSAN058-ROUGH AND READY ISLAND
+    - RSAN072-SAN JOAQUIN R AT BRANDT BRIDGE
+    - RSMKL008-S FORK MOKELUMNE AT TERMINOUS
+    - SLCBN002-CHADBOURNE SLOUGH NR SUNRISE DUCK CLUB
+    - SLDUT007-DUTCH SLOUGH
+    - SLMZU011-MONTEZUMA SL AT BELDONS LANDING
+    - SLMZU025-MONTEZUMA SL AT NATIONAL STEEL
+    - SLSUS012-SUISUN SL NEAR VOLANTI SL
+    - SLTRM004-THREE MILE SLOUGH NR SAN JOAQUIN R
+    - SSS-STEAMBOAT SL
+    - Martinez_input_dup
+    - Antioch_dup
+    - CCFB_Intake_dup
+    - Collinsville_dup
+    - CVP_Intake_dup
+    - Emmaton_dup
+    - Jersey_Point_dup
+    - Mallard_Island_dup
+    - Old_River_Hwy_4
+    - CCWD_Rock
+    - CCWD_Victoria_dup
+    - Martinez_input
+- csv_headers: 
+    - trp z=-0.5 EC Out [psu] # CHDMC006-CVP INTAKE
+    - wci z=-0.5 EC Out [psu] # CHSWP003-CCFB_INTAKE
+    - vcu z=-0.5 EC Out [psu] # CHVCT000-VICTORIA INTAKE
+    - uni z=-0.5 EC Out [psu] # OLD_MID-OLD RIVER NEAR MIDDLE RIVER
+    - rsl z=-0.5 EC Out [psu] # ROLD024-OLD RIVER AT BACON ISLAND
+    - old z=-0.5 EC Out [psu] # ROLD059-OLD RIVER AT TRACY BLVD
+    - pct z=-0.5 EC Out [psu] # RSAC064-SACRAMENTO R AT PORT CHICAGO
+    - mal_upper WSE Out [m NAVD88] # RSAC075-MALLARDISLAND
+    - cll z=-0.5 EC Out [psu] # RSAC081-COLLINSVILLE
+    - emm2_upper WSE Out [m NAVD88] # RSAC092-EMMATON
+    - srv z=-0.5 EC Out [psu] # RSAC101-SACRAMENTO R AT RIO VISTA
+    - anc z=-0.5 EC Out [psu] # RSAN007-ANTIOCH
+    - jer z=-0.5 EC Out [psu] # RSAN018-JERSEYPOINT
+    - sal z=-0.5 EC Out [psu] # RSAN032-SACRAMENTO R AT SAN ANDREAS LANDING
+    - ppt z=-0.5 EC Out [psu] # RSAN037-SAN JOAQUIN R AT PRISONERS POINT
+    - rri2 z=-0.5 EC Out [psu] # RSAN058-ROUGH AND READY ISLAND
+    - bdt z=-0.5 EC Out [psu] # RSAN072-SAN JOAQUIN R AT BRANDT BRIDGE
+    - lps z=-0.5 EC Out [psu] # RSMKL008-S FORK MOKELUMNE AT TERMINOUS
+    - snc z=-0.5 EC Out [psu] # SLCBN002-CHADBOURNE SLOUGH NR SUNRISE DUCK CLUB
+    - dsj z=-0.5 EC Out [psu] # SLDUT007-DUTCH SLOUGH
+    - bdl z=-0.5 EC Out [psu] # SLMZU011-MONTEZUMA SL AT BELDONS LANDING
+    - nsl2 z=-0.5 EC Out [psu] # SLMZU025-MONTEZUMA SL AT NATIONAL STEEL
+    - vol z=-0.5 EC Out [psu] # SUISUN SL NEAR VOLANTI SL
+    - tss z=-0.5 EC Out [psu] # SLTRM004-THREE MILE SLOUGH NR SAN JOAQUIN R
+    - sss z=-0.5 EC Out [psu] # SSS-STEAMBOAT SL
+    - mtz z=-0.5 EC Out [psu] # Martinez_input_dup
+    - anc z=-0.5 EC Out [psu] # Antioch_dup
+    - wci z=-0.5 EC Out [psu] # CCFB_Intake_dup
+    - cll z=-0.5 EC Out [psu] # Collinsville_dup
+    - trp z=-0.5 EC Out [psu] # CVP_Intake_dup
+    - emm2_upper WSE Out [m NAVD88] # Emmaton_dup
+    - jer z=-0.5 EC Out [psu] # Jersey_Point_dup
+    - mal_upper WSE Out [m NAVD88] # Mallard_Island_dup
+    - oh4 z=-0.5 EC Out [psu] # Old_River_Hwy_4
+    - rsl z=-0.5 EC Out [psu]  # CCWD_Rock
+    - vcu z=-0.5 EC Out [psu] # CCWD_Victoria_dup
+    - mtz z=-0.5 EC Out [psu] # Martinez_input
+
+# Model Meshes ----------------------------------------------------------------------------------
+
+meshes:
+- baseline
+- suisun
+- cache
+
+# Model Cases -----------------------------------------------------------------------------------
+
+cases:
+- lhc_1
+- lhc_2
+- lhc_3
+- lhc_4
+- lhc_5
+- lhc_6
+- lhc_7
