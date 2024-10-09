@@ -153,7 +153,7 @@ in_vars:
   method: calc_dcu
 
 # ANN
-- name: Tidal Energy In
+- name: SF Tidal Energy Out
   station_output: '{meshcase_dir}/outputs/staout_1'
   loc:
     - sffpx # San Francisco
@@ -258,6 +258,7 @@ out_vars:
   # Stations not in DSM2 ------------------------------------
   # - inb # 'SLRCK005' CWD Rock Slough PP
   - mdm # 'MDM' Middle R at Middle River
+  - sffpx
   # Additional stations of curiousity
   - mtz # 'MTZ' Martinez ------------------------------------
   - carqb # 'CARQB' Carquinez Strait at Carquinez Bridge
@@ -379,6 +380,7 @@ out_vars:
   # Stations not in DSM2 ------------------------------------
   - inb # 'SLRCK005' CWD Rock Slough PP
   - mdm # 'MDM' Middle R at Middle River
+  - sffpx
   # Additional stations of curiousity
   - mtz # 'MTZ' Martinez ------------------------------------
   - carqb # 'CARQB' Carquinez Strait at Carquinez Bridge

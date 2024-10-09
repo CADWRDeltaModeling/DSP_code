@@ -418,6 +418,9 @@ class ANNBCECGen(object):
             print('timeseries is inst-val, converting to per-aver')
             wse_ts.index = wse_ts.index.to_period()
 
+        # convert to feet
+        wse_ts = wse_ts * 3.28084  # ft/m
+
         df_nrg = cosine_lanczos((wse_ts-cosine_lanczos(wse_ts.copy(),
                                                        cutoff_period='40H', padtype='odd'))**2,
                                 cutoff_period='40H', padtype='odd')  # = < (z- <z>)^2 >
