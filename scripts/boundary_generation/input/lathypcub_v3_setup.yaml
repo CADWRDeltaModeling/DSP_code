@@ -87,7 +87,14 @@ perturbations:
       - ./data_out/suisun_gates/montezuma_radial_lhc_v2.th
       - ./data_out/suisun_gates/montezuma_flash_lhc_v2.th
       - ./data_out/suisun_gates/montezuma_boat_lock_lhc_v2.th
-- name: tide_shift_100
+- name: tide_shift_back_100
+  model_input: tide
+  variable: stage
+  method: shift
+  args:
+    file: ../../data/dsm2_rsac054_stage_histdss.csv
+    shift_backward: 100
+- name: tide_shift_forward_100
   model_input: tide
   variable: stage
   method: shift
@@ -124,7 +131,7 @@ cases:
   case_end: 2015-12-31
   model_year: 2014
   perturbations:
-    - tide_shift_100
+    - tide_shift_forward_100
     - dcc_open
     - dcd_pert_v1
     - suisun_mark_pert_v2
@@ -134,7 +141,7 @@ cases:
   case_end: 2012-12-31
   model_year: 2012
   perturbations:
-    - tide_shift_100
+    - tide_shift_forward_100
     - sac_scaled_1.1
     - dcd_pert_v2
     - suisun_mark_pert_v1
@@ -144,7 +151,7 @@ cases:
   case_end: 2015-12-31
   model_year: 2014
   perturbations:
-    - tide_shift_100
+    - tide_shift_forward_100
     - dcc_open
     - sac_pert_hist
     - sjr_pert_hist
@@ -160,7 +167,7 @@ cases:
   case_end: 2008-12-31
   model_year: 2008
   perturbations:
-    - tide_shift_100
+    - tide_shift_forward_100
     - dcd_pert_v2
     - suisun_mark_pert_v2
     - sac_pert_hist

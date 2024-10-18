@@ -131,7 +131,7 @@ model_config:
   method: read
   
 - model_input: suisgate
-  th_file: '{dsp_home}/scripts/boundary_generation/data_out/suisun_gates/montezuma_{gate}_lhc_v{gate_ver}.th'
+  th_file: '{dsp_home}/scripts/boundary_generation/data_out/suisun_gates/montezuma_{gate}_{cname}.th'
   method: copy
 
 - model_input: tide
@@ -206,7 +206,7 @@ versioned_th_files:
 cases_exclude:
   # - lhc_1
   # - lhc_2
-  - lhc_3
+  # - lhc_3
   - lhc_4
   # - lhc_5
   # - lhc_6
