@@ -19,7 +19,7 @@ def create_arg_parser():
                         help='')
     parser.add_argument('--path_polygons', default=None,  type=Path,
                         help='')
-    parser.add_argument('--polygon_domain', default=None,  type=list,
+    parser.add_argument('--polygon_domain', default=None,  type=str,
                         help='')
     return parser
 
@@ -38,7 +38,7 @@ def extract_evap_daily(path_out2d, path_polygons, poly_ids,
         coords="minimal",
         compat="override",
     ).astype(np.float64)
-    match = re.search(r'out2d_(\d+)\.nc', file_path)
+    match = re.search(r'out2d_(\d+)\.nc', str(path_out2d))
 
     if match:
         num_file = match.group(1)
@@ -75,19 +75,20 @@ def extract_evap_daily(path_out2d, path_polygons, poly_ids,
         da_out = da_integrated.sum(dim="n_face") * kg_to_cfs
         # add 8 hours to timestamps there's an 8-hr shift issue from xarray converting to UTC.
         # SCHISM has time information attached so xarray shifts by 8 hours
-        da_out["time"] = da_out.salinity.time + pd.to_timedelta(8, 'H')
+        da_out["time"] = da_out.time + pd.to_timedelta(8, 'h')
 
         # calculate daily average water evaporation cfs per day by averageing da_out over time (use xarray)
-        da_out_mean = da_out.resample('1D', closed='right').mean()
-        print(da_out_mean)
-        da_out_mean = da_out_mean.head(1)
-        print(da_out_mean)
+        da_out_mean = da_out.resample(time='1D', closed='right').mean()
+        # print(da_out_mean)
+        out_df = da_out_mean.to_dataframe()
+        out_df = out_df.head(1)
+        # print(out_df)
 
         # write da_out
         out_fn = os.path.join(os.path.dirname(
             path_polygons), f'evap_{poly}_{num_file}.csv')
         print(out_fn)
-        da_out_mean.to_csv(out_fn, float_format="%.1f")
+        out_df.to_csv(out_fn, float_format="%.1f")
 
 
 def main():
@@ -103,24 +104,24 @@ def main():
                     'baseline': ['legal_delta', 'suisun_bay', 'full_domain'],
                     'suisun': ['legal_delta', 'suisun_bay',
                                'grizzly_restoration', 'full_domain'],
-                    'cache_polys': ['legal_delta', 'suisun_bay', 'prospect_restoration',
-                                    'lookout_restoration', 'egbert_restoration', 'full_domain']}
+                    'cache': ['legal_delta', 'suisun_bay', 'prospect_restoration',
+                              'lookout_restoration', 'egbert_restoration', 'full_domain']}
 
     poly_ids = polygon_dict[polygon_domain]
 
     extract_evap_daily(path_out2d, path_polygons, poly_ids)
 
 
-def main_hardwire():
-    model_out_dir = "/scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_7/outputs"
-    os.chdir(model_out_dir)
-    path_out2d = os.path.join(model_out_dir, 'out2d_700.nc')
-    path_polygons = '/scratch/tomkovic/DSP_code/scripts/evap/evap_poly.shp'
+# def main_hardwire():
+#     model_out_dir = "/scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_7/outputs"
+#     os.chdir(model_out_dir)
+#     path_out2d = os.path.join(model_out_dir, 'out2d_700.nc')
+#     path_polygons = '/scratch/tomkovic/DSP_code/scripts/evap/evap_poly.shp'
 
-    # Baseline
-    base_polys = ['legal_delta', 'suisun_bay', 'full_domain']
+#     # Baseline
+#     base_polys = ['legal_delta', 'suisun_bay', 'full_domain']
 
-    extract_evap_daily(path_out2d, path_polygons, base_polys)
+#     extract_evap_daily(path_out2d, path_polygons, base_polys)
 
 
 if __name__ == "__main__":

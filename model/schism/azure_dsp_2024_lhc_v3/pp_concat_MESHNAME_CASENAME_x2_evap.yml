@@ -1,0 +1,38 @@
+resource_group: dwrbdo_dsp # the resource group containing the batch account
+job_name: pp_dsp_concat_2024_{meshname}_{cname} # job name, will be used to name the pool and the job
+batch_account_name: dwrbdodspbatch # batch account name
+storage_account_name: dwrbdodspsa # this is the storage account containing batch and storage_container defined below
+storage_container_name: test # this is mounted to $AZ_BATCH_MOUNTS_DIR/<<storage_container_name>> in addition to batch container which is mounted to $AZ_BATCH_MOUNTS_DIR/batch
+study_dir: process_evap_output ## where the relative study directory for the simulation will be
+study_copy_flags: --recursive --preserve-symlinks
+setup_dirs: # these are directories that are also copied in addition to the study_dir
+  - process_x2_output
+setup_dirs_copy_flags: --recursive --preserve-symlinks
+num_hosts: 1 # number of nodes in the pool
+# num_cores: <<number of cores total>> # is optional as default is number of cores per host * number of hosts
+num_scribes: 10 # This is used in the mpi_cmd template if referred to there
+# command to run , assume the study_dir is current directory
+mpi_opts: --bind-to core
+task_slots_per_node: 1
+vm_size: standard_ds5_v2 # standard_f16s_v2 # standard_ds5_v2
+command: |
+ source $AZ_BATCH_APP_PACKAGE_suxarray/bin/activate; # should check for consistency with evap package
+ # start with evaporation outputs
+ python concat_evap.py --csv_dir {meshname}_{cname} --polygon_domain baseline;
+ azcopy copy ./ "https://{storage_account_name}.blob.core.windows.net/{storage_container_name}/?{sas}" --include-regex="evap_ts.*.csv" --recursive;
+ 
+ # then x2
+ cd ../process_x2_output;
+ python concat_x2.py --csv_dir {meshname}_{cname};
+ azcopy copy ./ "https://{storage_account_name}.blob.core.windows.net/{storage_container_name}/?{sas}" --include-regex="x2_ts.*.csv" --recursive;
+ rm -rf *;
+# template for the pool name, which is used to create the pool with appropriate settings
+template_name: "alma87_mvapich2_20240426_pp" # this is the template name for the pool, e.g. "centos7" or "alma8"
+app_pkgs:
+  - name: batch_setup
+  - name: nfs
+  - name: schism_with_deps
+  #- name: schimpy_with_deps
+  - name: baydeltaschism
+  - name: telegraf
+  - name: suxarray

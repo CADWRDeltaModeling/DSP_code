@@ -1,0 +1,58 @@
+# env_vars are used to populate the rest of the variables below 
+env_vars:
+- dsp_home: /scratch/tomkovic/DSP_code # where the main folder of this project is (HPC4/HPC5)
+- bds_home: /home/tomkovic/BayDeltaSCHISM # where the BayDeltaSCHISM repository is housed
+- experiment: lhc_v3 # name of folder to look inside of test_file for azure setup
+- schism_dir: '{dsp_home}/model/schism'
+- exp_dir: '{schism_dir}/azure_dsp_2024_{experiment}' # for azure setup
+- common_dir: '{exp_dir}' # where to copy common files from
+- simulation_dir: '{exp_dir}/simulations' # where to store simulation data
+
+pp_yml_dir: '{exp_dir}/pp_yml_files' # where to copy azure yml files for run configurations
+
+# auxiliary yaml files
+case_setup: '{dsp_home}/scripts/boundary_generation/input/lathypcub_v3_setup.yaml'
+
+# setup files
+pp_yml_files:
+- '{exp_dir}/pp_MESHNAME_CASENAME_x2_evap.yml'
+- '{exp_dir}/pp_concat_MESHNAME_CASENAME_x2_evap.yml'
+
+meshcase_dir_files:
+- '{exp_dir}/process_x2.sh'
+- '{exp_dir}/evaporation_integrate.py'
+- '{exp_dir}/../../../scripts/evap/evap_poly.cpg'
+- '{exp_dir}/../../../scripts/evap/evap_poly.dbf'
+- '{exp_dir}/../../../scripts/evap/evap_poly.prj'
+- '{exp_dir}/../../../scripts/evap/evap_poly.sbn'
+- '{exp_dir}/../../../scripts/evap/evap_poly.sbx'
+- '{exp_dir}/../../../scripts/evap/evap_poly.shp'
+- '{exp_dir}/../../../scripts/evap/evap_poly.shp.xml'
+- '{exp_dir}/../../../scripts/evap/evap_poly.shx'
+
+# mesh parameters
+meshes:
+- name: baseline
+  indir: '{exp_dir}/baseline_inputs'
+- name: suisun
+  indir: '{exp_dir}/suisun_inputs'
+# - name: cache
+#   indir: '{exp_dir}/cache_inputs'
+# - name: franks
+#   indir: '{exp_dir}/franks_inputs'
+
+cases_exclude:
+  # - lhc_2
+  # - lhc_3
+  # - lhc_4
+  # - lhc_5
+  # - lhc_6
+  # - lhc_7
+  - none
+
+meshcases_exclude:
+  # - suisun
+  - none
+
+meshes_exclude:
+  - none
