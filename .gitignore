@@ -29,8 +29,9 @@ scripts/post-processing/**/*.html
 scripts/post-processing/**/*.png
 scripts/post-processing/plots/*
 
-# ignore evap folder for now
-# scripts/evap/*
+# ignore post-processing outputs for now
+scripts/evap/**/*.csv
+scripts/x2/**/*.csv
 
 # ignore this shapefile
 scripts/post-processing/input/evaporation_polygons.*
