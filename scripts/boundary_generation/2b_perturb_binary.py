@@ -234,7 +234,7 @@ def write_DSM2_to_SCHISM(dsm2_dss, radial_df, flash_df, boat_df, out_dir, case, 
 
     # check that time series all overlap
     if not (radial_df.index.min() == flash_df.index.min() == boat_df.index.min()):
-        print(f"""START TIMES NOT ALIGNED! radial: {radial_df.index.min()} 
+        print(f"""START TIMES NOT ALIGNED! radial: {radial_df.index.min()} )
                          flashboard: {flash_df.index.min()} 
                          boat lock: {boat_df.index.min()}""")
         ts = [t for t in ts if t >= max(
@@ -273,6 +273,10 @@ def write_DSM2_to_SCHISM(dsm2_dss, radial_df, flash_df, boat_df, out_dir, case, 
     radial_pert_df = radial_pert_df.dropna()
     radial_pert_df = radial_pert_df.loc[(
         radial_pert_df != radial_pert_df.shift()).any(axis=1)]  # gets rid of duplicate rows
+    radial_pert_df.loc[:, 'install'] = radial_pert_df['install'].astype(float).map(
+        '{:.0f}'.format)
+    radial_pert_df.loc[:, 'ndup'] = radial_pert_df['ndup'].astype(
+        float).map('{:.0f}'.format)
 
     # fix op_up/op_down (when op_up=0, op_down=1, else op_down=1)
     radial_pert_df['op_down'] = 1
@@ -285,6 +289,10 @@ def write_DSM2_to_SCHISM(dsm2_dss, radial_df, flash_df, boat_df, out_dir, case, 
     flash_pert_df.loc[:, 'op_up'] = np.nan
     flash_pert_df.loc[:, 'op_up'] = radial_pert_df['op_up'].values
     flash_pert_df.loc[:, 'op_down'] = flash_pert_df['op_up']
+    flash_pert_df.loc[:, 'install'] = flash_pert_df['install'].astype(float).map(
+        '{:.0f}'.format)
+    flash_pert_df.loc[:, 'ndup'] = flash_pert_df['ndup'].astype(
+        float).map('{:.0f}'.format)
     flash_pert_df.index = pd.to_datetime(radial_pert_df.index)
 
     write_th(flash_pert_df, os.path.join(
@@ -298,6 +306,10 @@ def write_DSM2_to_SCHISM(dsm2_dss, radial_df, flash_df, boat_df, out_dir, case, 
     boat_pert_df.loc[boat_pert_df['op_up'] == -1, 'op_up'] = 0
     boat_pert_df.loc[:, 'op_down'] = boat_pert_df['op_up']
     boat_pert_df.index = pd.to_datetime(radial_pert_df.index)
+    boat_pert_df.loc[:, 'install'] = boat_pert_df['install'].astype(float).map(
+        '{:.0f}'.format)
+    boat_pert_df.loc[:, 'ndup'] = boat_pert_df['ndup'].astype(
+        float).map('{:.0f}'.format)
 
     write_th(boat_pert_df, os.path.join(
         out_dir, f"montezuma_boat_lock_{case}.th"))
