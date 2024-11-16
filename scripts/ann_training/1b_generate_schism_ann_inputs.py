@@ -3,6 +3,8 @@ import pandas as pd
 import os
 import string
 
+from vtools.functions.unit_conversions import psu_ec_25c
+
 
 class SafeDict(dict):
     def __missing__(self, key):
@@ -35,7 +37,7 @@ def schism_to_ann_xlsx(in_fname, mesh):
         env_vars[env_var] = string.Formatter().vformat(
             env_vars[env_var], (), SafeDict((env_vars)))
     csv_fmt = inputs.get('csv_fmt')
-    vars_map = inputs.get('vars_map')
+    in_vars = inputs.get('in_vars')
     out_dir = env_vars['out_dir']
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
@@ -59,7 +61,7 @@ def schism_to_ann_xlsx(in_fname, mesh):
             input_df_daily = input_df_daily.rename_axis('Time')
 
             # go through each sheet and create csvs
-            for varmap in vars_map:
+            for varmap in in_vars:
                 sheet_name = varmap['sheet_name']
                 sheet_colnames = varmap['sheet_colnames']
                 csv_headers = varmap['csv_headers']
@@ -93,7 +95,19 @@ def schism_to_ann_xlsx(in_fname, mesh):
         print("Needs cases")
 
 
-def schism_to_ann_csv(in_fname, mesh):
+def get_csv_df(csv_file):
+    var_df = pd.read_table(csv_file,
+                           sep=',',
+                           index_col=0)
+    # create daily averages of each variable
+    var_df.index = pd.to_datetime(var_df.index)
+    var_df_daily = var_df.resample('D', closed='right').mean()
+    var_df_daily = var_df_daily.rename_axis('Time')
+
+    return var_df_daily
+
+
+def schism_to_ann_csv(in_fname, mesh, mesh_outname):
 
     with open(in_fname, 'r') as f:
         # loader = RawLoader(stream)
@@ -104,9 +118,11 @@ def schism_to_ann_csv(in_fname, mesh):
     for env_var in env_vars:
         env_vars[env_var] = string.Formatter().vformat(
             env_vars[env_var], (), SafeDict((env_vars)))
-    csv_fmt = inputs.get('csv_fmt')
-    vars_map = inputs.get('vars_map')
-    ann_var_names = [var['ann_colname'] for var in vars_map]
+
+    in_vars = inputs.get('in_vars')
+    comb_vars = inputs.get('comb_vars')
+    ann_var_names = [var['ann_colname'] for var in in_vars]
+    ann_var_names = ann_var_names + [var['ann_colname'] for var in comb_vars]
     out_ec_locs = build_dict(inputs.get('out_ec_locs'))
     out_dir = env_vars['out_dir']
     if not os.path.exists(out_dir):
@@ -114,30 +130,30 @@ def schism_to_ann_csv(in_fname, mesh):
 
     if 'cases' in inputs.keys():
         cases = inputs.get('cases')
-        for case_name in cases:
-            # case_num = case.get('case_num')
-            csv_file = string.Formatter().vformat(csv_fmt, (),
-                                                  SafeDict(({**env_vars,
-                                                           **locals()})))
-            input_df = pd.read_table(csv_file,
-                                     sep=',',
-                                     index_col=0)
-            # create daily averages of each variable
-            input_df.index = pd.to_datetime(input_df.index)
-            input_df_daily = input_df.resample('D', closed='right').mean()
-            input_df_daily = input_df_daily.rename_axis('Time')
-
+        for case_num in cases:
+            case_name = case_num  # f'lhc_{case_num}'
+            # uses this csv just to get the datetime indices for the other variables and to get EC outputs
+            csv_indx_fmt = string.Formatter().vformat(inputs.get('csv_indx_fmt'), (),
+                                                      SafeDict(({**env_vars,
+                                                                 **locals()})))
+            input_df_daily = get_csv_df(csv_indx_fmt)
             output_df_daily = pd.DataFrame(
-                index=input_df_daily.index, columns=['case'] + ann_var_names + out_ec_locs['ann_colnames'])
+                index=input_df_daily.index, columns=['model', 'scene', 'case'] + ann_var_names + out_ec_locs['ann_colnames'])  # creates an empty dataframe with spaces for each ANN variable
+            output_df_daily['model'] = 'SCHISM'
+            output_df_daily['scene'] = mesh
             output_df_daily['case'] = case_name
 
             # go through each sheet and store inputs
-            for varmap in vars_map:
+            for varmap in in_vars:
                 ann_colname = varmap['ann_colname']
                 unit_conv = varmap['unit_conv']
                 csv_header = varmap['csv_header']
+                csv_file = varmap['csv_file']
 
-                var_df = input_df_daily.loc[:, csv_header]
+                var_df_daily = get_csv_df(string.Formatter().vformat(csv_file, (),
+                                                                     SafeDict(({**env_vars,
+                                                                                **locals()}))))
+                var_df = var_df_daily.loc[:, csv_header]
                 if isinstance(unit_conv, list):
                     unit_dict = build_dict(unit_conv)
                     var_df = var_df.replace(unit_dict)
@@ -146,14 +162,26 @@ def schism_to_ann_csv(in_fname, mesh):
                 var_df.columns = ann_colname
                 output_df_daily[ann_colname] = var_df
 
+            # write combination variables
+            for varmap in comb_vars:
+                ann_colname = varmap['ann_colname']
+                vars = varmap['vars']
+                mult = varmap['mult']
+
+                var_df = (output_df_daily[vars].fillna(0) * mult).sum(axis=1)
+                var_df.columns = ann_colname
+                output_df_daily[ann_colname] = var_df
+
             # add EC ouptuts
             for ann_ec, col_ec in zip(out_ec_locs['ann_colnames'], out_ec_locs['csv_headers']):
-                output_df_daily[ann_ec] = input_df_daily.loc[:, col_ec]
+                output_df_daily[ann_ec] = psu_ec_25c(
+                    input_df_daily.loc[:, col_ec])
 
             # write out csv
             out_fn = os.path.join(out_dir,
-                                  f'calsim_ann_{os.path.basename(csv_file)}')
+                                  f'schism_{mesh_outname}_{case_num}.csv')
             # clean up the start and end rows
+            output_df_daily.index.name = 'datetime'
             output_df_daily.dropna(inplace=True)
             output_df_daily.to_csv(out_fn, float_format="%.2f")
     else:
@@ -167,5 +195,6 @@ if __name__ == '__main__':
 
     in_fname = "./input/ann_csv_config_lathypcub_v3_schism.yaml"
     mesh = 'baseline'
+    mesh_outname = 'base'
 
-    schism_to_ann_csv(in_fname, mesh)
+    schism_to_ann_csv(in_fname, mesh, mesh_outname)
