@@ -1,21 +1,21 @@
-331 ! total # of elems with sources
+367 ! total # of elems with sources
 411339 ! delta_src_1
 413207 ! delta_src_3
 411339 ! delta_src_4
 410505 ! delta_src_5
-409458 ! delta_src_6
-408876 ! delta_src_7
-408032 ! delta_src_8
-405991 ! delta_src_9
-404538 ! delta_src_10
-401414 ! delta_src_11
-398910 ! delta_src_12
-394466 ! delta_src_13
-393507 ! delta_src_14
-392338 ! delta_src_15
-390414 ! delta_src_16
-386281 ! delta_src_18
-382673 ! delta_src_19
+409354 ! delta_src_6
+408797 ! delta_src_7
+408194 ! delta_src_8
+405913 ! delta_src_9
+404568 ! delta_src_10
+401297 ! delta_src_11
+398905 ! delta_src_12
+394557 ! delta_src_13
+393590 ! delta_src_14
+392481 ! delta_src_15
+390897 ! delta_src_16
+385964 ! delta_src_18
+384040 ! delta_src_19
 380588 ! delta_src_20
 378654 ! delta_src_21
 375528 ! delta_src_22
@@ -37,138 +37,138 @@
 286015 ! delta_src_45
 269488 ! delta_src_46
 255773 ! delta_src_47
-407350 ! delta_src_48
-406578 ! delta_src_49
-405944 ! delta_src_50
-405274 ! delta_src_51
-404549 ! delta_src_52
-403535 ! delta_src_53
-402144 ! delta_src_54
-401968 ! delta_src_55
-402955 ! delta_src_56
-402326 ! delta_src_58
-399119 ! delta_src_59
-396946 ! delta_src_60
-393845 ! delta_src_61
-392405 ! delta_src_62
-390569 ! delta_src_63
+407441 ! delta_src_48
+406807 ! delta_src_49
+406052 ! delta_src_50
+405296 ! delta_src_51
+404648 ! delta_src_52
+403625 ! delta_src_53
+402306 ! delta_src_54
+401848 ! delta_src_55
+402952 ! delta_src_56
+402406 ! delta_src_58
+399201 ! delta_src_59
+397086 ! delta_src_60
+393661 ! delta_src_61
+392273 ! delta_src_62
+390748 ! delta_src_63
 387309 ! delta_src_64
-380218 ! delta_src_65
-375073 ! delta_src_66, nudged
-378353 ! delta_src_67
-381986 ! delta_src_68
-390914 ! delta_src_70
-392002 ! delta_src_71
-390787 ! delta_src_72
-387294 ! delta_src_73
-384355 ! delta_src_74
-381221 ! delta_src_75
-378646 ! delta_src_77
-377019 ! delta_src_78
-374112 ! delta_src_79
-373089 ! delta_src_80
-371721 ! delta_src_81
+380446 ! delta_src_65
+375501 ! delta_src_66
+378150 ! delta_src_67
+381865 ! delta_src_68
+391125 ! delta_src_70
+391841 ! delta_src_71
+391022 ! delta_src_72
+387506 ! delta_src_73
+384673 ! delta_src_74
+380877 ! delta_src_75
+378399 ! delta_src_77
+376260 ! delta_src_78
+374480 ! delta_src_79
+372980 ! delta_src_80
+371910 ! delta_src_81
 370037 ! delta_src_82
 366652 ! delta_src_84
 364762 ! delta_src_85
 362328 ! delta_src_86
-356616 ! delta_src_89
-353493 ! delta_src_91
-349075 ! delta_src_92
-340781 ! delta_src_93
-323621 ! delta_src_98
-312360 ! delta_src_100
-402879 ! delta_src_104
-399185 ! delta_src_105, nudged
-396430 ! delta_src_106, nudged
-393921 ! delta_src_107
-390487 ! delta_src_108
-382308 ! delta_src_109
-376019 ! delta_src_110
-371380 ! delta_src_111
-367200 ! delta_src_112, nudged
-370764 ! delta_src_113
-369097 ! delta_src_114
-367161 ! delta_src_115
-364969 ! delta_src_116
-362764 ! delta_src_117
-359910 ! delta_src_118
-354947 ! delta_src_119
+357223 ! delta_src_89
+354169 ! delta_src_91
+348125 ! delta_src_92
+341030 ! delta_src_93
+325908 ! delta_src_98
+311255 ! delta_src_100
+402888 ! delta_src_104
+399056 ! delta_src_105
+396213 ! delta_src_106
+393801 ! delta_src_107
+390736 ! delta_src_108
+382800 ! delta_src_109
+374620 ! delta_src_110
+371535 ! delta_src_111
+368001 ! delta_src_112
+371014 ! delta_src_113
+369254 ! delta_src_114
+367603 ! delta_src_115
+365584 ! delta_src_116
+362182 ! delta_src_117
+359209 ! delta_src_118
+353990 ! delta_src_119
 352915 ! delta_src_121
 348141 ! delta_src_122
 415614 ! delta_src_124
 338725 ! delta_src_125
-337661 ! delta_src_126
+337927 ! delta_src_126
 333401 ! delta_src_127
 330746 ! delta_src_128
 336496 ! delta_src_130
-350909 ! delta_src_133
+351175 ! delta_src_133
 344081 ! delta_src_135
 337232 ! delta_src_136
 334726 ! delta_src_137
-381720 ! delta_src_138
+381659 ! delta_src_138
 377206 ! delta_src_139
 368023 ! delta_src_140
 365619 ! delta_src_141
-360371 ! delta_src_142, nudged
+360091 ! delta_src_142
 357238 ! delta_src_143
 352508 ! delta_src_144
 345956 ! delta_src_145
 331100 ! delta_src_146
 344427 ! delta_src_147
 354596 ! delta_src_148
-400519 ! delta_src_149
-397133 ! delta_src_150
-379250 ! delta_src_151
-382977 ! delta_src_152
-390258 ! delta_src_153
-392462 ! delta_src_155
-393880 ! delta_src_156
-396595 ! delta_src_158
-397958 ! delta_src_159
-410184 ! delta_src_162
-408903 ! delta_src_163
-408189 ! delta_src_164
-406150 ! delta_src_165
-405958 ! delta_src_167
-405046 ! delta_src_168
-403852 ! delta_src_169
-399084 ! delta_src_170, nudged
-401319 ! delta_src_171
-399598 ! delta_src_172
-397891 ! delta_src_173, nudged
-396959 ! delta_src_174, nudged
-396243 ! delta_src_175, nudged
-395168 ! delta_src_176, nudged
-394488 ! delta_src_177, nudged
-393795 ! delta_src_178, nudged
-389608 ! delta_src_179
-387910 ! delta_src_182
+400398 ! delta_src_149
+397094 ! delta_src_150, nudged
+379883 ! delta_src_151
+381615 ! delta_src_152
+389511 ! delta_src_153
+392145 ! delta_src_155
+393939 ! delta_src_156
+396829 ! delta_src_158
+397626 ! delta_src_159
+409941 ! delta_src_162
+408854 ! delta_src_163
+408293 ! delta_src_164
+406048 ! delta_src_165
+405919 ! delta_src_167
+405104 ! delta_src_168
+403928 ! delta_src_169
+399589 ! delta_src_170
+401475 ! delta_src_171
+399697 ! delta_src_172
+397967 ! delta_src_173
+397027 ! delta_src_174
+396245 ! delta_src_175
+395129 ! delta_src_176
+394492 ! delta_src_177
+393798 ! delta_src_178
+389699 ! delta_src_179
+387708 ! delta_src_182
 382010 ! delta_src_183
-377788 ! delta_src_187
-371902 ! delta_src_188, nudged
-373266 ! delta_src_189, nudged
-374239 ! delta_src_190, nudged
-375919 ! delta_src_191, nudged
-378616 ! delta_src_192, nudged
-366332 ! delta_src_194, nudged
+378083 ! delta_src_187
+371759 ! delta_src_188
+373143 ! delta_src_189
+374024 ! delta_src_190
+375707 ! delta_src_191
+378619 ! delta_src_192
+366332 ! delta_src_194
 368861 ! delta_src_195
 367622 ! delta_src_196
-365962 ! delta_src_197, nudged
+365801 ! delta_src_197
 362680 ! delta_src_198
 357750 ! delta_src_199
-353826 ! delta_src_200
-340225 ! delta_src_201
-334208 ! delta_src_202
+353635 ! delta_src_200
+340228 ! delta_src_201
+333932 ! delta_src_202
 333684 ! delta_src_203
 330064 ! delta_src_204
 321408 ! delta_src_205
 305744 ! delta_src_206, nudged
-371627 ! delta_src_209, nudged
-373300 ! delta_src_210
-375089 ! delta_src_211
-377100 ! delta_src_212
-359032 ! delta_src_213, nudged
+372095 ! delta_src_209
+373381 ! delta_src_210
+375163 ! delta_src_211
+377254 ! delta_src_212
+358911 ! delta_src_213
 310167 ! delta_src_215
 304635 ! delta_src_216
 298222 ! delta_src_222
@@ -177,15 +177,15 @@
 294805 ! delta_src_226
 324781 ! delta_src_232
 294348 ! delta_src_240
-368284 ! delta_src_241
-351880 ! delta_src_242
-352827 ! delta_src_243
-346873 ! delta_src_245
+368213 ! delta_src_241
+350695 ! delta_src_242
+353605 ! delta_src_243
+345136 ! delta_src_245
 325731 ! delta_src_246
-341978 ! delta_src_247
+341256 ! delta_src_247
 331501 ! delta_src_250
 333761 ! delta_src_251
-138257 ! delta_src_253
+119328 ! delta_src_253
 196268 ! delta_src_255
 200247 ! delta_src_256
 117323 ! delta_src_257
@@ -199,7 +199,7 @@
 220710 ! delta_src_274, nudged
 229737 ! delta_src_276, nudged
 257792 ! delta_src_278, nudged
-218825 ! delta_src_280
+220411 ! delta_src_280
 233178 ! delta_src_282
 269660 ! delta_src_284
 286386 ! delta_src_286
@@ -207,7 +207,7 @@
 181951 ! delta_src_290
 228473 ! delta_src_292
 281930 ! delta_src_294
-80996 ! delta_src_296, nudged
+79246 ! delta_src_296
 26014 ! delta_src_297
 59867 ! delta_src_298
 78339 ! delta_src_299
@@ -228,7 +228,7 @@
 175197 ! delta_src_317
 205254 ! delta_src_318
 179571 ! delta_src_319
-164530 ! delta_src_320
+167058 ! delta_src_320
 209211 ! delta_src_321
 190637 ! delta_src_326
 6624 ! delta_src_330
@@ -255,6 +255,38 @@
 281878 ! delta_src_353
 268346 ! delta_src_354
 247014 ! delta_src_355
+413735 ! delta_src_2
+402638 ! delta_src_57
+385698 ! delta_src_69
+379742 ! delta_src_76
+369838 ! delta_src_83
+360208 ! delta_src_87
+359448 ! delta_src_88
+353620 ! delta_src_120
+346546 ! delta_src_123
+391529 ! delta_src_154
+395033 ! delta_src_157
+399723 ! delta_src_160
+408219 ! delta_src_166, nudged
+380412 ! delta_src_184
+379842 ! delta_src_185
+377892 ! delta_src_186
+407292 ! delta_src_800
+406840 ! delta_src_801
+406370 ! delta_src_802
+405743 ! delta_src_803, nudged
+405606 ! delta_src_804, nudged
+407593 ! delta_src_805, nudged
+405185 ! delta_src_806, nudged
+405819 ! delta_src_807
+405782 ! delta_src_808
+405604 ! delta_src_809
+405249 ! delta_src_810
+404729 ! delta_src_811
+404345 ! delta_src_812
+399478 ! delta_src_813
+401026 ! delta_src_814
+376148 ! delta_src_815
 213745 ! suisun_src_227
 176773 ! suisun_src_228
 204698 ! suisun_src_238
@@ -307,7 +339,7 @@
 66032 ! suisun_src_406
 17285 ! suisun_src_408
 34170 ! suisun_src_409
-57439 ! suisun_src_410
+65566 ! suisun_src_410
 33921 ! suisun_src_412
 88630 ! suisun_src_413
 220093 ! suisun_src_417
@@ -330,14 +362,18 @@
 241898 ! suisun_src_464
 235369 ! suisun_src_465
 232333 ! suisun_src_466
+60423 ! potw_sac_regional
+409438 ! potw_manteca
+378684 ! potw_mtn_house
+401619 ! potw_tracy_01
 
-331 ! total # of elems with sinks
+369 ! total # of elems with sinks
 411339 ! delta_sink_1
 413207 ! delta_sink_3
 411339 ! delta_sink_4
 410505 ! delta_sink_5
 409458 ! delta_sink_6
-408876 ! delta_sink_7
+408881 ! delta_sink_7
 408032 ! delta_sink_8
 405991 ! delta_sink_9
 404538 ! delta_sink_10
@@ -346,7 +382,7 @@
 394466 ! delta_sink_13
 393507 ! delta_sink_14
 392338 ! delta_sink_15
-390414 ! delta_sink_16
+390420 ! delta_sink_16
 386281 ! delta_sink_18
 382673 ! delta_sink_19
 380588 ! delta_sink_20
@@ -378,16 +414,16 @@
 403535 ! delta_sink_53
 402144 ! delta_sink_54
 401968 ! delta_sink_55
-402955 ! delta_sink_56
-402326 ! delta_sink_58
-399119 ! delta_sink_59
-396946 ! delta_sink_60
+402833 ! delta_sink_56
+402162 ! delta_sink_58
+398990 ! delta_sink_59
+397290 ! delta_sink_60
 393845 ! delta_sink_61
 392405 ! delta_sink_62
-390569 ! delta_sink_63
-387309 ! delta_sink_64
-380218 ! delta_sink_65
-375073 ! delta_sink_66, nudged
+390424 ! delta_sink_63
+387627 ! delta_sink_64
+381019 ! delta_sink_65
+375219 ! delta_sink_66
 378353 ! delta_sink_67
 381986 ! delta_sink_68
 390914 ! delta_sink_70
@@ -411,97 +447,97 @@
 340781 ! delta_sink_93
 323621 ! delta_sink_98
 312360 ! delta_sink_100
-402879 ! delta_sink_104
-399185 ! delta_sink_105, nudged
-396430 ! delta_sink_106, nudged
+402929 ! delta_sink_104
+399016 ! delta_sink_105
+396250 ! delta_sink_106
 393921 ! delta_sink_107
-390487 ! delta_sink_108
-382308 ! delta_sink_109
-376019 ! delta_sink_110
+389414 ! delta_sink_108
+383492 ! delta_sink_109
+374560 ! delta_sink_110
 371380 ! delta_sink_111
-367200 ! delta_sink_112, nudged
-370764 ! delta_sink_113
+367368 ! delta_sink_112
+370774 ! delta_sink_113
 369097 ! delta_sink_114
 367161 ! delta_sink_115
 364969 ! delta_sink_116
-362764 ! delta_sink_117
+362536 ! delta_sink_117
 359910 ! delta_sink_118
 354947 ! delta_sink_119
 352915 ! delta_sink_121
 348141 ! delta_sink_122
 415614 ! delta_sink_124
 338725 ! delta_sink_125
-337661 ! delta_sink_126
+337927 ! delta_sink_126
 333401 ! delta_sink_127
 330746 ! delta_sink_128
 336496 ! delta_sink_130
-350909 ! delta_sink_133
+351175 ! delta_sink_133
 344081 ! delta_sink_135
 337232 ! delta_sink_136
 334726 ! delta_sink_137
-381720 ! delta_sink_138
-377206 ! delta_sink_139
+381782 ! delta_sink_138
+377375 ! delta_sink_139
 368023 ! delta_sink_140
 365619 ! delta_sink_141
-360371 ! delta_sink_142, nudged
+360091 ! delta_sink_142
 357238 ! delta_sink_143
 352508 ! delta_sink_144
 345956 ! delta_sink_145
 331100 ! delta_sink_146
 344427 ! delta_sink_147
 354596 ! delta_sink_148
-400519 ! delta_sink_149
-397133 ! delta_sink_150
-379250 ! delta_sink_151
-382977 ! delta_sink_152
-390258 ! delta_sink_153
-392462 ! delta_sink_155
+400642 ! delta_sink_149
+397515 ! delta_sink_150
+379316 ! delta_sink_151
+382166 ! delta_sink_152
+389959 ! delta_sink_153
+392466 ! delta_sink_155
 393880 ! delta_sink_156
-396595 ! delta_sink_158
-397958 ! delta_sink_159
-410184 ! delta_sink_162
-408903 ! delta_sink_163
-408189 ! delta_sink_164
-406150 ! delta_sink_165
-405958 ! delta_sink_167
+396624 ! delta_sink_158
+397957 ! delta_sink_159
+409590 ! delta_sink_162
+408701 ! delta_sink_163
+408159 ! delta_sink_164
+406167 ! delta_sink_165
+405880 ! delta_sink_167
 405046 ! delta_sink_168
-403852 ! delta_sink_169
-399084 ! delta_sink_170, nudged
-401319 ! delta_sink_171
+403777 ! delta_sink_169
+399590 ! delta_sink_170
+401321 ! delta_sink_171
 399598 ! delta_sink_172
-397891 ! delta_sink_173, nudged
-396959 ! delta_sink_174, nudged
-396243 ! delta_sink_175, nudged
-395168 ! delta_sink_176, nudged
-394488 ! delta_sink_177, nudged
-393795 ! delta_sink_178, nudged
+397856 ! delta_sink_173
+396929 ! delta_sink_174
+396117 ! delta_sink_175
+395042 ! delta_sink_176
+394368 ! delta_sink_177
+393705 ! delta_sink_178
 389608 ! delta_sink_179
 387910 ! delta_sink_182
 382010 ! delta_sink_183
 377788 ! delta_sink_187
-371902 ! delta_sink_188, nudged
-373266 ! delta_sink_189, nudged
-374239 ! delta_sink_190, nudged
-375919 ! delta_sink_191, nudged
-378616 ! delta_sink_192, nudged
-366332 ! delta_sink_194, nudged
+371904 ! delta_sink_188
+373227 ! delta_sink_189
+374151 ! delta_sink_190
+375841 ! delta_sink_191
+378777 ! delta_sink_192
+366332 ! delta_sink_194
 368861 ! delta_sink_195
 367622 ! delta_sink_196
-365962 ! delta_sink_197, nudged
+365801 ! delta_sink_197
 362680 ! delta_sink_198
 357750 ! delta_sink_199
-353826 ! delta_sink_200
-340225 ! delta_sink_201
-334208 ! delta_sink_202
+353635 ! delta_sink_200
+340228 ! delta_sink_201
+333932 ! delta_sink_202
 333684 ! delta_sink_203
 330064 ! delta_sink_204
 321408 ! delta_sink_205
 305744 ! delta_sink_206, nudged
-371627 ! delta_sink_209, nudged
+371992 ! delta_sink_209
 373300 ! delta_sink_210
 375089 ! delta_sink_211
-377100 ! delta_sink_212
-359032 ! delta_sink_213, nudged
+377024 ! delta_sink_212
+358911 ! delta_sink_213
 310167 ! delta_sink_215
 304635 ! delta_sink_216
 298222 ! delta_sink_222
@@ -510,15 +546,15 @@
 294805 ! delta_sink_226
 324781 ! delta_sink_232
 294348 ! delta_sink_240
-368284 ! delta_sink_241
-351880 ! delta_sink_242
-352827 ! delta_sink_243
-346873 ! delta_sink_245
+368213 ! delta_sink_241
+350695 ! delta_sink_242
+353605 ! delta_sink_243
+345136 ! delta_sink_245
 325731 ! delta_sink_246
-341978 ! delta_sink_247
+341256 ! delta_sink_247
 331501 ! delta_sink_250
 333761 ! delta_sink_251
-138257 ! delta_sink_253
+119328 ! delta_sink_253
 196268 ! delta_sink_255
 200247 ! delta_sink_256
 117323 ! delta_sink_257
@@ -532,7 +568,7 @@
 220710 ! delta_sink_274, nudged
 229737 ! delta_sink_276, nudged
 257792 ! delta_sink_278, nudged
-218825 ! delta_sink_280
+220411 ! delta_sink_280
 233178 ! delta_sink_282
 269660 ! delta_sink_284
 286386 ! delta_sink_286
@@ -540,7 +576,7 @@
 181951 ! delta_sink_290
 228473 ! delta_sink_292
 281930 ! delta_sink_294
-80996 ! delta_sink_296, nudged
+79246 ! delta_sink_296
 26014 ! delta_sink_297
 59867 ! delta_sink_298
 78339 ! delta_sink_299
@@ -561,7 +597,7 @@
 175197 ! delta_sink_317
 205254 ! delta_sink_318
 179571 ! delta_sink_319
-164530 ! delta_sink_320
+167058 ! delta_sink_320
 209211 ! delta_sink_321
 190637 ! delta_sink_326
 6624 ! delta_sink_330
@@ -588,6 +624,44 @@
 281878 ! delta_sink_353
 268346 ! delta_sink_354
 247014 ! delta_sink_355
+413729 ! delta_sink_2
+403054 ! delta_sink_57
+386439 ! delta_sink_69
+379777 ! delta_sink_76
+369708 ! delta_sink_83
+360352 ! delta_sink_87
+359339 ! delta_sink_88
+353625 ! delta_sink_120
+346152 ! delta_sink_123
+391265 ! delta_sink_154
+394846 ! delta_sink_157
+399406 ! delta_sink_160
+408126 ! delta_sink_166, nudged
+380493 ! delta_sink_184
+379919 ! delta_sink_185
+377902 ! delta_sink_186
+407487 ! delta_sink_800
+407071 ! delta_sink_801
+406536 ! delta_sink_802
+406081 ! delta_sink_803, nudged
+405742 ! delta_sink_804, nudged
+405185 ! delta_sink_805, nudged
+405184 ! delta_sink_806, nudged
+405858 ! delta_sink_807
+405820 ! delta_sink_808
+405670 ! delta_sink_809
+405424 ! delta_sink_810
+404694 ! delta_sink_811
+404444 ! delta_sink_812
+398614 ! delta_sink_813
+401118 ! delta_sink_814
+377236 ! delta_sink_815
+393569 ! delta_null_sink_61a
+393383 ! delta_null_sink_61b
+392490 ! delta_null_sink_62a
+392176 ! delta_null_sink_62b
+390569 ! delta_null_sink_63a
+388225 ! delta_null_sink_63b
 213745 ! suisun_sink_227
 176773 ! suisun_sink_228
 204698 ! suisun_sink_238
@@ -640,7 +714,7 @@
 66032 ! suisun_sink_406
 17285 ! suisun_sink_408
 34170 ! suisun_sink_409
-57439 ! suisun_sink_410
+65566 ! suisun_sink_410
 33921 ! suisun_sink_412
 88630 ! suisun_sink_413
 220093 ! suisun_sink_417

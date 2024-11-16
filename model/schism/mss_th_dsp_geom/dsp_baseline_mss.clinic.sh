@@ -40,8 +40,8 @@ cd ../
 # CREATE CLIINIC SYMBOLIC LINKS ----------------------------
 
 # add new links
-ln -sf SAL_nu_obshycom.nc SAL_nu.nc
-ln -sf TEM_nu_obshycom.nc TEM_nu.nc
+ln -sf SAL_nu_hycom.nc SAL_nu.nc
+ln -sf TEM_nu_hycom.nc TEM_nu.nc
 ln -sf salinity_nudge_obshycom.gr3 SAL_nudge.gr3
 ln -sf temperature_nudge_obshycom.gr3 TEM_nudge.gr3
 ln -sf hotstart_2021.nc hotstart.nc
