@@ -9,6 +9,7 @@ Script to gather input/output data from SCHISM for training ANN
 import os
 from schimpy.station import *
 from schimpy.model_time import file_to_timestamp
+from schimpy.schism_sources_sinks import read_source_sink_in
 from vtools.functions.filter import cosine_lanczos
 import datetime
 import warnings
@@ -107,12 +108,21 @@ def get_ts_from_th(infile, start, elapsed_unit="s"):
 
 
 def get_headers(infile, no_index=True):
-    with open(infile, 'r') as headin:
-        head = headin.readline().strip()
-        headers = head.split()
+    if infile.split('.')[-1] == 'th':
+        with open(infile, 'r') as headin:
+            for line in headin:
+                if line.startswith("#"):
+                    continue
+                headers = line.split()
+                if len(headers) == 1:
+                    headers = line.split(',')
+                break
 
-    if no_index:
-        headers = headers[1:]
+        if no_index:
+            headers = headers[1:]
+    elif infile.split('.')[-1] == 'in':
+        ss_in = read_source_sink_in(infile)[0]
+        headers = ss_in.name.values
 
     return headers
 
@@ -264,6 +274,10 @@ class ANNBCECGen(object):
                                                                                     **locals(),
                                                                                     **{"meshcase_dir": meshcase_dir},
                                                                                     **mesh_mod_th_dict})],
+                                                  invar['source_sink_search'],
+                                                  string.Formatter().vformat(invar['th_header'], (),
+                                                                             SafeDict(({**self.env_vars,
+                                                                                        **locals()}))),
                                                   time_basis)
 
             elif invar['method'] == "calc_tidal_energy":  # outputs_fpath, time_basis, loc
@@ -394,11 +408,23 @@ class ANNBCECGen(object):
 
         return out_df
 
-    def calc_dcu(self, th_files, time_basis):
+    def calc_dcu(self, th_files, source_sink_search, src_sink_head, time_basis):
         # warnings.warn("'calc_dcu' method assumes an order to th_files of 1) source 2) sink")
         src = get_ts_from_th(th_files[0], time_basis)
+        headers = get_headers(src_sink_head.format_map({**self.env_vars,
+                                                        **locals(),
+                                                        **{'ss_type': 'source'}}))  # add headers for in_col indexing
+        # add headers for in_col indexing
+        src = src.loc[:, [source_sink_search in x for x in headers]]
         src = src.sum(axis=1)
+
         sink = get_ts_from_th(th_files[1], time_basis)
+        headers = get_headers(src_sink_head.format_map({**self.env_vars,
+                                                        **locals(),
+                                                        **{'ss_type': 'sink'}}))  # add headers for in_col indexing
+        if len(headers) < len(sink.columns):
+            sink = sink.iloc[:, :len(headers)]
+        sink = sink.loc[:, [source_sink_search in x for x in headers]]
         sink = sink.sum(axis=1)
 
         net = src + sink
@@ -513,7 +539,12 @@ if __name__ == '__main__':
     in_fname = "./input/pull_output_lathypcub_v3_schism.yaml"
 
     for case in range(1, 8):
-        range(1, 8)
         print(f"\n\n\t\t---------  Runnning Case {case} ----------")
         annbc = ANNBCECGen(in_fname, model_type="SCHISM")
         annbc.get_meshcase_inouts('baseline', case)
+
+    # in_fname = "./input/pull_output_mss_schism.yaml"
+
+    # print(f"\n\n\t\t---------  Runnning MSS ----------")
+    # annbc = ANNBCECGen(in_fname, model_type="SCHISM")
+    # annbc.get_meshcase_inouts('baseline', 99)

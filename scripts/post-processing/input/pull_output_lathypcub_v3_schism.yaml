@@ -128,7 +128,16 @@ in_vars:
   method: read_single_column_th
 
 # Suisun Marsh Salinity Control Gate schedule (if used in the restoration scenarios) (definitely double check this one!)
-- name: Suisun Radial In
+- name: Suisun Radial opdown In
+  th_files: 
+    - '{smscg_radial_file}'
+  th_header: '{bds_home}/data/time_history/montezuma_radial.th' # use this to get the headers to match the inputs
+  inputs:
+    - op_down # this is what will consider the operation of the gate (1=Open, 0=Tidally Operated)
+  method: read_single_column_th
+
+# Suisun Marsh Salinity Control Gate schedule (if used in the restoration scenarios) (definitely double check this one!)
+- name: Suisun Radial opup In
   th_files: 
     - '{smscg_radial_file}'
   th_header: '{bds_home}/data/time_history/montezuma_radial.th' # use this to get the headers to match the inputs
@@ -146,11 +155,22 @@ in_vars:
   method: read_single_column_th
 
 # ANN
-- name: Net Delta CU In [cms] # daily (DIV+SEEP-DRAIN) for DCD and SMCD 
+- name: Delta CU In [cms] # daily (DIV+SEEP-DRAIN) for DCD and SMCD 
   th_files: 
     - '{vsource_file}'
     - '{vsink_file}'
+  th_header: '{bds_home}/data/channel_depletion/v{ss_type}_dated.th' # use this to get the headers to match the inputs
   method: calc_dcu
+  source_sink_search: delta
+
+# ANN
+- name: Suisun CU In [cms] # daily (DIV+SEEP-DRAIN) for DCD and SMCD 
+  th_files: 
+    - '{vsource_file}'
+    - '{vsink_file}'
+  th_header: '{bds_home}/data/channel_depletion/v{ss_type}_dated.th' # use this to get the headers to match the inputs
+  method: calc_dcu
+  source_sink_search: suisun
 
 # ANN
 - name: SF Tidal Energy Out
@@ -198,11 +218,10 @@ in_vars:
 # Combined inputs ===================================================================================
 comb_in_vars:
 # Net Delta Outflow at Martinez.  Compare daily (or weekly) average time series based on summation of all boundary conditions.
+# RMA:  (Sac, SJR, Yolo Bypass, Mokelumne, Cosumnes, Calaveras), exports (SWP, CVP, Contra Costa, NBA) and net DICU
 - name: Net Delta Outflow In [cms]
   vars:
-    - american in [cms]
-    - napa in [cms]
-    - Net Delta CU In [cms]
+    - Delta CU In [cms]
     - Exports Combined In [cms]
     - sjr In [cms]
     - Northern Flow In [cms]
@@ -244,10 +263,11 @@ out_vars:
   - ibs # 'IBS' Cordelia Slough at Ibis club
   - gys # 'GYS' Goodyear Slough at Morrow Island club
   - ver # 'VER' Vernalis
+  - anh # 'ANH' Antioch
   # Needed for ANN .xlsx  -------------------------------
   - uni # 'OLD_MID' Old River near Middle River
   - old # 'ROLD059' Old River at Tracy Blvd 
-  # - cse # 'RSAC081' Sacramento River at Collinsville 
+  - cse # 'RSAC081' Sacramento River at Collinsville 
   - rri2 # 'RSAN058' Rough and Ready Island
   - bdt # 'RSAN072' San Joaquin River at Brandt Bridge
   - lps # 'RSMKL008' Little Potato Slough at Terminous 

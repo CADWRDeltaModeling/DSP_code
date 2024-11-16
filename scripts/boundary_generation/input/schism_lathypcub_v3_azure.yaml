@@ -204,18 +204,22 @@ versioned_th_files:
   linked_fn: '{dsp_home}/scripts/boundary_generation/data_out/ccfb_gates/ccfb_{cname}.th'
 
 cases_exclude:
-  # - lhc_1
+  - lhc_1
   # - lhc_2
   # - lhc_3
   - lhc_4
   # - lhc_5
   # - lhc_6
   # - lhc_7
+  - lhc_99
   # - none
 
 meshcases_exclude:
-  - none
-#   - baseline_lhc_1
+  # - none
+  - baseline_lhc_2
+  - baseline_lhc_3
+  # - baseline_lhc_5
+  - baseline_lhc_7
 
 meshes_exclude:
   # - baseline

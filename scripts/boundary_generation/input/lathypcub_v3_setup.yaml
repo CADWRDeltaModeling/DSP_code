@@ -195,4 +195,9 @@ cases:
     - sac_scaled_1.1
     - dcd_pert_v1
     - suisun_mark_pert_v1
+- name: lhc_99
+  extends: model_base
+  case_start: 2021-1-1
+  case_end: 2024-1-2
+  model_year: 2021
   
