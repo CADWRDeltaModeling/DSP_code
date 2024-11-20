@@ -33,6 +33,9 @@ scripts/post-processing/plots/*
 scripts/evap/**/*.csv
 scripts/x2/**/*.csv
 
+# ignore the following:
+scripts/**/check_emm.py
+
 # ignore this shapefile
 scripts/post-processing/input/evaporation_polygons.*
 scripts/**/*.log

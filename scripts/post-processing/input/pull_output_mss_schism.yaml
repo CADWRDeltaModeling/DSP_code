@@ -285,6 +285,10 @@ out_vars:
   - carqb # 'CARQB' Carquinez Strait at Carquinez Bridge
   - gzm # Grizzly Bay at Head of Montezuma Slough
   - msl # Montezuma Slough at Roaring River
+  - god # Godfather II on Suisun Slough
+  - gzl # grizzly Bay
+  - frk # Franks Tract, Mid Tract
+  - bac # Old River at Bacon Island
   method: assign_multiple_ec
 
 # Rio Vista, Emmaton and Jersey Point.  Compare tidally average time series from cross section flow computed at salinity monitoring locations.

@@ -289,6 +289,16 @@ class ANNBCECGen(object):
                                                            station_inpath,
                                                            time_basis,
                                                            invar['loc'])
+                
+            elif invar['method'] == "calc_tidal_filter":  # outputs_fpath, time_basis, loc
+
+                invar_df[in_name] = self.calc_tidal_filter(invar['station_output'].format_map({**self.env_vars,
+                                                                                               **locals(),
+                                                                                               **{"meshcase_dir": meshcase_dir},
+                                                                                               **mesh_mod_th_dict}),
+                                                           station_inpath,
+                                                           time_basis,
+                                                           invar['loc'])    
 
             else:
                 raise ValueError(
@@ -458,6 +468,28 @@ class ANNBCECGen(object):
         df_tidal_energy = df_tidal_energy.resample('15min').ffill()
 
         return df_tidal_energy
+    
+    def calc_tidal_filter(self, outputs_fpath, station_inpath, time_basis, loc):
+
+        wse_ts = self.get_single_staout(
+            outputs_fpath, station_inpath, time_basis, loc)
+
+        if isinstance(wse_ts.index, pd.core.indexes.datetimes.DatetimeIndex):
+            print('timeseries is inst-val, converting to per-aver')
+            wse_ts.index = wse_ts.index.to_period()
+
+        # convert to feet
+        wse_ts = wse_ts * 3.28084  # ft/m
+
+        df_filt = cosine_lanczos(wse_ts.copy(), cutoff_period='40H', padtype='odd') - wse_ts.mean() # = <z> - ave(z)
+        if not isinstance(df_filt.index, pd.DatetimeIndex):
+            df_filt.index = df_filt.index.to_timestamp()
+        df_tidal_filter = df_filt.resample('D', closed='right').mean()
+        df_tidal_filter.columns = ['tidal_energy']
+        # df_tidal_filter.index = df_tidal_filter.index.to_timestamp()
+        df_tidal_filter = df_tidal_filter.resample('15min').ffill()
+
+        return df_tidal_filter
 
     def get_single_staout(self, outputs_fpath, station_inpath, time_basis, loc, depth='upper'):
 
@@ -541,7 +573,7 @@ if __name__ == '__main__':
     for case in range(1, 8):
         print(f"\n\n\t\t---------  Runnning Case {case} ----------")
         annbc = ANNBCECGen(in_fname, model_type="SCHISM")
-        annbc.get_meshcase_inouts('baseline', case)
+        annbc.get_meshcase_inouts('suisun', case)
 
     # in_fname = "./input/pull_output_mss_schism.yaml"
 

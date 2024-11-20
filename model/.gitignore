@@ -97,3 +97,10 @@ schism/**/nudging/*
 schism/**/hotstart.nc
 schism/**/SAL_nu.nc
 schism/**/TEM_nu.nc
+
+# x2 generation and evap generation
+schism/**/x2*.out
+schism/**/evap*.csv
+
+# extra run
+**/mss_th_dsp_geom/**/*
