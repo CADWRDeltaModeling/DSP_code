@@ -2,6 +2,7 @@
 import pandas as pd
 import os
 import string
+import re
 
 from vtools.functions.unit_conversions import psu_ec_25c
 
@@ -178,8 +179,9 @@ def schism_to_ann_csv(in_fname, mesh, mesh_outname):
                     input_df_daily.loc[:, col_ec])
 
             # write out csv
+            case_number = re.findall(r"\d+", case_num)[0]
             out_fn = os.path.join(out_dir,
-                                  f'schism_{mesh_outname}_{case_num}.csv')
+                                  f'schism_{mesh_outname}_{case_number}.csv')
             # clean up the start and end rows
             output_df_daily.index.name = 'datetime'
             output_df_daily.dropna(inplace=True)
@@ -194,7 +196,9 @@ if __name__ == '__main__':
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
     in_fname = "./input/ann_csv_config_lathypcub_v3_schism.yaml"
-    mesh = 'baseline'
-    mesh_outname = 'base'
+    mesh = 'suisun'
+    mesh_outname = 'suisun'
+    # mesh = 'baseline'
+    # mesh_outname = 'base'
 
     schism_to_ann_csv(in_fname, mesh, mesh_outname)
