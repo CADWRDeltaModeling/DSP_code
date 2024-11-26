@@ -21,7 +21,7 @@ SUIS_GATE_EXPERIMENT	 DSP_LHC_7
 START_DATE               29OCT2009
 QUAL_START_DATE          01NOV2009
 PTM_START_DATE           ${QUAL_START_DATE}
-END_DATE                 12DEC2011
+END_DATE                 31DEC2011
 START_TIME               0000
 END_TIME                 0000
 TEMPDIR                  z:/temp                                #Spacious directory for scratch files
