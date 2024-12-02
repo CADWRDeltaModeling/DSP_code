@@ -36,6 +36,8 @@ overwrite <- c('SJR Flow','Exports','Sacramento')
 
 # Load data ---------------------------------------------------------------
 
+version <- 'v1'
+
 # load delta state vars
 dsm2_filename <- '../../data/dsm2_ann_inputs_base.xlsx'
 
@@ -82,22 +84,22 @@ pulse_params <- hash() # flow peak scaling, random shift mean, random shift stan
 
 # pulse_params[['Northern Flow']] <- c(15000/scale_denom, 200, 1500, 5000, NA)
 pulse_params[['Sacramento']] <- c(15000/scale_denom, 200, 1500, 
-                                  4000, NA, 2,
-                                  TRUE, 1)
+                                  3000, NA, 2,
+                                  TRUE, 1) # v1: c(15000/scale_denom, 200, 1500, 4000, NA, 2, TRUE, 1)
 pulse_params[['SJR Flow']] <- c(2000/scale_denom, 50, 500, 
-                                200, NA, 2,
-                                TRUE, .9)
+                                150, NA, 2,
+                                TRUE, 1) # v1: c(2000/scale_denom, 50, 500,200, NA, 2, TRUE, .9)
 pulse_params[['Exports']] <- c(100/scale_denom, 1000, 2000, 
-                               50, max(delta_state$Exports), 2,
-                               FALSE, 0)
+                               50, 1.05*max(delta_state$Exports), 2,
+                               FALSE, 0) # v1: c(100/scale_denom, 1000, 2000, 50, max(delta_state$Exports), 2, FALSE, 0)
 # pulse_params[['Consump Use']] <- c(200/scale_denom, 1000, 2000, 
 #                                     -15000, 5000, 6,
 #                                    FALSE)
 
 # Create data variability -------------------------------------------------
 
-runyrs <- seq(2006,2016,1)
-runyr <- 2006
+runyrs <- seq(1991,2016,1) # for v1 only ran from 2006-2016
+runyr <- 1991
 
 for (runyr in runyrs) {
   print(paste0("  - ",runyr,"  ====="))
@@ -142,7 +144,7 @@ plt <- ggplot(data=plt.df) +
 pltl <- ggplotly(plt, dynamicTicks=TRUE)
 pltl
 
-pltl_name <- "perturb_historical.html"
+pltl_name <- paste0("perturb_historical_", version, ".html")
 
 saveWidget(pltl, pltl_name, selfcontained=TRUE)
 file.rename(pltl_name, paste0("plots/",pltl_name))
@@ -156,7 +158,7 @@ for (name in overwrite) {
 
     out_df <- full.df[,c('Time',name)]
     out_csv <- str_replace_all(name," ","_")
-    write.table(out_df, file=paste0(csv_dir,'/',out_csv,'_',min(runyrs),'-',max(runyrs),'_perturb_historical.csv'),
+    write.table(out_df, file=paste0(csv_dir,'/',out_csv,'_',min(runyrs),'-',max(runyrs),'_perturb_historical_',version,'.csv'),
                 sep=',', row.names=FALSE, col.names=FALSE)
 
 }

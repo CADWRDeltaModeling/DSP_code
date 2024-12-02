@@ -56,12 +56,12 @@ pulse_events <- function(ts.df, nstep=365, rescale=0.015, sh.mean=500, sh.sd=150
   
   # Now create a response function to that stimulus that has mean
   # at shape/rate and peak mode (shape-1)/rate days after the stimulus
-  f<-dgamma(1:30,shape=4.5,rate=0.5)
+  f <- dgamma(1:30,shape=4.5,rate=0.5)
   f <- f/sum(f)
   # print(max(u)*rescale) # Rescale to desired range, including duration of stimulus, value of stimulus and the response
   
   f <- f*rescale
-  z <- stats::filter(u,f) # shape the events in u to create z
+  z <- stats::filter(u,f, circular = TRUE) # shape the events in u to create z
   if (plotshow) {ts.plot(z,xlim=c(1,nstep))}
   
   # Random shifts
@@ -95,7 +95,7 @@ pulse_events <- function(ts.df, nstep=365, rescale=0.015, sh.mean=500, sh.sd=150
     }
     
     ts.df$Edit <- ts.df$Value + z + rshift + stoch
-  } else {
+  } else { # don't edit Edit values (no stochit)
     ts.df$Edit <- ts.df$Value + z + rshift
   }
   
@@ -156,15 +156,15 @@ stochify <- function(nstep, ints, stochscale, nstep_buf=3500, base_period_days=1
   
   # scale stochasticity
   rel_scale <- abs(min(ints)/min(y))
-  if (stochscale>=0.75) {
-    scale_y <- rescale(y,
-                       to=c(stochscale*min(y)*rel_scale, 
-                            max(y)*rel_scale*(2-stochscale)))
-  } else {
-    scale_y <- rescale(y,
-                       to=c((min(y)*(.75-stochscale)) + 0.75*min(y)*rel_scale, 
-                            max(y)*rel_scale*(2-0.75)))
-  }
+  # if (stochscale>=0.75) {
+  scale_y <- rescale(y,
+                     to=c(stochscale*min(y)*rel_scale, 
+                          max(y)*rel_scale*(2-stochscale)))
+  # } else {
+  #   scale_y <- rescale(y,
+  #                      to=c((min(y)*(.75-stochscale)) + 0.75*min(y)*rel_scale, 
+  #                           max(y)*rel_scale*(2-0.75)))
+  # }
   
   if (FALSE){
     # debugging plots
@@ -196,7 +196,7 @@ stochify <- function(nstep, ints, stochscale, nstep_buf=3500, base_period_days=1
 perturb_all <- function(delta_df, pulse_params) {
   
   ndo_pass <- FALSE
-  min.ndo <- 200
+  min.ndo <- min(min(delta_df$`Net Delta Outflow`), 200)
   ndoct <- 1
   sto_reduct <- 0.95
   
@@ -233,18 +233,25 @@ perturb_all <- function(delta_df, pulse_params) {
                               sh.sd, num.pulse, stochit, stochscale)
       
       # debug check
+      # min(ts.df.e$Edit)
       # ggplot(data=ts.df.e,aes(x=Time)) +
       #   geom_line(aes(y=Value, color='orig')) +
       #   geom_line(aes(y=Edit, color='edit'))
+      # min.crit
       
       # check for min max criteria
       if (!is.na(min.crit) | !is.na(max.crit)) {
-        pass <- FALSE
+        pass <- FALSE# check for min/max criteria
+        if (is.na(max.crit)) {
+          if (min(ts.df.e$Edit)<min.crit) {
+            pass <- FALSE } else { pass <- TRUE}
+        } else if (min(ts.df.e$Edit)<min.crit | max(ts.df.e$Edit)>max.crit) {
+          pass <- FALSE } else { pass <- TRUE}
         pct <- 1
         while (!pass) {
-          if (pct%%50==0) {
-            stochscale=stochscale*sto_reduct
-            print(paste0(' - ',key,': Modifying stochscale to ', stochscale))}
+          # if (pct%%50==0) {
+          #   stochscale=stochscale*sto_reduct
+          #   print(paste0(' - ',key,': Modifying stochscale to ', stochscale))}
           ts.df.e <- pulse_events(ts.df, nstep=nrow(ts.df), rescale=scale, sh.mean, 
                                   sh.sd, num.pulse, stochit, stochscale)
           
@@ -266,19 +273,23 @@ perturb_all <- function(delta_df, pulse_params) {
     
     if (min(net_delta_outflow)>min.ndo) {
       ndo_pass <- TRUE
-    } #else {
-    # print(paste0("Minimum net delta outflow is ", min(net_delta_outflow)))
-    # print(paste0("Maximum Exports is ", max(edit.df$Exports)))
-    # print(paste0("Minimum Northern Flow is ", max(edit.df$`NF_nonSac`)))
-    # print(paste0("Minimum SJR Flow is ", max(edit.df$`SJR Flow`)))
-    plt.df <- data.frame(Time=edit.df$Time, NDO=net_delta_outflow)
-    ggplot() +
-      geom_line(data=edit.df, aes(x=Time, y=Exports, color='Exports')) +
-      geom_line(data=edit.df, aes(x=Time, y=Sacramento+NF_nonSac, color='Northern Flow')) +
-      geom_line(data=edit.df, aes(x=Time, y=`SJR Flow`, color='SJR')) +
-      geom_line(data=plt.df, mapping=aes(x=Time, y=NDO, color='NDO'), size=2)
-
-     # } # end ndo check
+    } else {
+      # print(paste0("----- Minimum net delta outflow is ", min(net_delta_outflow)))
+      # print(paste0("Maximum Exports is ", max(edit.df$Exports)))
+      # print(paste0("Minimum Northern Flow is ", max(edit.df$`NF_nonSac`)))
+      # print(paste0("Minimum SJR Flow is ", max(edit.df$`SJR Flow`)))
+      # plt.df <- data.frame(Time=edit.df$Time, NDO=net_delta_outflow)
+      # ggplot() +
+      #   geom_line(data=edit.df, aes(x=Time, y=Exports, color='Edit Exports')) +
+      #   geom_line(data=edit.df, aes(x=Time, y=Sacramento+NF_nonSac, color='Edit Northern Flow')) +
+      #   geom_line(data=edit.df, aes(x=Time, y=`SJR Flow`, color='Edit SJR')) +
+      #   geom_line(data=plt.df, mapping=aes(x=Time, y=NDO, color='Edit NDO'), size=2) +
+      #   geom_line(data=delta_df, aes(x=Time, y=Exports, color='Orig Exports')) +
+      #   geom_line(data=delta_df, aes(x=Time, y=Sacramento+NF_nonSac, color='Orig Northern Flow')) +
+      #   geom_line(data=delta_df, aes(x=Time, y=`SJR Flow`, color='Orig SJR')) +
+      #   geom_line(data=delta_df, mapping=aes(x=Time, y=`Net Delta Outflow`, color='Orig NDO'), size=2)
+      
+      } # end ndo check
     ndoct <- ndoct + 1
   } # end ndo loop
   
