@@ -111,7 +111,7 @@ pulse_events <- function(ts.df, nstep=365, rescale=0.015, sh.mean=500, sh.sd=150
 # base_period_days=128
 # ints <- ts.df$Value
 
-stochify <- function(nstep, ints, stochscale, nstep_buf=3500, base_period_days=128) {
+stochify <- function(nstep, ints, stochscale, nstep_buf=3500, base_period_days=128, lambda_pers=c(1,2,4)) {
   ########## This is a perturbation that includes drift plus periodicities
   # of 14,28 and 56 days. The first couple lines are where those periods are
   # basically you set some frequencies and it randomly modulates those as well as creating a trend.
@@ -121,7 +121,7 @@ stochify <- function(nstep, ints, stochscale, nstep_buf=3500, base_period_days=1
   lambdabase = 2*pi/base_period_days
   # You could add or remove periods here by changing c(1,2,4)
   # The lowest frequency corresponds to the 1 element (128 days divided by 1)
-  lambda = c(1,2,4)*2*pi/base_period_days # c(1,2,4,8)
+  lambda = lambda_pers*2*pi/base_period_days # c(1,2,4,8)
   
   order_trend <- 2 # 2
   order_cycle <- 4 # 4
@@ -170,13 +170,84 @@ stochify <- function(nstep, ints, stochscale, nstep_buf=3500, base_period_days=1
     # debugging plots
     dev.off()
     # par(mfrow=c(4,1))
-    ts.plot(ints, ylab='Original TS', xlab='',ylim=c(min(y),max(ints)))
-    lines(y, ylab='Initial Stoch', xlab='', col='blue')
+    ts.plot(ints, ylab='Original TS', xlab='',ylim=c(min(scale_y),max(ints)))
+    # lines(y, ylab='Initial Stoch', xlab='', col='blue')
     lines(scale_y, ylab='Scaled Stoch', xlab='', col='red')
     lines(ints+y, ylab='Initial Add', xlab='',ylim=c(0,12000), col='lightblue')
     lines(ints+scale_y, ylab='Scaled Add', xlab='',ylim=c(0,12000), col='magenta')
     legend("topleft", c("Original TS", "Initial Stoch", 
                         "Scaled Stoch", "Initial Add","Scaled Add"), 
+           col = c('black','blue','red','lightblue','magenta'), 
+           lty = rep(1,5), ncol = 3, cex = 0.8)
+  }
+  
+  return(scale_y)
+  # par(mfrow=c(4,1))
+  # for(jplot in 2:4){ts.plot(m[jplot,])}
+  # ts.plot(y)
+}
+
+
+# function: stoch_tide ------------------------------------------------------
+# debug
+# nstep_buf=3500
+# base_period_days=128
+# ints <- ts.df$Value
+
+stoch_tide <- function(nstep, ints, rel_mag, center, lambda, nstep_buf=3500, sigma2_kappa=rep(1e-10, length(lambda)) {
+  ########## This is a perturbation that includes drift plus periodicities
+  # of 14,28 and 56 days. The first couple lines are where those periods are
+  # basically you set some frequencies and it randomly modulates those as well as creating a trend.
+  
+  library(scales)
+  
+  
+  order_trend <- 2 # 2
+  order_cycle <- 4 # 4
+  freqs <- lambda
+  rho <- 0.993 # 0.993
+  sigma2_eps <- 1e-2 # 1e-4
+  sigma2_zeta <- 1e-10 # 1e-10 for subtide
+  sigma2_diffuse <- 1. # 1.
+  
+  mod <- sc_model_build(order_trend,order_cycle,freqs,rho,
+                        sigma2_eps=sigma2_eps,sigma2_zeta=sigma2_zeta,
+                        sigma2_kappa=sigma2_kappa,sigma2_diffuse=sigma2_diffuse)
+  mod$GG[1,2] <- 0.99
+  mod$GG[2,2] <- 0.99
+  mod$FF[2] <- 0.99
+  nstate <- dim(mod$GG)[1]
+  sigma_eps <- sqrt(sigma2_eps)
+  sigma <- sqrt(diag(mod$W))
+  y = rep(NA,nstep_buf)
+  m = matrix(nrow=nstate,ncol=nstep_buf)
+  m[,]<-0.
+  
+  
+  for (i in 2:nstep_buf){
+    m[,i] = mod$GG%*%m[,i-1] + rnorm(nstate,sd=sigma)
+    y[i] = mod$FF%*%m[,i] + rnorm(1,sigma_eps)
+  }
+  ndx <- c(1,order_trend+1+order_cycle*2*(0:(length(freqs)-1)))
+  m <- m[ndx,1001:(1000+nstep)]*4
+  y <- colSums(m)+rnorm(nstep)*2
+  
+  # scale stochasticity
+  scale_y <- rescale(y,
+                     to=c((rel_mag*(max(ints)-min(ints))/2)+center, 
+                          center-(rel_mag*(max(ints)-min(ints))/2)))
+  
+  if (FALSE){
+    # debugging plots
+    dev.off()
+    # par(mfrow=c(4,1))
+    ts.plot(ints, ylab='Original TS', xlab='',ylim=c(min(scale_y),max(ints)))
+    # lines(y, ylab='Initial Stoch', xlab='', col='blue')
+    lines(scale_y, ylab='Scaled Stoch', xlab='', col='red')
+    # lines(ints+y, ylab='Initial Add', xlab='',ylim=c(0,12000), col='lightblue')
+    # lines(ints+scale_y, ylab='Scaled Add', xlab='',ylim=c(0,12000), col='magenta')
+    legend("topleft", c("Original TS", 
+                        "Scaled Stoch"), 
            col = c('black','blue','red','lightblue','magenta'), 
            lty = rep(1,5), ncol = 3, cex = 0.8)
   }
