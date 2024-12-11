@@ -56,34 +56,84 @@ def perturb_binary(orig_ts, P00=0.988, P11=0.9625):
     return ts
 
 
-def sample_binary_ts():
-    ndx = pd.date_range(pd.Timestamp(2007, 1, 1), freq='d', periods=1000)
-    ts = pd.Series(index=ndx, data=None)
-    ts[:] = 1.0
+def perturb_suisun_ops_dsm2(in_dss_dir, gates_dss, P00=0.990, P11=0.990):
 
-    off_periods = [("2007-6-01", "2007-09-15"), ("2008-03-01", "2008-05-05"),
-                   ("2008-10-01", "2008-11-15"), ("2009-03-01", "2009-05-05")]
+    gates_dss_file = os.path.join(in_dss_dir, gates_dss)
 
-    for off in off_periods:
-        ts.loc[pd.to_datetime(off[0]):pd.to_datetime(off[1])] = 0
+    with pyhecdss.DSSFile(gates_dss_file) as d:
+        fdname, generated = d._check_condensed_catalog_file_and_recatalog(condensed=True)
+        catdf = pyhecdss.DSSFile._read_catalog_dsd(fdname)
 
-    ts.name = "pos"
-    return ts
+        filtered_df = catdf[(catdf.B == 'MTZSL')]
+        p = d.get_pathnames(filtered_df)
 
-# example:
-# ts_orig = sample_binary_ts()
-# P00=0.988
-# P11=0.9625
-# ts = perturb_binary(ts_orig,P00,P11)  # Defaults are fine
-# print(ts)
-# ts["perturbed"]*=0.75
-
-# ts.plot() #drawstyle="steps-post")
-# plt.legend()
-# plt.show()
+        radial_df, units, ptype = d.read_its([item for item in p if 'RADIAL_OP' in item][0], startDateStr='01JAN1953', endDateStr='01JAN2030')
+        radial_op_up_df, units, ptype = d.read_its([item for item in p if 'RADIAL_FRACT_FROM' in item][0], startDateStr='01JAN1953', endDateStr='01JAN2030')
+        radial_op_down_df, units, ptype = d.read_its([item for item in p if 'RADIAL_FRACT_TO' in item][0], startDateStr='01JAN1953', endDateStr='01JAN2030')
+        flash_df, units, ptype = d.read_its([item for item in p if 'FLASHBOARD_OP' in item][0], startDateStr='01JAN1953', endDateStr='01JAN2030')
+        boat_df, units, ptype = d.read_its([item for item in p if 'BOATLOCK' in item][0], startDateStr='01JAN1953', endDateStr='01JAN2030')
 
 
-def perturb_suisun_ops(radial_df, flash_df, boat_df, P00=0.990, P11=0.990, column_order=['radial', 'flashboard', 'boat_lock']):
+    all_df = radial_df.join(radial_op_up_df, how='outer')
+    all_df = all_df.join(radial_op_down_df, how='outer')
+    all_df = all_df.join(flash_df, how='outer')
+    all_df = all_df.join(boat_df.loc[~boat_df.index.duplicated(keep='first')], how='outer')
+    all_df.columns = ['radial_op','radial_up', 'radial_down', 'flashboard', 'boat_lock']
+    all_df = all_df.ffill()
+    all_df = all_df.reindex(pd.date_range(start=radial_df.index.min(),
+                                          end=radial_df.index.max(),
+                                          freq='D'), 
+                                          method='ffill')
+    all_df = all_df.bfill()
+    ts = all_df.index.to_list()
+
+    # make perturbations
+    rnum = np.random.rand(len(ts))
+    for i in range(1, len(ts)):
+        if all_df.loc[all_df.index[i-1], 'radial_up'] == 0:
+            # radial gate is operational
+            if rnum[i-1] >= P00:
+                all_df.loc[all_df.index[i], 'radial_up'] = 1.0
+                all_df.loc[all_df.index[i], 'radial_down'] = 1.0  # change to open if above P00 threshold
+                all_df.loc[all_df.index[i], 'radial_up'] = 1.0
+                all_df.loc[all_df.index[i], 'radial_down'] = 1.0
+            else:
+                all_df.loc[all_df.index[i], 'radial_up'] = 0.0
+                all_df.loc[all_df.index[i], 'radial_down'] = 1.0 # keep operational if below P00 threshold
+                all_df.loc[all_df.index[i], 'radial_up'] = 0.0
+                all_df.loc[all_df.index[i], 'radial_down'] = 1.0
+        else:
+            # radial gate is open (op_up!=0)
+            if rnum[i-1] >= P11:
+                all_df.loc[all_df.index[i], 'radial_up'] = 0.0
+                all_df.loc[all_df.index[i], 'radial_down'] = 1.0  # change to operational if above P00 threshold
+                all_df.loc[all_df.index[i], 'radial_up'] = 0.0
+                all_df.loc[all_df.index[i], 'radial_down'] = 1.0
+            else:
+                all_df.loc[all_df.index[i], 'radial_up'] = 1.0
+                all_df.loc[all_df.index[i], 'radial_down'] = 1.0  # keep operational if below P00 threshold
+                all_df.loc[all_df.index[i], 'radial_up'] = 1.0
+                all_df.loc[all_df.index[i], 'radial_down'] = 1.0
+        # Check that boat and flash are operated appropriately
+        if all_df.loc[all_df.index[i], 'radial_up'] == 0.0: # upstream is CLOSED (tidal)
+            all_df.loc[all_df.index[i], 'radial_down'] = 1.0 # downstream is OPEN (tidal)
+            all_df.loc[all_df.index[i], 'radial_op'] = -10.0 # operation is ON
+            all_df.loc[all_df.index[i], 'flashboard'] = 0.0 # flashboards need to be IN/CLOSED
+            all_df.loc[all_df.index[i], 'boat_lock'] = 1.0  # boatlock needs to be OPEN
+        if all_df.loc[all_df.index[i], 'radial_up'] == 1.0: # upstream is OPEN
+            all_df.loc[all_df.index[i], 'radial_down'] = 1.0 # downstream is OPEN
+            all_df.loc[all_df.index[i], 'radial_op'] = 1.0 # operation is OFF # leave boatlock/flashboard operations as is
+        if all_df.loc[all_df.index[i], 'flashboard'] == 0.0: # flashboard OPEN
+            all_df.loc[all_df.index[i], 'boat_lock'] = 1.0 # boatlock is CLOSED
+        if all_df.loc[all_df.index[i], 'flashboard'] == 1.0: # flashboard CLOSED
+            all_df.loc[all_df.index[i], 'boat_lock'] = 0.0 # boatlock is OPEN
+
+    # remove any rows that are unecessary
+    all_clean = clean_df(all_df)
+
+    return all_clean
+
+def perturb_suisun_ops_schism(radial_df, flash_df, boat_df, P00=0.990, P11=0.990, column_order=['radial', 'flashboard', 'boat_lock']):
     """ Given a series of  ones and zeros, perturb to  the complementary state. "Unperturbed" means original value.
     Parameters 
     ----------
@@ -406,8 +456,24 @@ if __name__ == "__main__":
             all_clean.to_csv(f'./data_out/MTZSL_markov_pert_v{v}.csv',
                              header=dsm2_header,
                              index=True)
+# Suisun Gates for 100-case LHC v4 ----------------------------------------------------------------------------
 
-    if True:  # just write out SCHISM form DSM2
+    if True:  # switches so I can just re-write the necessary component
+
+        in_dss_dir = '../../model/dsm2/2021DSM2FP_202301/timeseries'
+        gates_dss = 'gates-v8.dss'
+        out_dir = './data_out/suisun_gates_lhc_v4/'
+        if not os.path.exists(out_dir):
+            os.mkdir(out_dir)
+
+        for v in [1, 2]:
+            all_clean = perturb_suisun_ops_dsm2(in_dss_dir, gates_dss)
+
+            all_clean.to_csv(os.path.join(out_dir, f'MTZSL_markov_pert_v{v}.csv'),
+                             header=True,
+                             index=True)
+
+    if False:  # just write out SCHISM form DSM2
         bds_dir = '/home/tomkovic/BayDeltaSCHISM/data/time_history'
         out_dir = './data_out/suisun_gates/'
         if not os.path.exists(out_dir):
