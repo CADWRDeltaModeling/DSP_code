@@ -36,7 +36,7 @@ overwrite <- c('SJR Flow','Exports','Sacramento')
 
 # Load data ---------------------------------------------------------------
 
-version <- 'v1'
+version <- 'v2'
 
 # load delta state vars
 dsm2_filename <- '../../data/dsm2_ann_inputs_base.xlsx'
@@ -98,8 +98,8 @@ pulse_params[['Exports']] <- c(100/scale_denom, 1000, 2000,
 
 # Create data variability -------------------------------------------------
 
-runyrs <- seq(1991,2016,1) # for v1 only ran from 2006-2016
-runyr <- 1991
+runyrs <- seq(1991,2019,1)
+# runyr <- 1991
 
 for (runyr in runyrs) {
   print(paste0("  - ",runyr,"  ====="))

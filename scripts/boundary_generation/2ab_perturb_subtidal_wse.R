@@ -148,4 +148,4 @@ csv_df <- out.df[,c('datetime','Edit')]
 csv_df$datetime <- format(csv_df$datetime, "%Y-%m-%d %H:%M:%S")
 
 write.table(csv_df, file=paste0(csv_dir,'/perturb_historical_subtide_',version,'.csv'),
-            sep=',', row.names=FALSE, col.names=TRUE)
+            sep=',', row.names=FALSE, col.names=FALSE)
