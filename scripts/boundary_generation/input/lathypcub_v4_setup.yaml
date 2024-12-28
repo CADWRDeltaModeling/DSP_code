@@ -1,0 +1,167 @@
+# Breaks down the cases for 100 latin hypercube cases
+
+training_set: latinhypcub_v4
+  
+output_dir: ./data_out/latinhypercube_v4_bundles
+
+perturbations:
+- name: flows sacramento + 10%
+  model_input: sac
+  variable: flow
+  method: scale
+  args:
+    file: ../../data/dsm2_rsac155_flow_histdss.csv
+    scale_factor: 1.1
+- name: flows sacramento - 10%
+  model_input: sac
+  variable: flow
+  method: scale
+  args:
+    file: ../../data/dsm2_rsac155_flow_histdss.csv
+    scale_factor: 0.9
+- name: flows perturbed - v1
+  variable: flow
+  components:
+    - model_input: sac
+      method: read
+      args:
+        file: ./data_out/Sacramento_1991-2019_perturb_historical_v1.csv
+    - model_input: sjr
+      method: read
+      args:
+        file: ./data_out/SJR_Flow_1991-2019_perturb_historical_v1.csv
+    - model_input: chcc
+      method: read
+      args:
+        file: ./data_out/CHCCC006_perturb_historical_v1.csv
+    - model_input: chdm
+      method: read
+      args:
+        file: ./data_out/CHDMC004_perturb_historical_v1.csv
+    - model_input: swp
+      method: read
+      args:
+        file: ./data_out/CHSWP003_perturb_historical_v1.csv
+    - model_input: ccvct
+      method: read
+      args:
+        file: ./data_out/CHVCT001_perturb_historical_v1.csv
+    - model_input: rold
+      method: read
+      args:
+        file: ./data_out/ROLD034_perturb_historical_v2.csv
+- name: flows perturbed - v2
+  variable: flow
+  components:
+    - model_input: sac
+      method: read
+      args:
+        file: ./data_out/Sacramento_1991-2019_perturb_historical_v2.csv
+    - model_input: sjr
+      method: read
+      args:
+        file: ./data_out/SJR_Flow_1991-2019_perturb_historical_v2.csv
+    - model_input: chcc
+      method: read
+      args:
+        file: ./data_out/CHCCC006_perturb_historical_v2.csv
+    - model_input: chdm
+      method: read
+      args:
+        file: ./data_out/CHDMC004_perturb_historical_v2.csv
+    - model_input: swp
+      method: read
+      args:
+        file: ./data_out/CHSWP003_perturb_historical_v2.csv
+    - model_input: ccvct
+      method: read
+      args:
+        file: ./data_out/CHVCT001_perturb_historical_v2.csv
+    - model_input: rold
+      method: read
+      args:
+        file: ./data_out/ROLD034_perturb_historical_v2.csv
+- name: dcc perturbed
+  model_input: dcc
+  variable: pos
+  method: read
+  args:
+    file: ./data_out/RSAC128_markov_pert.csv
+- name: dcc always open
+  model_input: dcc
+  variable: pos
+  method: set
+  args:
+    file: ../../data/dsm2_rsac128_pos_gatesdss.csv
+    set_value: 2.0
+- name: dcc always closed
+  model_input: dcc
+  variable: pos
+  method: set
+  args:
+    file: ../../data/dsm2_rsac128_pos_gatesdss.csv
+    set_value: 0
+- name: suis perturbed - v1
+  variable: op
+  model_input: suisgate
+  method: read_suisun
+  args:
+    file: ./data_out/suisun_gates_lhc_v4/MTZSL_markov_pert_v1.csv
+- name: suis perturbed - v2
+  variable: op
+  model_input: suisgate
+  method: read_suisun
+  args:
+    file: ./data_out/suisun_gates_lhc_v4/MTZSL_markov_pert_v2.csv
+- name: tide shifted - 50d
+  model_input: tide
+  variable: stage
+  method: shift
+  args:
+    file: ../../data/dsm2_rsac054_stage_histdss.csv
+    shift: -50
+- name: tide shifted + 100d
+  model_input: tide
+  variable: stage
+  method: shift
+  args:
+    file: ../../data/dsm2_rsac054_stage_histdss.csv
+    shift: 100
+- name: tide subtidal pert
+  model_input: tide
+  variable: stage
+  method: read
+  args:
+    file: ./data_out/perturb_historical_subtide_v1.csv # check to have no header
+- name: dcd perturbed - v1
+  variable: flow
+  components:
+    - model_input: dcdsink
+      method: read_dcd
+      args:
+        file: ./data_out/DCD_hist_Lch5_v1_sink.csv
+    - model_input: dcdsource
+      method: read_dcd
+      args:
+        file: ./data_out/DCD_hist_Lch5_v1_source.csv
+- name: dcd perturbed - v2
+  variable: flow
+  components:
+    - model_input: dcdsink
+      method: read_dcd
+      args:
+        file: ./data_out/DCD_hist_Lch5_v2_sink.csv
+    - model_input: dcdsource
+      method: read_dcd
+      args:
+        file: ./data_out/DCD_hist_Lch5_v2_source.csv
+
+cases:
+- filename: ./data_out/lhc_v4.csv
+  pert_vars:
+    - tide
+    - dcc
+    - flows
+    - dcd
+    - suis
+  
