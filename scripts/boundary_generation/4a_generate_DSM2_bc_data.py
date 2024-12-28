@@ -34,18 +34,18 @@ def get_pathname(dss_filename, b_part, c_part, e_part=None, f_part=None, filter_
         filtered_df = None
         if b_part is not None:
             filtered_df = filtered_df[(
-                catdf.B == b_part)] if filtered_df is not None else catdf[(catdf.B == b_part)]
+                filtered_df.B == b_part)] if filtered_df is not None else catdf[(catdf.B == b_part)]
         if c_part is not None:
             filtered_df = filtered_df[(
-                catdf.C == c_part)] if filtered_df is not None else catdf[(catdf.C == c_part)]
+                filtered_df.C == c_part)] if filtered_df is not None else catdf[(catdf.C == c_part)]
         if e_part is not None:
             filtered_df = filtered_df[(
-                catdf.E == e_part)] if filtered_df is not None else catdf[(catdf.E == e_part)]
+                filtered_df.E == e_part)] if filtered_df is not None else catdf[(catdf.E == e_part)]
         if f_part is not None:
             filtered_df = filtered_df[(
-                catdf.F == f_part)] if filtered_df is not None else catdf[(catdf.F == f_part)]
+                filtered_df.F == f_part)] if filtered_df is not None else catdf[(catdf.F == f_part)]
         if filter_b_part_numeric:
-            filtered_df = filtered_df[(catdf.B.str.isnumeric())]
+            filtered_df = filtered_df[(filtered_df.B.str.isnumeric())]
         path_list = d.get_pathnames(filtered_df)
 
     return path_list
@@ -56,7 +56,7 @@ def update_DSS(pdict, case_dir, crange, in_dss, out_dss, pathname,
     # Take in information about the perturbation and update the ouptut DSS file
 
     model_input = pdict['model_input']
-    print(f'\t Creating outputs for {model_input}')
+    # print(f'\t Creating outputs for {model_input}')
 
     mod_file = os.path.join(
         case_dir, f'{pdict["model_input"]}_{pdict["method"]}_{crange[0]}-{crange[1]}.csv')
@@ -103,7 +103,7 @@ def update_DSS(pdict, case_dir, crange, in_dss, out_dss, pathname,
     dss_out_file = out_dss[locals()['in_dss']]
 
     with pyhecdss.DSSFile(dss_out_file) as d_out:
-        print(f'Writing out {pathname_out}')
+        # print(f'Writing out {pathname_out}')
         if e_part.startswith('IR-'):
             d_out.write_its(pathname_out, ts_df, unit_part,
                             ptype)  # write to output DSS file
@@ -117,8 +117,12 @@ def update_DSS(pdict, case_dir, crange, in_dss, out_dss, pathname,
 
     return paths_out
 
+def create_perturbations(row, pert_vars):
+    perturbations = [f"{var} {row[var].lower()}" for var in pert_vars if 'regular' not in row[var].lower()]
+    return perturbations
 
-def create_dsm2_bcs(in_fname, dsm2_config_fname):
+
+def create_dsm2_bcs(in_fname, dsm2_config_fname, skip=0):
     with open(in_fname, 'r') as f:
         # loader = RawLoader(stream)
         inputs = schism_yaml.load(f)
@@ -130,7 +134,21 @@ def create_dsm2_bcs(in_fname, dsm2_config_fname):
 
     if item_exist(inputs, 'cases'):
         print(f'Handling cases:')
-        case_items = inputs.get('cases')
+        case_items = inputs.get('cases')        
+        if 'filename' in case_items[0].keys():
+            
+            # setup cases with csv file and not yaml
+            case_file = pd.read_csv(case_items[0]['filename'])
+            pert_vars = case_items[0]['pert_vars']
+            case_file['start'] = pd.to_datetime(case_file['start'])
+            case_file['end'] = pd.to_datetime(case_file['end'])
+
+            case_file['name'] = case_file['case']
+            case_file.rename(columns={'start': 'case_start',
+                                      'end':'case_end'}, inplace=True)
+            case_file['perturbations'] = case_file.apply(create_perturbations, axis=1, args=(pert_vars,))
+        
+            case_items = case_file.iloc[skip:].copy() # this behaves the same as if the cases are defined in a yaml
 
     if item_exist(inputs, 'perturbations'):
         perturb_items = inputs.get('perturbations')
@@ -149,9 +167,9 @@ def create_dsm2_bcs(in_fname, dsm2_config_fname):
     dsm2_config = dsm2_inputs.get('model_config')
 
     training_set = dsm2_inputs.get('training_set')
-    dsp_home = dsm2_inputs.get('dsp_home')
-    in_dss_dir = os.path.join(dsp_home, dsm2_inputs.get('in_dss_dir'))
-    out_dss_dir = os.path.join(dsp_home, dsm2_inputs.get('out_dss_dir'))
+    # dsp_home = dsm2_inputs.get('dsp_home')
+    in_dss_dir = dsm2_inputs.get('in_dss_dir')
+    out_dss_dir = dsm2_inputs.get('out_dss_dir')
     hist_dss = os.path.join(in_dss_dir, dsm2_inputs.get('hist_dss'))
     gates_dss = os.path.join(in_dss_dir,  dsm2_inputs.get('gates_dss'))
     dcd_dss = os.path.join(in_dss_dir,  dsm2_inputs.get('dcd_dss'))
@@ -201,7 +219,7 @@ def create_dsm2_bcs(in_fname, dsm2_config_fname):
 
     # retrieve and write out cases
     print('Handling cases:')
-    for case in case_items:
+    for index, case in case_items.iterrows():
 
         cname = case.get('name')
         print(f'\t- {cname}')
@@ -219,7 +237,8 @@ def create_dsm2_bcs(in_fname, dsm2_config_fname):
         f_part_out = f'DSP_{cname}'
         out_dss = {hist_dss: f'{dsm2_dir}/{cname}_hist.dss',
                    gates_dss: f'{dsm2_dir}/{cname}_gates.dss',
-                   dcd_dss: f'{dsm2_dir}/{cname}_dcd.dss'}
+                   dcd_dss: f'{dsm2_dir}/{cname}_dcd.dss',
+                   'ec_est_dss': f'{dsm2_dir}/{cname}_ec_est.dss'}
         # create DSS files
         for key, out_file in out_dss.items():
             if not os.path.exists(out_file):
@@ -240,7 +259,8 @@ def create_dsm2_bcs(in_fname, dsm2_config_fname):
                 except:
                     raise ValueError(
                         f"The perturbation {cp} needs to be defined in the perturbations section of the yaml file")
-
+                
+                print(f'\t Creating outputs for {cp}')
                 if 'components' in pdict.keys():
                     cdict = pdict.get('components')
                     subout_dir = os.path.join(case_dir, cp)
@@ -307,45 +327,46 @@ def create_dsm2_bcs(in_fname, dsm2_config_fname):
                                                paths_out, f_part_out, d_part_replace, unit_part)
 
         # Copy Remaining paths into modified DSS files
-
+        print('\t Copying remaining files')
         for dss_in in out_dss:
-            with pyhecdss.DSSFile(dss_in) as d_in:
-                with pyhecdss.DSSFile(out_dss[dss_in]) as d_out:
-                    incat = d_in.read_catalog()  # all the pathnames in the DSS file
-                    paths_in = d_in.get_pathnames(incat)
+            if 'ec_est' not in dss_in:
+                with pyhecdss.DSSFile(dss_in) as d_in:
+                    with pyhecdss.DSSFile(out_dss[dss_in]) as d_out:
+                        incat = d_in.read_catalog()  # all the pathnames in the DSS file
+                        paths_in = d_in.get_pathnames(incat)
 
-                    # paths in the input DSS that haven't been copied out
-                    missing_paths = list(set(paths_in) - set(paths_out))
+                        # paths in the input DSS that haven't been copied out
+                        missing_paths = list(set(paths_in) - set(paths_out))
 
-                    for p in missing_paths:
-                        df = None
-                        units = None
-                        ptype = None
-                        print(f'Writing out {p} units {units} pytype {ptype}')
-                        if d_in.parse_pathname_epart(p).startswith('IR-'):
-                            df, units, ptype = d_in.read_its(p)
-                            if units == 'und':
-                                units = 'UNSPECIF'
-                            # write to output DSS file
-                            d_out.write_its(p, df, units, ptype)
-                        else:
-                            df, units, ptype = d_in.read_rts(p)
-                            if units == 'und':
-                                units = 'UNSPECIF'
-                            # write to output DSS file
-                            d_out.write_rts(p, df, units, ptype)
+                        for p in missing_paths:
+                            df = None
+                            units = None
+                            ptype = None
+                            # print(f'Writing out {p} units {units} pytype {ptype}')
+                            if d_in.parse_pathname_epart(p).startswith('IR-'):
+                                df, units, ptype = d_in.read_its(p)
+                                if units == 'und':
+                                    units = 'UNSPECIF'
+                                # write to output DSS file
+                                d_out.write_its(p, df, units, ptype)
+                            else:
+                                df, units, ptype = d_in.read_rts(p)
+                                if units == 'und':
+                                    units = 'UNSPECIF'
+                                # write to output DSS file
+                                d_out.write_rts(p, df, units, ptype)
 
 
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
     # model_dir = r"D:\projects\delta_salinity\model\schism\dsp_202311_baseline"
-    in_fname = "./input/lathypcub_v3_setup.yaml"
+    in_fname = "./input/lathypcub_v4_setup.yaml"
 
     # cases = create_cases()
-    dsm2_config_fname = "./input/lathypcub_v3_dsm2_config.yaml"
+    dsm2_config_fname = "./input/lathypcub_v4_dsm2_config.yaml"
     # in_fname = "../../../../model/schism/dsp_202311_baseline/dsp_baseline_bay_delta.yaml"
 
     # args = Namespace(main_inputfile=in_fname)
 
-    create_dsm2_bcs(in_fname, dsm2_config_fname)
+    create_dsm2_bcs(in_fname, dsm2_config_fname, skip=0)
