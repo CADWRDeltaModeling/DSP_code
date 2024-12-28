@@ -194,7 +194,7 @@ stochify <- function(nstep, ints, stochscale, nstep_buf=3500, base_period_days=1
 # base_period_days=128
 # ints <- ts.df$Value
 
-stoch_tide <- function(nstep, ints, rel_mag, center, lambda, nstep_buf=3500, sigma2_kappa=rep(1e-10, length(lambda)) {
+stoch_tide <- function(nstep, ints, rel_mag, center, lambda, nstep_buf=3500, sigma2_kappa=rep(1e-10, length(lambda))) {
   ########## This is a perturbation that includes drift plus periodicities
   # of 14,28 and 56 days. The first couple lines are where those periods are
   # basically you set some frequencies and it randomly modulates those as well as creating a trend.
