@@ -12,6 +12,7 @@ from vtools.functions.filter import cosine_lanczos
 import matplotlib.pyplot as plt
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
+print(os.getcwd())
 
 def tidal_energy(df):
 
@@ -39,7 +40,7 @@ rma_sfo_100d_shift.index = rma_sfo_100d_shift.index.to_timestamp()
 # sfo NOAA station
 # download_noaa --syear 1989 --eyear 2020 --param water_level sfo_station.txt # in input
 
-sffpx_elev = './input/noaa_download/noaa_sffpx_9414290_water_level_1989_2021.csv'
+sffpx_elev = '../../../../data/noaa_download/noaa_sffpx_9414290_water_level_1989_2021.csv'
 
 sffpx = read_noaa(sffpx_elev, force_regular=True)
 sffpx_shift = sffpx.copy()
@@ -48,9 +49,13 @@ sffpx = sffpx.loc[plot_dates[0]:plot_dates[1]]
 sffpx_shift = sffpx_shift.loc[plot_dates[0]:plot_dates[1]]
 
 # SCHISM sffpx outputs
-schism_sfo4 = read_staout('./input/staout_1.base_4', './input/station.in', pd.to_datetime('2006-11-14'))
+schism_sfo4 = read_staout('../../model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_4/outputs/staout_1', 
+                          '../../model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_4/station.in', 
+                          pd.to_datetime('2006-11-14'))
 schism_sfo4 = schism_sfo4['sffpx_default']
-schism_sfo5 = read_staout('./input/staout_1.base_5', './input/station.in', pd.to_datetime('2006-11-14'))
+schism_sfo5 = read_staout('../../model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_5/outputs/staout_1', 
+                          '../../model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_5/station.in', 
+                          pd.to_datetime('2006-11-14'))
 schism_sfo5 = schism_sfo5['sffpx_default']
 
 # # Plot Results
