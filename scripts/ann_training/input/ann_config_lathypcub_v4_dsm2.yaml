@@ -1,0 +1,16 @@
+experiment: latinhypercube_v4 # name of folder to look inside of test_file dir
+
+base_study_folder: '../../model/dsm2/2021DSM2FP_202301'
+model_input_folder: '{base_study_folder}/timeseries'
+model_folder: '../../model/dsm2/DSP_DSM2_202412/{experiment}'
+model_output_folder: '{model_folder}/output'
+
+smcd_dss_file: '{model_input_folder}/SMCD_hist.dss'
+
+dcd_dss_file: '{model_folder}/timeseries/lhc_{case_num}_dcd.dss'
+hist_dss_file: '{model_folder}/timeseries/lhc_{case_num}_hist.dss'
+gate_dss_file: '{model_folder}/timeseries/lhc_{case_num}_gates.dss'
+model_ec_file: '{model_output_folder}/lhc_{case_num}_EC.dss'
+output_folder: './data_out'
+
+cases: range(1,101)
