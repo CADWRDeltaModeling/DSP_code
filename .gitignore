@@ -3,6 +3,8 @@ model/*/output*
 
 # ignore lily's script to clean/modify file format of input data from DSS
 data/fix_csv.py
+data/dayflow*
+data/mtz_ec_hist_bc.csv
 
 # ignore output from latinhypercube generation
 scripts/boundary_generation/data_out/*bundles*
@@ -49,3 +51,4 @@ scripts/**/*.log
 *.Rproj.user
 *.Rhistory
 *.RData
+.Rproj.user
