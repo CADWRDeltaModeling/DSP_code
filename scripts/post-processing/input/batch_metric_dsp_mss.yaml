@@ -6,14 +6,10 @@
 # $ batch_metrics batch_metric_yourname.yaml
 # batch_metrics batch_metric_dsp.yaml
 
-dest_dir: /scratch/tomkovic/DSP_code/scripts/post-processing/plots/baseline_lhc_4
+dest_dir: /scratch/tomkovic/DSP_code/scripts/post-processing/plots/mss
 
 outputs_dir:
- - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_4/outputs/
-#  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/franks_lhc_4/outputs/
-#  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_lhc_4/outputs/
-#  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/slr_simulations/baseline_slr_lhc_4/outputs/
-#  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_basebc_lhc_4/outputs/
+ - /scratch/tomkovic/DSP_code/model/schism/mss_th_dsp_geom/outputs/
 
 # Station database
 # This is correct for flow, the one without _new is correct for station.in
@@ -22,40 +18,24 @@ obs_search_path:
  - /scratch/nasbdo/modeling_data/repo/continuous/screened
 
 station_input: 
- - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_4/station.in
-#  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/franks_lhc_4/station.in
-#  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_lhc_4/station.in
-#  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/slr_simulations/baseline_slr_lhc_4/station.in
-#  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_basebc_lhc_4/station.in
+ - /scratch/tomkovic/DSP_code/model/schism/mss_th_dsp_geom/station.in
  
 flow_station_input:
- - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_4/fluxflag.prop  
-#  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/franks_lhc_4/fluxflag.prop 
-#  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_lhc_4/fluxflag.prop 
-#  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/slr_simulations/baseline_slr_lhc_4/fluxflag.prop 
-#  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_basebc_lhc_4/fluxflag.prop
+ - /scratch/tomkovic/DSP_code/model/schism/mss_th_dsp_geom/fluxflag.prop  
  
 # Database of the field data file
 # This is correct for flow. Use the one without _new for station.in
-obs_links_csv: /scratch/nasbdo/modeling_data/repo/continuous/obs_links_screened_20250109.csv
-time_basis:  2006-11-14  # ISO date format (e.g. 2009-05-05)
-# start_inst:  2008-06-01  # 5-15 to 6-15 for gate install flow/elev 9/20-10/10 good
-# end_inst:    2008-07-01  # 11-15 for water levels
-# start_avg:   2007-01-01
-# end_avg:     2008-12-31
+obs_links_csv: /scratch/nasbdo/modeling_data/repo/continuous/obs_links_screened_20240120.csv
+time_basis:  2021-1-1  # ISO date format (e.g. 2009-05-05)
 # Times for debugging beginning of run
-start_inst:  2007-09-01 
-end_inst:    2007-12-31
-start_avg:   2007-11-01
-end_avg:     2007-12-01
-variable: elev # one of elev, salt, flow
+start_inst:  2021-03-01 
+end_inst:    2022-06-30
+start_avg:   2021-06-01
+end_avg:     2021-07-30
+variable: flow # one of elev, salt, flow
 labels: # Three labels for field data and two runs
   - Observed
-  - DSP Baseline
-  # - DSP Franks Tract
-  # - DSP Suisun Restoration
-  # - DSP Baseline w/ SLR
-  # - DSP SuisunBaseBC Restoration
+  - DSP MSS
 
 
 selected_stations:

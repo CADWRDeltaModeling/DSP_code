@@ -40,7 +40,7 @@ done
 
 echo "Simulation start date from param.nml is $simulation_start_date"
 
-for NUMBER in $(seq 1 3); # $highest); # all salinity
+for NUMBER in $(seq 1 797); # $highest); # all salinity
 do
   #!/bin/bash
   DOCKER_IMAGE=suxarray:v2024.09.0
