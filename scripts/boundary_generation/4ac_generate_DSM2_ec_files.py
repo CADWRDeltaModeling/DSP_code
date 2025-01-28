@@ -5,7 +5,7 @@
 import pandas as pd
 import numpy as np
 from schimpy import schism_yaml
-from schimpy.prepare_schism import process_output_dir, check_nested_match, item_exist
+from schimpy.prepare_schism import item_exist
 
 from pydelmod.create_ann_inputs import get_dss_data
 import pyhecdss
@@ -253,4 +253,4 @@ if __name__ == "__main__":
 
     # args = Namespace(main_inputfile=in_fname)
 
-    create_dsm2_ec_est(in_fname, dsm2_config_fname, skip=0)
+    create_dsm2_ec_est(in_fname, dsm2_config_fname, skip=105)

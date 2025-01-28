@@ -12,6 +12,9 @@ dcd_dss: "DCD_hist_Lch5.dss"
 config_file: input/config_latinhypercube_CASE.inp
 hydro_file: input/hydro_latinhypercube_CASE.inp
 qual_file: input/qual_ec_latinhypercube_CASE.inp
+qual_x2_file: input/qual_ec_latinhypercube_x2_CASE.inp
+
+mod_spinup_days: 90
 
 treatments:
   - name: tide

@@ -34,6 +34,8 @@ scripts/post-processing/plots/*
 # ignore post-processing outputs for now
 scripts/evap/**/*.csv
 scripts/x2/**/*.csv
+scripts/post-processing/input/*.th
+scripts/post-processing/input/*.in
 
 # ignore the following:
 scripts/**/check_emm.py

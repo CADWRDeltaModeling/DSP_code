@@ -85,8 +85,11 @@ def create_dsm2_inps(in_fname, dsm2_config_fname):
     config_infile = dsm2_inputs.get('config_file')
     hydro_infile = dsm2_inputs.get('hydro_file')
     qual_infile = dsm2_inputs.get('qual_file')
+    qual_x2_infile = dsm2_inputs.get('qual_x2_file')
 
     treatments = dsm2_inputs.get('treatments')
+
+    mod_spinup_days = dsm2_inputs.get('mod_spinup_days')
 
     # retrieve and write out cases
     print('Handling cases:')
@@ -95,8 +98,8 @@ def create_dsm2_inps(in_fname, dsm2_config_fname):
         cname = case.get('name')
         print(f'\t- {cname}')
 
-        config_dict = {'sim_start': dt.datetime.strftime(case.get('case_start'), format='%d%b%Y').upper(),
-                       'qual_start': dt.datetime.strftime(case.get('case_start')+dt.timedelta(days=1), format='%d%b%Y').upper(),
+        config_dict = {'sim_start': dt.datetime.strftime(case.get('case_start')-pd.Timedelta(days=mod_spinup_days), format='%d%b%Y').upper(),
+                       'qual_start': dt.datetime.strftime(case.get('case_start')-pd.Timedelta(days=mod_spinup_days-1), format='%d%b%Y').upper(),
                        'sim_end': dt.datetime.strftime(case.get('case_end'), format='%d%b%Y').upper(),
                        'case_name': cname}
 
@@ -120,12 +123,15 @@ def create_dsm2_inps(in_fname, dsm2_config_fname):
         config_filename = os.path.basename(config_infile).replace('CASE',str(''.join(filter(str.isdigit, cname)))) # replace with the proper filename
         hydro_filename = os.path.basename(hydro_infile).replace('CASE',str(''.join(filter(str.isdigit, cname)))) # replace with the proper filename
         qual_filename = os.path.basename(qual_infile).replace('CASE',str(''.join(filter(str.isdigit, cname)))) # replace with the proper filename
+        qual_x2_filename = os.path.basename(qual_x2_infile).replace('CASE',str(''.join(filter(str.isdigit, cname)))) # replace with the proper filename
 
         fmt_string_file(config_infile, os.path.join(inp_dir, config_filename), config_dict, method='format_map')
         fmt_string_file(hydro_infile, os.path.join(inp_dir, hydro_filename), SafeDict(({**config_dict,
                                                                                         **locals()})), method='format_map')
         fmt_string_file(qual_infile, os.path.join(inp_dir, qual_filename), SafeDict(({**config_dict,
                                                                                       **locals()})), method='format_map')
+        fmt_string_file(qual_x2_infile, os.path.join(inp_dir, qual_x2_filename), SafeDict(({**config_dict,
+                                                                                           **locals()})), method='format_map')
 
 
 if __name__ == "__main__":
