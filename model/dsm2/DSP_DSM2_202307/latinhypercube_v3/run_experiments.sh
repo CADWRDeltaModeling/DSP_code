@@ -16,6 +16,8 @@ do
 	${RUNHYDRO} hydro_${EXPERIMENT}_${NUMBER}.inp
     echo "${RUNQUAL} qual_ec_${EXPERIMENT}_${NUMBER}.inp"
 	${RUNQUAL} qual_ec_${EXPERIMENT}_${NUMBER}.inp
+    echo "${RUNQUAL} qual_ec_${EXPERIMENT}_x2_${NUMBER}.inp"
+	${RUNQUAL} qual_ec_${EXPERIMENT}_x2_${NUMBER}.inp
 done
 
 # /home/tomkovic/dsm2_repo/dsm2/BUILD/hydro hydro_latinhypercube_1.inp

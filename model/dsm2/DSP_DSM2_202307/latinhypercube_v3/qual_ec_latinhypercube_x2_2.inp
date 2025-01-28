@@ -2,7 +2,7 @@
 # Historical study EC
 # 202107
 CONFIGURATION
-config_latinhypercube_1.inp
+config_latinhypercube_2.inp
 END
 
 SCALAR
@@ -66,6 +66,6 @@ OUTPUT_TIME_SERIES
 # ${DSM2INPUTDIR}/output_reservoir_std_qual_named.inp
 # ${DSM2INPUTDIR}/output_ec_rki.inp                             #202102
 # ${DSM2INPUTDIR}/output_ec_csdp.inp                            #202102
-./station_dbase_ec_locs.inp                                                # dms datastore station_dbase csv
+./x2_ec_locs.inp                                                           # X2 profile along sac river
 END
 
