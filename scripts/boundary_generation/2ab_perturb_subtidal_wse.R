@@ -35,31 +35,31 @@ source("./functions/pulse_events.R")
 
 version <- 'v1'
 
-# load mtz stage
-# mtz_stage <- read.table("./input/dsm2_mtz_stage_ft_15min.csv", skip=4, sep=',', header=FALSE)
+# load mrz stage
+# mrz_stage <- read.table("./input/dsm2_mrz_stage_ft_15min.csv", skip=4, sep=',', header=FALSE)
 # 
-# mtz_stage$datetime <- lubridate::dmy_hm(paste0(mtz_stage$V2,' ',mtz_stage$V3))
-# mtz_stage <- mtz_stage[,c('datetime','V4')]
-# names(mtz_stage) <- c('datetime','stage (ft)')
-# mtz_stage$datetime <- format(mtz_stage$datetime, "%Y-%m-%d %H:%M:%S")
-# write.table(mtz_stage, "./input/dsm2_mtz_stage_ft_15min_clean.csv", sep=',',
+# mrz_stage$datetime <- lubridate::dmy_hm(paste0(mrz_stage$V2,' ',mrz_stage$V3))
+# mrz_stage <- mrz_stage[,c('datetime','V4')]
+# names(mrz_stage) <- c('datetime','stage (ft)')
+# mrz_stage$datetime <- format(mrz_stage$datetime, "%Y-%m-%d %H:%M:%S")
+# write.table(mrz_stage, "./input/dsm2_mrz_stage_ft_15min_clean.csv", sep=',',
 #             row.names=FALSE, col.names=TRUE)
 
-mtz_stage <- read.table("./input/dsm2_mtz_stage_ft_15min_clean.csv", sep=',', header=TRUE)
-names(mtz_stage) <- c('datetime','stage (ft)')
-mtz_stage$datetime <- lubridate::ymd_hms(mtz_stage$datetime)
+mrz_stage <- read.table("./input/dsm2_mrz_stage_ft_15min_clean.csv", sep=',', header=TRUE)
+names(mrz_stage) <- c('datetime','stage (ft)')
+mrz_stage$datetime <- lubridate::ymd_hms(mrz_stage$datetime)
 
-mtz_filter <- read.table("./data_out/dsm2_mtz_stage_ft_15min_clean_filtered.csv", sep=',', header=TRUE)
-mtz_filter$datetime <- lubridate::ymd_hm(mtz_filter$datetime)
+mrz_filter <- read.table("./data_out/dsm2_mrz_stage_ft_15min_clean_filtered.csv", sep=',', header=TRUE)
+mrz_filter$datetime <- lubridate::ymd_hm(mrz_filter$datetime)
 
-mtz_tidal <- merge(mtz_stage, mtz_filter, by='datetime')
-names(mtz_tidal) <-  c('datetime','inst','filtered')
-mtz_tidal$tidal <- mtz_tidal$inst - mtz_tidal$filtered
-mtZ_tidal <- mtz_tidal[,c('datetime','tidal')]
+mrz_tidal <- merge(mrz_stage, mrz_filter, by='datetime')
+names(mrz_tidal) <-  c('datetime','inst','filtered')
+mrz_tidal$tidal <- mrz_tidal$inst - mrz_tidal$filtered
+mrz_tidal <- mrz_tidal[,c('datetime','tidal')]
 
 # Plot filtered ts --------------------------------------------------------
 
-plt.filt <- merge(mtz_stage, mtz_filter, by='datetime')
+plt.filt <- merge(mrz_stage, mrz_filter, by='datetime')
 names(plt.filt) <-  c('datetime','inst','filtered')
 plt.filt <- melt(plt.filt, id.vars='datetime')
 
@@ -83,14 +83,14 @@ plt <- ggplot() +
         legend.background = element_rect(fill = "white", color = NULL),
         axis.title.y = element_text(color='black'),
         axis.text.x = element_text(angle=90)) +
-  ggtitle("Altered Stage at MTZ")
+  ggtitle("Altered Stage at mrz")
 plt
 
 
 # Set parameters ----------------------------------------------------------
 
-nstep <- nrow(mtz_filter)
-ints <- mtz_filter$`stage..ft.`
+nstep <- nrow(mrz_filter)
+ints <- mrz_filter$`stage..ft.`
 nstep_buf <- nstep+2000
 rel_mag <- 0.5
 center <- mean(ints)
@@ -101,7 +101,7 @@ lambda = 2*pi/(c(2,4,7,14) * (24 * 60 * 15))
 stoch <- stoch_tide(nstep, ints, rel_mag, center, lambda,
                     nstep_buf=nstep_buf, sigma2_kappa=sigma2_kappa)
 
-plt.df <- mtz_filter
+plt.df <- mrz_filter
 plt.df$stoch <- stoch
 
 # Plots
@@ -129,13 +129,13 @@ plt <- ggplot() +
         legend.background = element_rect(fill = "white", color = NULL),
         axis.title.y = element_text(color='black'),
         axis.text.x = element_text(angle=90)) +
-  ggtitle("Altered Stage at MTZ")
+  ggtitle("Altered Stage at mrz")
 # plt
 
 mean(ints)
 mean(stoch)
 
-out.df <- mtz_tidal
+out.df <- mrz_tidal
 out.df$pert_subtide <- stoch
 out.df$Edit <- out.df$pert_subtide + out.df$tidal
 out.df <- out.df[,c('datetime','Edit')]
