@@ -1,28 +1,28 @@
-#dsp_home: /scratch/tomkovic/DSP_code # where the main folder of this project is (HPC4/5)
-
-dsp_home: F:/ann_workspace/DSP_code
 experiment: latinhypercube_v3 # name of folder to look inside of test_file dir
 
-base_study_folder: '{dsp_home}/model/dsm2/2021DSM2FP_202301'
+base_study_folder: '../../model/dsm2/2021DSM2FP_202301'
 model_input_folder: '{base_study_folder}/timeseries'
-model_folder: '{dsp_home}/model/dsm2/DSP_DSM2_202307/{experiment}'
+model_folder: '../../model/dsm2/DSP_DSM2_202307/{experiment}'
 model_output_folder: '{model_folder}/output'
 
 smcd_dss_file: '{model_input_folder}/SMCD_hist.dss'
+x2_csv_infile: 'D:\schism\repositories\BayDeltaSCHISM\bdschism\bdschism\x2route_bay_sac.csv'
 
 dcd_dss_file: '{model_folder}/timeseries/lhc_{case_num}_dcd.dss'
 hist_dss_file: '{model_folder}/timeseries/lhc_{case_num}_hist.dss'
 gate_dss_file: '{model_folder}/timeseries/lhc_{case_num}_gates.dss'
 model_ec_file: '{model_output_folder}/lhc_{case_num}_EC.dss'
-output_folder: '{dsp_home}/model/dsm2/DSP_DSM2_202307/{experiment}/anninputs/lhc_{case_num}'
-# output_folder: '{dsp_home}/model/dsm2/DSP_DSM2_202307/latinhypercube_v1p1/anninputs/lhc_{case_num}'
-xlsx_filepath: '{dsp_home}/model/dsm2/DSP_DSM2_202307/{experiment}/anninputs/dsm2_ann_inputs_lhc_{case_num}.xlsx'
-# xlsx_filepath: '{dsp_home}/model/dsm2/DSP_DSM2_202307/latinhypercube_v1p1/anninputs/dsm2_ann_inputs_lhc_{case_num}.xlsx'
+model_x2_ec_file: '{model_output_folder}/lhc_{case_num}_EC_X2.dss'
+output_folder: './data_out'
+casanntra_folder: '../../../casanntra/data'
+
+case_setup: '../boundary_generation/data_out/lhc_v4.csv'
+
 cases:
-- case_num: 1
-- case_num: 2
-- case_num: 3
-- case_num: 4
-- case_num: 5
-- case_num: 6
-- case_num: 7
+- case_num: 1001
+- case_num: 1002
+- case_num: 1003
+- case_num: 1004
+- case_num: 1005
+- case_num: 1006
+- case_num: 1007

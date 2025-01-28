@@ -5,6 +5,13 @@ import os
 
 from pydelmod.create_ann_inputs import get_dss_data
 
+from bdschism.x2_time_series import find_x2
+
+from vtools.functions.unit_conversions import ec_psu_25c
+
+import re
+import time
+
 
 def process_gate_data(dss_filename, b_part, c_part, map_zero_one=['df==0','df==1'], startDateStr=None, endDateStr=None):
     '''
@@ -92,7 +99,7 @@ def generate_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_fil
     df_exports_flow['exports'] = df_exports_flow['CHSWP003']+df_exports_flow['CHDMC004']+df_exports_flow['CHCCC006']+\
         df_exports_flow['ROLD034']+df_exports_flow['CHVCT001']
     
-    out_df['exports'] = df_exports_flow['exports']
+    out_df['exports'] = -df_exports_flow['exports']
 
     #############################################
     # 4. DCC gate operation as daily percentage #
@@ -100,15 +107,18 @@ def generate_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_fil
     b_part = 'RSAC128'
     c_part = 'POS'
     dcc_op_df = process_gate_data(gate_dss_file, b_part, c_part, map_zero_one=['df<2','df==2'])
-    out_df['dcc'] = dcc_op_df
+    dcc_op_df.index = dcc_op_df.index.to_period()
+    out_df['dcc'] = dcc_op_df['gate_pos']
     
     ################################################
     # 5. Suisun gate operation as daily percentage #
     ################################################
     b_part = 'MTZSL'
     c_part = 'RADIAL_OP'
-    suisun_op_df = process_gate_data(gate_dss_file, b_part, c_part, map_zero_one = ['df!=-10','df==-10'], startDateStr='01JAN1953', endDateStr='01JAN2030')
-    out_df['smscg'] = suisun_op_df
+    suisun_op_df = process_gate_data(gate_dss_file, b_part, c_part, 
+                                     map_zero_one = ['df!=-10','df==-10'], startDateStr='01JAN1953', endDateStr='01JAN2030')
+    suisun_op_df.index = suisun_op_df.index.to_period()
+    out_df['smscg'] = suisun_op_df['gate_pos']
 
     ############################################################
     # 6. Net Delta CU, daily (DIV+SEEP-DRAIN) for DCD and SMCD #
@@ -135,10 +145,10 @@ def generate_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_fil
 
     cu_total['cu_total']=cu_total['dcd_divseep_total']+cu_total['smcd_divseep_total']-cu_total['dcd_drain_total']-cu_total['smcd_drain_total']
 
-    out_df['delta_cu'] = cu_total['cu_total']
+    out_df['cu_flow'] = cu_total['cu_total']
 
     # Net Delta Outflow RMA:  (Sac, SJR, Yolo Bypass, Mokelumne, Cosumnes, Calaveras), exports (SWP, CVP, Contra Costa, NBA) and net DICU
-    out_df['ndo'] = out_df['northern_flow'] + out_df['sjr_flow'] - out_df['exports'] - out_df['delta_cu']
+    out_df['ndo'] = out_df['northern_flow'] + out_df['sjr_flow'] + out_df['exports'] - out_df['cu_flow']
 
     ########################################
     # 7. Tidal Energy: daily max-daily min #
@@ -160,64 +170,51 @@ def generate_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_fil
     ######################################
     # 8. EC Output for various locations #
     ######################################
-    b_part_dss_filename_dict = {'CHDMC006': model_ec_file, 'CHSWP003': model_ec_file,\
-        'CHVCT000': model_ec_file, 'OLD_MID': model_ec_file, 'ROLD024': model_ec_file,
-        'ROLD059': model_ec_file, 'RSAC064': model_ec_file, 'RSAC075': model_ec_file,
-        'RSAC081': model_ec_file, 'RSAC092': model_ec_file, 'RSAC101': model_ec_file,
-        'RSAN007': model_ec_file, 'RSAN018': model_ec_file, 'RSAN032': model_ec_file,
-        'RSAN037': model_ec_file, 'RSAN058': model_ec_file, 'RSAN072': model_ec_file,
-        'RSMKL008': model_ec_file, 'SLCBN002': model_ec_file, 'SLDUT007': model_ec_file,
-        'SLMZU011': model_ec_file, 'SLMZU025': model_ec_file, 'SLSUS012': model_ec_file,
-        'SLTRM004': model_ec_file, 'SSS': model_ec_file, 'RSAC054': hist_dss_file}
-    b_part_c_part_dict = {'CHDMC006': 'EC', 'CHSWP003': 'EC',\
-        'CHVCT000': 'EC', 'OLD_MID': 'EC', 'ROLD024': 'EC',
-        'ROLD059': 'EC', 'RSAC064': 'EC', 'RSAC075': 'EC',
-        'RSAC081': 'EC', 'RSAC092': 'EC', 'RSAC101': 'EC',
-        'RSAN007': 'EC', 'RSAN018': 'EC', 'RSAN032': 'EC',
-        'RSAN037': 'EC', 'RSAN058': 'EC', 'RSAN072': 'EC',
-        'RSMKL008': 'EC', 'SLCBN002': 'EC', 'SLDUT007': 'EC',
-        'SLMZU011': 'EC', 'SLMZU025': 'EC', 'SLSUS012': 'EC',
-        'SLTRM004': 'EC', 'SSS': 'EC', 'RSAC054': 'EC'}
-    if b_part_e_part_dict == None:
-        b_part_e_part_dict = {'CHDMC006': '15MIN', 'CHSWP003': '15MIN',\
-            'CHVCT000': '15MIN', 'OLD_MID': '15MIN', 'ROLD024': '15MIN',
-            'ROLD059': '15MIN', 'RSAC064': '15MIN', 'RSAC075': '15MIN',
-            'RSAC081': '15MIN', 'RSAC092': '15MIN', 'RSAC101': '15MIN',
-            'RSAN007': '15MIN', 'RSAN018': '15MIN', 'RSAN032': '15MIN',
-            'RSAN037': '15MIN', 'RSAN058': '15MIN', 'RSAN072': '15MIN',
-            'RSMKL008': '15MIN', 'SLCBN002': '15MIN', 'SLDUT007': '15MIN',
-            'SLMZU011': '15MIN', 'SLMZU025': '15MIN', 'SLSUS012': '15MIN',
-            'SLTRM004': '15MIN', 'SSS': '15MIN', 'RSAC054': '1HOUR'}
+    ec_locs = ['anc','anh','bac','bdl','bdt','bet','cll','cse',
+                 'dsj','emm2','frk','god','gys','gzl','hll','hol2',
+                 'ibs','jer','mal','mtz','nsl2','obi','oh4','old',
+                 'pct','ppt','rri2','rsl','sal','snc','srv','sss',
+                 'tms','trp','tss','uni','vcu','vol','wci','ver']
+    
+    
+    b_part_dss_filename_dict = {name.upper():model_ec_file for name in ec_locs}
+    b_part_c_part_dict = {name.upper():'EC' for name in ec_locs}
+    b_part_e_part_dict = {name.upper():'1HOUR' for name in ec_locs}
+
     df_model_ec = get_dss_data(b_part_dss_filename_dict, 'b_part', \
         primary_part_c_part_dict=b_part_c_part_dict, primary_part_e_part_dict=b_part_e_part_dict)
+    df_model_ec.columns = df_model_ec.columns.str.lower()
     
-    # now add model output ec near CCC intakes
-    b_part_dss_filename_dict = {'ROLD034': model_ec_file, 'SLRCK005': model_ec_file}
-    b_part_c_part_dict = {'ROLD034': 'EC', 'SLRCK005': 'EC'}
-    df_model_ec_2 = get_dss_data(b_part_dss_filename_dict, 'b_part', b_part_c_part_dict)
-    df_model_ec = pd.merge(df_model_ec, df_model_ec_2, how='outer', left_index=True, right_index=True)
-    
-    # now add another copy of Mtz ec
-    df_model_ec['RSAC054'] = df_model_ec['RSAC054']
-        
-    # now rename some of the columns
-    col_rename_dict = {'CHDMC006': 'trp', 'CHSWP003': 'wci', 'CHVCT000': 'vcu', 
-                       'OLD_MID': 'uni', 'ROLD024': 'rsl', 'ROLD059': 'old', 
-                       'RSAC064': 'pct', 'RSAC075': 'mal', 'RSAC081': 'cse',
-                       'RSAC092': 'emm2', 'RSAC101': 'srv', 'RSAN007': 'anc', 
-                       'RSAN018': 'jer', 'RSAN032': 'sal', 'RSAN037': 'ppt', 
-                       'RSAN058': 'rri2', 'RSAN072': 'bdt', 'RSMKL008': 'lps',
-                       'SLCBN002': 'snc', 'SLDUT007': 'dsj', 'SLMZU011': 'bdl', 
-                       'SLMZU025': 'nsl2', 'SLSUS012': 'vol', 'SLTRM004': 'tss', 
-                       'SSS': 'sss', 'ROLD034': 'oh4', 'SLRCK005': 'inb', 'RSAC054': 'mrz'}
+    col_rename_dict = {'ver': 'vern_ec'}
 
     df_model_ec.rename(columns=col_rename_dict, inplace=True)
-
+    
     out_df = pd.merge(out_df, df_model_ec, left_index=True, right_index=True, how='outer')
 
     return out_df
 
-def run_ann_input(in_fname, e_part_dict=None):
+def calc_x2(dss_file, names):
+
+    b_part_dss_filename_dict = {str(name):dss_file for name in names}
+    b_part_c_part_dict = {str(name):'EC' for name in names}
+    b_part_e_part_dict = {str(name):'1HOUR' for name in names}
+
+    ec_df = get_dss_data(b_part_dss_filename_dict, 'b_part', \
+        primary_part_c_part_dict=b_part_c_part_dict, primary_part_e_part_dict=b_part_e_part_dict)
+    
+    for col_ec in ec_df.columns:
+        ec_df[col_ec] = ec_psu_25c(ec_df.loc[:, col_ec])
+
+    x2_df = pd.DataFrame(index=ec_df.index, columns=['x2'])
+
+    for index, row in ec_df.iterrows():
+        row.index = row.index.astype(float)
+        x2_df.loc[index,'x2'] = find_x2(row)
+
+    return x2_df
+    
+
+def run_ann_input(in_fname, case_nums=range(0,9999)):
 
     with open(in_fname, 'r') as f:
         # loader = RawLoader(stream)
@@ -231,36 +228,75 @@ def run_ann_input(in_fname, e_part_dict=None):
     model_output_folder = inputs.get('model_output_folder').format(**locals())
     smcd_dss_file = inputs.get('smcd_dss_file').format(**locals())
     
+                 
     col_order = ['model','scene','case',
-                 'northern_flow','sac_flow','sjr_flow','exports','delta_cu','ndo',
+                 'sac_flow','sjr_flow','exports','cu_flow','ndo',
                  'dcc','smscg',
-                 'mrz_tidal_energy','mrz_tidal_filter',
-                #  'x2',
-                 'trp','wci','vcu','uni','rsl','old','pct','mal',
-                 'emm2','srv','anc','jer','sal','ppt','rri2','bdt','lps',
-                 'snc','dsj','bdl','nsl2','vol','tss','sss','cse',
-                 'oh4','rsl','vcu','god',
-                #  'frk','bac','hol','mtz','cll','tms','anh','gzl'
-                 ]
+                 'vern_ec','mrz_tidal_energy','mrz_tidal_filter',
+                 'anc','anh','bac','bdl','bdt','bet','cll','cse',
+                 'dsj','emm2','frk','god','gys','gzl','hll','hol2',
+                 'ibs','jer','mal','mtz','nsl2','obi','oh4','old',
+                 'pct','ppt','rri2','rsl','sal','snc','srv','sss',
+                 'tms','trp','tss','uni','vcu','vol','wci',
+                 'x2']
+    
+    float_columns = ['sac_flow','sjr_flow','exports','cu_flow','ndo',
+                     'vern_ec','mrz_tidal_energy','mrz_tidal_filter',
+                     'anc','anh','bac','bdl','bdt','bet','cll','cse',
+                     'dsj','emm2','frk','god','gys','gzl','hll','hol2',
+                     'ibs','jer','mal','mtz','nsl2','obi','oh4','old',
+                     'pct','ppt','rri2','rsl','sal','snc','srv','sss',
+                     'tms','trp','tss','uni','vcu','vol','wci',
+                     'x2']
 
-    cases = list(eval(inputs.get('cases')))
-    for case_num in cases:
-        hist_dss_file = inputs.get('hist_dss_file').format(**locals())
-        gate_dss_file = inputs.get('gate_dss_file').format(**locals())
-        model_ec_file = inputs.get('model_ec_file').format(**locals())
-        output_folder = inputs.get('output_folder').format(**locals())
-        dcd_dss_file = inputs.get('dcd_dss_file').format(**locals())
+    x2_csv_infile = inputs.get('x2_csv_infile').format(**locals())
+    x2_names = pd.read_csv(x2_csv_infile, comment='#')
+    x2_names = x2_names['distance'].tolist()[::10] # only use every 10 columns out of the ~1000
 
-        # generate aggregated ANN inputs from DSM2 outputs
-        case_out_df = generate_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file, model_ec_file, output_folder,
-                            b_part_e_part_dict=e_part_dict)
-        case_out_df['case'] = case_num
-        case_out_df['model'] = 'dsm2'
-        case_out_df['scene'] = 'baseline'
-        
-        case_out_df = case_out_df[[col for col in col_order if col in case_out_df.columns]]
-        
-        case_out_df.to_csv(os.path.join(output_folder,f'dsm2_base_{case_num}.csv'), float_format="%.2f", index=True)
+    case_setup = pd.read_csv(inputs.get('case_setup'))
+
+    for index, row in case_setup.iterrows():
+        case_num = re.search(r'(\d+)$', row['case']).group(1)
+        mod_case_num = False
+        if int(case_num) in case_nums:
+            if int(case_num) > 1000:
+                mod_case_num = True
+                case_num = int(case_num) - 1000
+
+            hist_dss_file = inputs.get('hist_dss_file').format(**locals())
+            gate_dss_file = inputs.get('gate_dss_file').format(**locals())
+            model_ec_file = inputs.get('model_ec_file').format(**locals())
+            model_x2_ec_file = inputs.get('model_x2_ec_file').format(**locals())
+            output_folder = inputs.get('output_folder').format(**locals())
+            casanntra_folder = inputs.get('casanntra_folder').format(**locals())
+            dcd_dss_file = inputs.get('dcd_dss_file').format(**locals())
+
+            # # to run this in parallel with ongoing/overnight check if the model is finished running
+            # while not os.path.exists(model_x2_ec_file):
+            #     print(f"Waiting for file {model_x2_ec_file} to appear...")
+            #     time.sleep(120)  # Wait for 30 seconds before checking again
+
+            # print(f"File {model_x2_ec_file} is now available! Post-processing model results")
+
+            # calculate x2
+            case_x2 = calc_x2(model_x2_ec_file, x2_names) # takes a while
+
+            # generate aggregated ANN inputs from DSM2 outputs
+            case_out_df = generate_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file, model_ec_file, output_folder)
+            
+            if mod_case_num:
+                case_num = case_num + 1000
+            case_out_df['case'] = case_num
+            case_out_df['model'] = 'dsm2'
+            case_out_df['scene'] = 'base'
+            case_out_df = case_out_df.loc[pd.to_datetime(row['start']):(pd.to_datetime(row['end'])-pd.Timedelta(days=1)),:]
+
+            case_out_df['x2'] = case_x2.loc[case_out_df.index, 'x2']
+            
+            case_out_df = case_out_df[[col for col in col_order if col in case_out_df.columns]]
+            case_out_df[float_columns] = case_out_df[float_columns].astype(float)
+            
+            case_out_df.to_csv(os.path.join(casanntra_folder,f'dsm2_base_{case_num}.csv'), float_format="%.2f", index=True, index_label='datetime')
 
 
 if __name__ == '__main__':
@@ -268,8 +304,7 @@ if __name__ == '__main__':
     from schimpy import schism_yaml
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
-    in_fname = "./input/ann_config_lathypcub_v4_dsm2.yaml"
-    e_part_dict = None
+    in_fname = "./input/ann_config_lathypcub_v3_dsm2.yaml"
 
-
-    run_ann_input(in_fname, e_part_dict=e_part_dict)
+    # run_ann_input(in_fname, case_nums=range(1001,1008))
+    run_ann_input(in_fname, case_nums=range(1007,1008))

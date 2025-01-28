@@ -5,12 +5,17 @@ model_input_folder: '{base_study_folder}/timeseries'
 model_folder: '../../model/dsm2/DSP_DSM2_202412/{experiment}'
 model_output_folder: '{model_folder}/output'
 
+x2_csv_infile: 'D:\schism\repositories\BayDeltaSCHISM\bdschism\bdschism\x2route_bay_sac.csv'
 smcd_dss_file: '{model_input_folder}/SMCD_hist.dss'
+
+case_setup: '../boundary_generation/data_out/lhc_v4.csv'
 
 dcd_dss_file: '{model_folder}/timeseries/lhc_{case_num}_dcd.dss'
 hist_dss_file: '{model_folder}/timeseries/lhc_{case_num}_hist.dss'
 gate_dss_file: '{model_folder}/timeseries/lhc_{case_num}_gates.dss'
 model_ec_file: '{model_output_folder}/lhc_{case_num}_EC.dss'
+model_x2_ec_file: '{model_output_folder}/lhc_{case_num}_EC_X2.dss'
 output_folder: './data_out'
+casanntra_folder: '../../../casanntra/data'
 
 cases: range(1,101)
