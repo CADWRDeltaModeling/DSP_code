@@ -179,6 +179,14 @@ in_vars:
     - sffpx # San Francisco
   method: calc_tidal_energy
 
+  # ANN
+- name: SF Tidal Filter Out
+  station_output: '{meshcase_dir}/outputs/staout_1'
+  loc:
+    - sffpx # San Francisco
+  method: calc_tidal_filter
+
+
 # intermediate for NDO
 - name: american in [cms]
   th_files: 
@@ -218,10 +226,9 @@ in_vars:
 # Combined inputs ===================================================================================
 comb_in_vars:
 # Net Delta Outflow at Martinez.  Compare daily (or weekly) average time series based on summation of all boundary conditions.
+# RMA:  (Sac, SJR, Yolo Bypass, Mokelumne, Cosumnes, Calaveras), exports (SWP, CVP, Contra Costa, NBA) and net DICU
 - name: Net Delta Outflow In [cms]
   vars:
-    - american in [cms]
-    - napa in [cms]
     - Delta CU In [cms]
     - Exports Combined In [cms]
     - sjr In [cms]
@@ -289,6 +296,7 @@ out_vars:
   - gzl # grizzly Bay
   - frk # Franks Tract, Mid Tract
   - bac # Old River at Bacon Island
+  - hol # Holland Cut near Bethel Island
   method: assign_multiple_ec
 
 # Rio Vista, Emmaton and Jersey Point.  Compare tidally average time series from cross section flow computed at salinity monitoring locations.

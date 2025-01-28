@@ -290,7 +290,7 @@ class ANNBCECGen(object):
                                                            time_basis,
                                                            invar['loc'])
                 
-            elif invar['method'] == "calc_tidal_filter":  # outputs_fpath, time_basis, loc
+            elif invar['method'] == "calc_tidal_filter":  # outputs_fpath, station_inpath, time_basis, loc
 
                 invar_df[in_name] = self.calc_tidal_filter(invar['station_output'].format_map({**self.env_vars,
                                                                                                **locals(),
@@ -458,8 +458,8 @@ class ANNBCECGen(object):
         wse_ts = wse_ts * 3.28084  # ft/m
 
         df_nrg = cosine_lanczos((wse_ts-cosine_lanczos(wse_ts.copy(),
-                                                       cutoff_period='40H', padtype='odd'))**2,
-                                cutoff_period='40H', padtype='odd')  # = < (z- <z>)^2 >
+                                                       cutoff_period='40h', padtype='odd'))**2,
+                                cutoff_period='40h', padtype='odd')  # = < (z- <z>)^2 >
         if not isinstance(df_nrg.index, pd.DatetimeIndex):
             df_nrg.index = df_nrg.index.to_timestamp()
         df_tidal_energy = df_nrg.resample('D', closed='right').mean()
@@ -481,7 +481,7 @@ class ANNBCECGen(object):
         # convert to feet
         wse_ts = wse_ts * 3.28084  # ft/m
 
-        df_filt = cosine_lanczos(wse_ts.copy(), cutoff_period='40H', padtype='odd') - wse_ts.mean() # = <z> - ave(z)
+        df_filt = cosine_lanczos(wse_ts.copy(), cutoff_period='40h', padtype='odd') # = <z>
         if not isinstance(df_filt.index, pd.DatetimeIndex):
             df_filt.index = df_filt.index.to_timestamp()
         df_tidal_filter = df_filt.resample('D', closed='right').mean()
@@ -568,15 +568,15 @@ if __name__ == '__main__':
     #     annbc = ANNBCECGen(in_fname, model_type="SCHISM")
     #     annbc.get_meshcase_inouts('baseline', case)
 
-    in_fname = "./input/pull_output_lathypcub_v3_schism.yaml"
+    # in_fname = "./input/pull_output_lathypcub_v3_schism.yaml"
 
-    for case in range(1, 8):
-        print(f"\n\n\t\t---------  Runnning Case {case} ----------")
-        annbc = ANNBCECGen(in_fname, model_type="SCHISM")
-        annbc.get_meshcase_inouts('suisun', case)
+    # for case in range(1, 8):
+    #     print(f"\n\n\t\t---------  Runnning Case {case} ----------")
+    #     annbc = ANNBCECGen(in_fname, model_type="SCHISM")
+    #     annbc.get_meshcase_inouts('suisun', case)
 
-    # in_fname = "./input/pull_output_mss_schism.yaml"
+    in_fname = "./input/pull_output_mss_schism.yaml"
 
-    # print(f"\n\n\t\t---------  Runnning MSS ----------")
-    # annbc = ANNBCECGen(in_fname, model_type="SCHISM")
-    # annbc.get_meshcase_inouts('baseline', 99)
+    print(f"\n\n\t\t---------  Runnning MSS ----------")
+    annbc = ANNBCECGen(in_fname, model_type="SCHISM")
+    annbc.get_meshcase_inouts('baseline', 2021)

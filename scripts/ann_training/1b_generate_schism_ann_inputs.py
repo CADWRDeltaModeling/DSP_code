@@ -133,6 +133,7 @@ def schism_to_ann_csv(in_fname, mesh, mesh_outname):
         cases = inputs.get('cases')
         for case_num in cases:
             case_name = case_num  # f'lhc_{case_num}'
+            case_number = re.findall(r"\d+", case_num)[0]
             # uses this csv just to get the datetime indices for the other variables and to get EC outputs
             csv_indx_fmt = string.Formatter().vformat(inputs.get('csv_indx_fmt'), (),
                                                       SafeDict(({**env_vars,
@@ -142,7 +143,7 @@ def schism_to_ann_csv(in_fname, mesh, mesh_outname):
                 index=input_df_daily.index, columns=['model', 'scene', 'case'] + ann_var_names + out_ec_locs['ann_colnames'])  # creates an empty dataframe with spaces for each ANN variable
             output_df_daily['model'] = 'SCHISM'
             output_df_daily['scene'] = mesh
-            output_df_daily['case'] = case_name
+            output_df_daily['case'] = case_number
 
             # go through each sheet and store inputs
             for varmap in in_vars:
@@ -179,7 +180,6 @@ def schism_to_ann_csv(in_fname, mesh, mesh_outname):
                     input_df_daily.loc[:, col_ec])
 
             # write out csv
-            case_number = re.findall(r"\d+", case_num)[0]
             out_fn = os.path.join(out_dir,
                                   f'schism_{mesh_outname}_{case_number}.csv')
             # clean up the start and end rows
@@ -196,9 +196,9 @@ if __name__ == '__main__':
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
     in_fname = "./input/ann_csv_config_lathypcub_v3_schism.yaml"
-    mesh = 'suisun'
-    mesh_outname = 'suisun'
-    # mesh = 'baseline'
-    # mesh_outname = 'base'
+    # mesh = 'suisun'
+    # mesh_outname = 'suisun'
+    mesh = 'baseline'
+    mesh_outname = 'base'
 
     schism_to_ann_csv(in_fname, mesh, mesh_outname)
