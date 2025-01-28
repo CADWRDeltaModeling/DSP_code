@@ -18,14 +18,14 @@ ln -sf {meshname}.{cname}.elev2D.th.nc elev2D.th.nc
 ln -sf bctides.in.2d bctides.in
 ln -sf vgrid.in.2d vgrid.in
 
+# add gr3 links
+ln -sf salinity_nudge_roms.gr3 SAL_nudge.gr3
+ln -sf temperature_nudge_roms.gr3 TEM_nudge.gr3
+
 # modified TH inputs
 {linked_th_file_strings}
 
 # inputs specific to this setup
-ln -sf SAL_nu_roms.nc SAL_nu.nc
-ln -sf salinity_nudge_roms.gr3 SAL_nudge.gr3
-ln -sf TEM_nu_roms.nc TEM_nu.nc
-ln -sf temperature_nudge_roms.gr3 TEM_nudge.gr3
 ln -sf param.nml.tropic param.nml
 # ln -sf ../launch.tropic.pbs launch.pbs # only necessary with HPC4
 

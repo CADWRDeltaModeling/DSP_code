@@ -665,9 +665,10 @@ class ModelBCGen(object):
             'slurm_tropic').format(**self.env_vars)
         self.slurm_clinic = self.inputs.get(
             'slurm_clinic').format(**self.env_vars)
-        self.az_yml_file = self.inputs.get(
-            'az_yml_file').format(**self.env_vars)
-        self.az_yml_dir = self.inputs.get('az_yml_dir').format(**self.env_vars)
+        if self.machine.lower() == 'azure':
+            self.az_yml_file = self.inputs.get(
+                'az_yml_file').format(**self.env_vars)
+            self.az_yml_dir = self.inputs.get('az_yml_dir').format(**self.env_vars)
         self.job_name = self.inputs.get('job_name')
         self.output_log_file_base = self.inputs.get('output_log_file_base')
         self.geometry_files = self.inputs.get('geometry_files')
@@ -819,15 +820,15 @@ if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
     # Read in param.tropic and param.clinic and modify
-    if True:  # run for azure
+    if False:  # run for azure
         yml_fname = "./input/schism_lathypcub_v3_azure.yaml"
 
         mbc = ModelBCGen(yml_fname, 'schism', machine='azure')
 
-    elif False:  # run for azure SLR
+    elif True:  # run for azure SLR
         yml_fname = "./input/schism_slr_lathypcub_v3_azure.yaml"
 
-        mbc = ModelBCGen(yml_fname, 'schism', machine='azure')
+        mbc = ModelBCGen(yml_fname, 'schism', machine='hpc5')
 
     elif False:  # run for azure
         yml_fname = "./input/schism_lathypcub_v3_azure_from_base.yaml"

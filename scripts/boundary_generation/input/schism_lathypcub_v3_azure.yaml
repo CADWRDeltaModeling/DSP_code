@@ -211,7 +211,7 @@ cases_exclude:
   # - lhc_5
   # - lhc_6
   # - lhc_7
-  - lhc_99
+  - lhc_2021
   # - none
 
 meshcases_exclude:

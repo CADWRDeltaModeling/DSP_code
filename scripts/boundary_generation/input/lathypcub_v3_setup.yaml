@@ -151,7 +151,7 @@ cases:
   case_end: 2015-12-31
   model_year: 2014
   perturbations:
-    - tide_shift_forward_100
+    - tide_shift_back_100
     - dcc_open
     - sac_pert_hist
     - sjr_pert_hist
@@ -195,7 +195,7 @@ cases:
     - sac_scaled_1.1
     - dcd_pert_v1
     - suisun_mark_pert_v1
-- name: lhc_99
+- name: lhc_2021
   extends: model_base
   case_start: 2021-1-1
   case_end: 2024-1-2
