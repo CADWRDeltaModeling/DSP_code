@@ -104,3 +104,6 @@ schism/**/evap*.csv
 
 # extra run
 **/mss_th_dsp_geom/**/*
+
+# dsm2 pause
+dsm2/**/latinhypercube_v4/*

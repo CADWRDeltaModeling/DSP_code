@@ -56,12 +56,12 @@ pulse_events <- function(ts.df, nstep=365, rescale=0.015, sh.mean=500, sh.sd=150
   
   # Now create a response function to that stimulus that has mean
   # at shape/rate and peak mode (shape-1)/rate days after the stimulus
-  f<-dgamma(1:30,shape=4.5,rate=0.5)
+  f <- dgamma(1:30,shape=4.5,rate=0.5)
   f <- f/sum(f)
   # print(max(u)*rescale) # Rescale to desired range, including duration of stimulus, value of stimulus and the response
   
   f <- f*rescale
-  z <- stats::filter(u,f) # shape the events in u to create z
+  z <- stats::filter(u,f, circular = TRUE) # shape the events in u to create z
   if (plotshow) {ts.plot(z,xlim=c(1,nstep))}
   
   # Random shifts
@@ -95,7 +95,7 @@ pulse_events <- function(ts.df, nstep=365, rescale=0.015, sh.mean=500, sh.sd=150
     }
     
     ts.df$Edit <- ts.df$Value + z + rshift + stoch
-  } else {
+  } else { # don't edit Edit values (no stochit)
     ts.df$Edit <- ts.df$Value + z + rshift
   }
   
@@ -111,7 +111,7 @@ pulse_events <- function(ts.df, nstep=365, rescale=0.015, sh.mean=500, sh.sd=150
 # base_period_days=128
 # ints <- ts.df$Value
 
-stochify <- function(nstep, ints, stochscale, nstep_buf=3500, base_period_days=128) {
+stochify <- function(nstep, ints, stochscale, nstep_buf=3500, base_period_days=128, lambda_pers=c(1,2,4)) {
   ########## This is a perturbation that includes drift plus periodicities
   # of 14,28 and 56 days. The first couple lines are where those periods are
   # basically you set some frequencies and it randomly modulates those as well as creating a trend.
@@ -121,7 +121,7 @@ stochify <- function(nstep, ints, stochscale, nstep_buf=3500, base_period_days=1
   lambdabase = 2*pi/base_period_days
   # You could add or remove periods here by changing c(1,2,4)
   # The lowest frequency corresponds to the 1 element (128 days divided by 1)
-  lambda = c(1,2,4)*2*pi/base_period_days # c(1,2,4,8)
+  lambda = lambda_pers*2*pi/base_period_days # c(1,2,4,8)
   
   order_trend <- 2 # 2
   order_cycle <- 4 # 4
@@ -156,27 +156,98 @@ stochify <- function(nstep, ints, stochscale, nstep_buf=3500, base_period_days=1
   
   # scale stochasticity
   rel_scale <- abs(min(ints)/min(y))
-  if (stochscale>=0.75) {
-    scale_y <- rescale(y,
-                       to=c(stochscale*min(y)*rel_scale, 
-                            max(y)*rel_scale*(2-stochscale)))
-  } else {
-    scale_y <- rescale(y,
-                       to=c((min(y)*(.75-stochscale)) + 0.75*min(y)*rel_scale, 
-                            max(y)*rel_scale*(2-0.75)))
-  }
+  # if (stochscale>=0.75) {
+  scale_y <- rescale(y,
+                     to=c(stochscale*min(y)*rel_scale, 
+                          max(y)*rel_scale*(2-stochscale)))
+  # } else {
+  #   scale_y <- rescale(y,
+  #                      to=c((min(y)*(.75-stochscale)) + 0.75*min(y)*rel_scale, 
+  #                           max(y)*rel_scale*(2-0.75)))
+  # }
   
   if (FALSE){
     # debugging plots
     dev.off()
     # par(mfrow=c(4,1))
-    ts.plot(ints, ylab='Original TS', xlab='',ylim=c(min(y),max(ints)))
-    lines(y, ylab='Initial Stoch', xlab='', col='blue')
+    ts.plot(ints, ylab='Original TS', xlab='',ylim=c(min(scale_y),max(ints)))
+    # lines(y, ylab='Initial Stoch', xlab='', col='blue')
     lines(scale_y, ylab='Scaled Stoch', xlab='', col='red')
     lines(ints+y, ylab='Initial Add', xlab='',ylim=c(0,12000), col='lightblue')
     lines(ints+scale_y, ylab='Scaled Add', xlab='',ylim=c(0,12000), col='magenta')
     legend("topleft", c("Original TS", "Initial Stoch", 
                         "Scaled Stoch", "Initial Add","Scaled Add"), 
+           col = c('black','blue','red','lightblue','magenta'), 
+           lty = rep(1,5), ncol = 3, cex = 0.8)
+  }
+  
+  return(scale_y)
+  # par(mfrow=c(4,1))
+  # for(jplot in 2:4){ts.plot(m[jplot,])}
+  # ts.plot(y)
+}
+
+
+# function: stoch_tide ------------------------------------------------------
+# debug
+# nstep_buf=3500
+# base_period_days=128
+# ints <- ts.df$Value
+
+stoch_tide <- function(nstep, ints, rel_mag, center, lambda, nstep_buf=3500, sigma2_kappa=rep(1e-10, length(lambda))) {
+  ########## This is a perturbation that includes drift plus periodicities
+  # of 14,28 and 56 days. The first couple lines are where those periods are
+  # basically you set some frequencies and it randomly modulates those as well as creating a trend.
+  
+  library(scales)
+  
+  
+  order_trend <- 2 # 2
+  order_cycle <- 4 # 4
+  freqs <- lambda
+  rho <- 0.993 # 0.993
+  sigma2_eps <- 1e-2 # 1e-4
+  sigma2_zeta <- 1e-10 # 1e-10 for subtide
+  sigma2_diffuse <- 1. # 1.
+  
+  mod <- sc_model_build(order_trend,order_cycle,freqs,rho,
+                        sigma2_eps=sigma2_eps,sigma2_zeta=sigma2_zeta,
+                        sigma2_kappa=sigma2_kappa,sigma2_diffuse=sigma2_diffuse)
+  mod$GG[1,2] <- 0.99
+  mod$GG[2,2] <- 0.99
+  mod$FF[2] <- 0.99
+  nstate <- dim(mod$GG)[1]
+  sigma_eps <- sqrt(sigma2_eps)
+  sigma <- sqrt(diag(mod$W))
+  y = rep(NA,nstep_buf)
+  m = matrix(nrow=nstate,ncol=nstep_buf)
+  m[,]<-0.
+  
+  
+  for (i in 2:nstep_buf){
+    m[,i] = mod$GG%*%m[,i-1] + rnorm(nstate,sd=sigma)
+    y[i] = mod$FF%*%m[,i] + rnorm(1,sigma_eps)
+  }
+  ndx <- c(1,order_trend+1+order_cycle*2*(0:(length(freqs)-1)))
+  m <- m[ndx,1001:(1000+nstep)]*4
+  y <- colSums(m)+rnorm(nstep)*2
+  
+  # scale stochasticity
+  scale_y <- rescale(y,
+                     to=c((rel_mag*(max(ints)-min(ints))/2)+center, 
+                          center-(rel_mag*(max(ints)-min(ints))/2)))
+  
+  if (FALSE){
+    # debugging plots
+    dev.off()
+    # par(mfrow=c(4,1))
+    ts.plot(ints, ylab='Original TS', xlab='',ylim=c(min(scale_y),max(ints)))
+    # lines(y, ylab='Initial Stoch', xlab='', col='blue')
+    lines(scale_y, ylab='Scaled Stoch', xlab='', col='red')
+    # lines(ints+y, ylab='Initial Add', xlab='',ylim=c(0,12000), col='lightblue')
+    # lines(ints+scale_y, ylab='Scaled Add', xlab='',ylim=c(0,12000), col='magenta')
+    legend("topleft", c("Original TS", 
+                        "Scaled Stoch"), 
            col = c('black','blue','red','lightblue','magenta'), 
            lty = rep(1,5), ncol = 3, cex = 0.8)
   }
@@ -196,7 +267,7 @@ stochify <- function(nstep, ints, stochscale, nstep_buf=3500, base_period_days=1
 perturb_all <- function(delta_df, pulse_params) {
   
   ndo_pass <- FALSE
-  min.ndo <- 200
+  min.ndo <- min(min(delta_df$`Net Delta Outflow`), 200)
   ndoct <- 1
   sto_reduct <- 0.95
   
@@ -233,18 +304,25 @@ perturb_all <- function(delta_df, pulse_params) {
                               sh.sd, num.pulse, stochit, stochscale)
       
       # debug check
+      # min(ts.df.e$Edit)
       # ggplot(data=ts.df.e,aes(x=Time)) +
       #   geom_line(aes(y=Value, color='orig')) +
       #   geom_line(aes(y=Edit, color='edit'))
+      # min.crit
       
       # check for min max criteria
       if (!is.na(min.crit) | !is.na(max.crit)) {
-        pass <- FALSE
+        pass <- FALSE# check for min/max criteria
+        if (is.na(max.crit)) {
+          if (min(ts.df.e$Edit)<min.crit) {
+            pass <- FALSE } else { pass <- TRUE}
+        } else if (min(ts.df.e$Edit)<min.crit | max(ts.df.e$Edit)>max.crit) {
+          pass <- FALSE } else { pass <- TRUE}
         pct <- 1
         while (!pass) {
-          if (pct%%50==0) {
-            stochscale=stochscale*sto_reduct
-            print(paste0(' - ',key,': Modifying stochscale to ', stochscale))}
+          # if (pct%%50==0) {
+          #   stochscale=stochscale*sto_reduct
+          #   print(paste0(' - ',key,': Modifying stochscale to ', stochscale))}
           ts.df.e <- pulse_events(ts.df, nstep=nrow(ts.df), rescale=scale, sh.mean, 
                                   sh.sd, num.pulse, stochit, stochscale)
           
@@ -266,19 +344,23 @@ perturb_all <- function(delta_df, pulse_params) {
     
     if (min(net_delta_outflow)>min.ndo) {
       ndo_pass <- TRUE
-    } #else {
-    # print(paste0("Minimum net delta outflow is ", min(net_delta_outflow)))
-    # print(paste0("Maximum Exports is ", max(edit.df$Exports)))
-    # print(paste0("Minimum Northern Flow is ", max(edit.df$`NF_nonSac`)))
-    # print(paste0("Minimum SJR Flow is ", max(edit.df$`SJR Flow`)))
-    plt.df <- data.frame(Time=edit.df$Time, NDO=net_delta_outflow)
-    ggplot() +
-      geom_line(data=edit.df, aes(x=Time, y=Exports, color='Exports')) +
-      geom_line(data=edit.df, aes(x=Time, y=Sacramento+NF_nonSac, color='Northern Flow')) +
-      geom_line(data=edit.df, aes(x=Time, y=`SJR Flow`, color='SJR')) +
-      geom_line(data=plt.df, mapping=aes(x=Time, y=NDO, color='NDO'), size=2)
-
-     # } # end ndo check
+    } else {
+      # print(paste0("----- Minimum net delta outflow is ", min(net_delta_outflow)))
+      # print(paste0("Maximum Exports is ", max(edit.df$Exports)))
+      # print(paste0("Minimum Northern Flow is ", max(edit.df$`NF_nonSac`)))
+      # print(paste0("Minimum SJR Flow is ", max(edit.df$`SJR Flow`)))
+      # plt.df <- data.frame(Time=edit.df$Time, NDO=net_delta_outflow)
+      # ggplot() +
+      #   geom_line(data=edit.df, aes(x=Time, y=Exports, color='Edit Exports')) +
+      #   geom_line(data=edit.df, aes(x=Time, y=Sacramento+NF_nonSac, color='Edit Northern Flow')) +
+      #   geom_line(data=edit.df, aes(x=Time, y=`SJR Flow`, color='Edit SJR')) +
+      #   geom_line(data=plt.df, mapping=aes(x=Time, y=NDO, color='Edit NDO'), size=2) +
+      #   geom_line(data=delta_df, aes(x=Time, y=Exports, color='Orig Exports')) +
+      #   geom_line(data=delta_df, aes(x=Time, y=Sacramento+NF_nonSac, color='Orig Northern Flow')) +
+      #   geom_line(data=delta_df, aes(x=Time, y=`SJR Flow`, color='Orig SJR')) +
+      #   geom_line(data=delta_df, mapping=aes(x=Time, y=`Net Delta Outflow`, color='Orig NDO'), size=2)
+      
+      } # end ndo check
     ndoct <- ndoct + 1
   } # end ndo loop
   

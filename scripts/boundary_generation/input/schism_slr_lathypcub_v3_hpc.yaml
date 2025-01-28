@@ -2,10 +2,10 @@
 env_vars:
 - dsp_home: /scratch/tomkovic/DSP_code # where the main folder of this project is (HPC4/HPC5)
 - bds_home: /home/tomkovic/BayDeltaSCHISM # where the BayDeltaSCHISM repository is housed
-- experiment: lhc_v3 # name of folder to look inside of test_file for azure setup
+- experiment: lhc_v4 # name of folder to look inside of test_file for azure setup
 # - experiment: latinhypercube_v3 # name of folder to look inside of test_file for HPC5 setup
 - schism_dir: '{dsp_home}/model/schism'
-- exp_dir: '{schism_dir}/azure_dsp_2024_{experiment}' # for azure setup
+- exp_dir: '{schism_dir}/dsp_2024_{experiment}' # for azure setup
 # - exp_dir: '{schism_dir}/dsp_202402_{experiment}' # for HPC55 setup
 - th_repo: '{bds_home}/data/time_history'
 - dcd_repo: '{bds_home}/data/channel_depletion'

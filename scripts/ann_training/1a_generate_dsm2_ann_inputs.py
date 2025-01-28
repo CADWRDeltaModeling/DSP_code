@@ -6,7 +6,7 @@ import os
 from pydelmod.create_ann_inputs import get_dss_data
 
 
-def process_gate_data(dss_filename, output_file, b_part, c_part, map_zero_one=['df==0','df==1'], startDateStr=None, endDateStr=None):
+def process_gate_data(dss_filename, b_part, c_part, map_zero_one=['df==0','df==1'], startDateStr=None, endDateStr=None):
     '''
     Read delta cross-channel gate operation data
     Create daily time series indicating fraction of maximum gate opening (100% means both gates open all day).
@@ -32,7 +32,8 @@ def process_gate_data(dss_filename, output_file, b_part, c_part, map_zero_one=['
     # now find daily averages of one minute data
     df_daily_avg = df_1min.resample('D', closed='right').mean()
     df_daily_avg = df_daily_avg.rename(columns={df_daily_avg.columns[0]:'gate_pos'})
-    df_daily_avg.to_csv(output_file, float_format="%.2f")
+
+    return df_daily_avg
 
 def generate_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file, model_ec_file, output_folder,
                         b_part_e_part_dict = None):
@@ -68,7 +69,9 @@ def generate_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_fil
     df_northern_flow.fillna(0, inplace=True)
     df_northern_flow['northern_flow'] = df_northern_flow['RSAC155'] + df_northern_flow['BYOLO040']+df_northern_flow['RMKL070'] +\
         df_northern_flow['RCSM075'] + df_northern_flow['RCAL009']-df_northern_flow['SLBAR002']
-    df_northern_flow.to_csv(output_folder + '/df_northern_flow.csv', float_format="%.2f")
+    
+    out_df = df_northern_flow['northern_flow'].to_frame()
+    out_df['sac_flow'] = df_northern_flow['RSAC155']
 
     #############
     # SJR Flow  #
@@ -76,7 +79,9 @@ def generate_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_fil
     b_part_dss_filename_dict = {'RSAN112': hist_dss_file}
     b_part_c_part_dict = {'RSAN112': 'FLOW'}
     df_sjr_flow = get_dss_data(b_part_dss_filename_dict, 'b_part', b_part_c_part_dict)
-    df_sjr_flow.to_csv(output_folder + '/df_sjr_flow.csv', float_format="%.2f")
+    
+    df_sjr_flow.columns = ['sjr_flow']
+    out_df['sjr_flow'] = df_sjr_flow
 
     ###############################################################################################
     # 3. Exports: Sum(Banks, Jones, CCC plants(Rock Sl, Middle R (actually old river), Victoria)) #
@@ -84,26 +89,26 @@ def generate_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_fil
     b_part_dss_filename_dict = {'CHSWP003': hist_dss_file, 'CHDMC004': hist_dss_file, 'CHCCC006': hist_dss_file,\
         'ROLD034': hist_dss_file, 'CHVCT001': hist_dss_file}
     df_exports_flow = get_dss_data(b_part_dss_filename_dict, 'b_part')
-    # df_exports_flow.fillna(0, inplace=True)
     df_exports_flow['exports'] = df_exports_flow['CHSWP003']+df_exports_flow['CHDMC004']+df_exports_flow['CHCCC006']+\
         df_exports_flow['ROLD034']+df_exports_flow['CHVCT001']
-    df_exports_flow.to_csv(output_folder+'/df_exports_flow.csv', float_format="%.2f")
+    
+    out_df['exports'] = df_exports_flow['exports']
 
     #############################################
     # 4. DCC gate operation as daily percentage #
     #############################################
     b_part = 'RSAC128'
     c_part = 'POS'
-    gate_output_file = output_folder+'/dcc_gate_op.csv'
-    process_gate_data(gate_dss_file, gate_output_file, b_part, c_part, map_zero_one=['df<2','df==2'])
+    dcc_op_df = process_gate_data(gate_dss_file, b_part, c_part, map_zero_one=['df<2','df==2'])
+    out_df['dcc'] = dcc_op_df
     
     ################################################
     # 5. Suisun gate operation as daily percentage #
     ################################################
     b_part = 'MTZSL'
     c_part = 'RADIAL_OP'
-    gate_output_file = output_folder+'/suisun_gate_op.csv'
-    process_gate_data(gate_dss_file, gate_output_file, b_part, c_part, map_zero_one = ['df!=-10','df==-10'], startDateStr='01JAN1953', endDateStr='01JAN2030')
+    suisun_op_df = process_gate_data(gate_dss_file, b_part, c_part, map_zero_one = ['df!=-10','df==-10'], startDateStr='01JAN1953', endDateStr='01JAN2030')
+    out_df['smscg'] = suisun_op_df
 
     ############################################################
     # 6. Net Delta CU, daily (DIV+SEEP-DRAIN) for DCD and SMCD #
@@ -129,8 +134,11 @@ def generate_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_fil
     cu_total = pd.merge(cu_total_dcd, cu_total_smcd, how='left', left_index=True, right_index=True)
 
     cu_total['cu_total']=cu_total['dcd_divseep_total']+cu_total['smcd_divseep_total']-cu_total['dcd_drain_total']-cu_total['smcd_drain_total']
-    # now only save the grand total column to csv
-    cu_total[['cu_total']].to_csv(output_folder+'/df_cu_total.csv', float_format="%.2f")
+
+    out_df['delta_cu'] = cu_total['cu_total']
+
+    # Net Delta Outflow RMA:  (Sac, SJR, Yolo Bypass, Mokelumne, Cosumnes, Calaveras), exports (SWP, CVP, Contra Costa, NBA) and net DICU
+    out_df['ndo'] = out_df['northern_flow'] + out_df['sjr_flow'] - out_df['exports'] - out_df['delta_cu']
 
     ########################################
     # 7. Tidal Energy: daily max-daily min #
@@ -139,33 +147,18 @@ def generate_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_fil
     b_part_c_part_dict={'RSAC054': 'STAGE'}
     df_mtz_stage = get_dss_data(b_part_dss_filename_dict, 'b_part', \
         primary_part_c_part_dict=b_part_c_part_dict, daily_avg=False)
-    df_nrg = cosine_lanczos((df_mtz_stage-cosine_lanczos(df_mtz_stage.copy(), 
-                                                         cutoff_period ='40H', padtype='odd'))**2, 
-                            cutoff_period ='40H', padtype='odd') # = < (z- <z>)^2 >
-    df_mtz_tidal_energy = df_nrg.resample('D', closed='right').mean()
-    df_mtz_tidal_energy.columns=['tidal_energy']
+    df_filter = cosine_lanczos(df_mtz_stage.copy(), cutoff_period ='40H', padtype='odd')
+    df_nrg = cosine_lanczos((df_mtz_stage-df_filter)**2, cutoff_period ='40H', padtype='odd') # = < (z- <z>)^2 >
+    df_mrz_tidal_filter = df_filter.resample('D', closed='right').mean()
+    df_mrz_tidal_filter.columns=['tidal_filter']
+    df_mrz_tidal_energy = df_nrg.resample('D', closed='right').mean()
+    df_mrz_tidal_energy.columns=['tidal_energy']
 
-    df_mtz_stage.to_csv(output_folder+'/df_mtz_stage.csv', float_format="%.2f")    
-    df_mtz_tidal_energy.to_csv(output_folder+'/df_mtz_tidal_energy.csv', float_format="%.2f")
-
-    #############################################
-    # 8. SJR inflow salinity at vernalis, daily #
-    #############################################
-    b_part_dss_filename_dict = {'RSAN112': hist_dss_file}
-    b_part_c_part_dict = {'RSAN112': 'EC'}
-    df_sjr_ec = get_dss_data(b_part_dss_filename_dict, 'b_part', primary_part_c_part_dict=b_part_c_part_dict)
-    df_sjr_ec.to_csv(output_folder + '/df_sjr_ec.csv', float_format="%.2f")
-
-    ##########################
-    # 9. Sacramento River EC #
-    ##########################
-    b_part_dss_filename_dict = {'RSAC139': hist_dss_file}
-    b_part_c_part_dict = {'RSAC139': 'EC'}
-    df_sac_ec = get_dss_data(b_part_dss_filename_dict, 'b_part', primary_part_c_part_dict=b_part_c_part_dict)
-    df_sac_ec.to_csv(output_folder + '/df_sac_ec.csv', float_format="%.2f")
+    out_df['mrz_tidal_energy'] = df_mrz_tidal_energy['tidal_energy']
+    out_df['mrz_tidal_filter'] = df_mrz_tidal_filter['tidal_filter']
 
     ######################################
-    # 10. EC Output for various locations #
+    # 8. EC Output for various locations #
     ######################################
     b_part_dss_filename_dict = {'CHDMC006': model_ec_file, 'CHSWP003': model_ec_file,\
         'CHVCT000': model_ec_file, 'OLD_MID': model_ec_file, 'ROLD024': model_ec_file,
@@ -197,80 +190,39 @@ def generate_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_fil
             'SLTRM004': '15MIN', 'SSS': '15MIN', 'RSAC054': '1HOUR'}
     df_model_ec = get_dss_data(b_part_dss_filename_dict, 'b_part', \
         primary_part_c_part_dict=b_part_c_part_dict, primary_part_e_part_dict=b_part_e_part_dict)
-    # df_model_ec = df_model_ec.resample('D').mean()
-
-    # now add duplicate columns
-    duplication_dict = {'RSAN007': 'Antioch_dup', 'CHSWP003': 'CCFB_Intake_dup', 'RSAC081': 'Collinsville_dup', 'CHDMC006': 'CVP_Intake_dup',
-        'RSAC092': 'Emmaton_dup', 'RSAN018': 'Jersey_Point_dup', 'RSAC075': 'Mallard_Island_dup'}
-    for rki in duplication_dict:
-        new_name = duplication_dict[rki]
-        df_model_ec[new_name] = df_model_ec[rki]
-
-    # print('before error: columns='+str(df_model_ec.columns))
+    
     # now add model output ec near CCC intakes
     b_part_dss_filename_dict = {'ROLD034': model_ec_file, 'SLRCK005': model_ec_file}
     b_part_c_part_dict = {'ROLD034': 'EC', 'SLRCK005': 'EC'}
     df_model_ec_2 = get_dss_data(b_part_dss_filename_dict, 'b_part', b_part_c_part_dict)
     df_model_ec = pd.merge(df_model_ec, df_model_ec_2, how='outer', left_index=True, right_index=True)
-    # print('before error: columns='+str(df_model_ec.columns))
-
-    # now add a copy of victoria intake ec
-    df_model_ec['CHVCT000_dup'] = df_model_ec['CHVCT000']
+    
     # now add another copy of Mtz ec
-    df_model_ec['Martinez_input'] = df_model_ec['RSAC054']
+    df_model_ec['RSAC054'] = df_model_ec['RSAC054']
         
     # now rename some of the columns
-    col_rename_dict = {'CHDMC006': 'CHDMC006-CVP INTAKE', 'CHSWP003': 'CHSWP003-CCFB_INTAKE', 'CHVCT000': 'CHVCT000-VICTORIA INTAKE',
-        'OLD_MID': 'OLD_MID-OLD RIVER NEAR MIDDLE RIVER', 'ROLD024': 'ROLD024-OLD RIVER AT BACON ISLAND', 
-        'ROLD059': 'ROLD059-OLD RIVER AT TRACY BLVD', 'RSAC064': 'RSAC064-SACRAMENTO R AT PORT CHICAGO', 'RSAC075': 'RSAC075-MALLARDISLAND',
-        'RSAC081': 'RSAC081-COLLINSVILLE', 'RSAC092': 'RSAC092-EMMATON', 'RSAC101': 'RSAC101-SACRAMENTO R AT RIO VISTA', 
-        'RSAN007': 'RSAN007-ANTIOCH', 'RSAN018': 'RSAN018-JERSEYPOINT', 'RSAN032': 'RSAN032-SACRAMENTO R AT SAN ANDREAS LANDING',
-        'RSAN037': 'RSAN037-SAN JOAQUIN R AT PRISONERS POINT', 'RSAN058': 'RSAN058-ROUGH AND READY ISLAND', 
-        'RSAN072': 'RSAN072-SAN JOAQUIN R AT BRANDT BRIDGE', 'RSMKL008': 'RSMKL008-S FORK MOKELUMNE AT TERMINOUS',
-        'SLCBN002': 'SLCBN002-CHADBOURNE SLOUGH NR SUNRISE DUCK CLUB', 'SLDUT007': 'SLDUT007-DUTCH SLOUGH', 
-        'SLMZU011': 'SLMZU011-MONTEZUMA SL AT BELDONS LANDING', 'SLMZU025': 'SLMZU025-MONTEZUMA SL AT NATIONAL STEEL',
-        'SLSUS012': 'SLSUS012-SUISUN SL NEAR VOLANTI SL', 'SLTRM004': 'SLTRM004-THREE MILE SLOUGH NR SAN JOAQUIN R', 'SSS': 'SSS-STEAMBOAT SL',
-        'ROLD034': 'Old_River_Hwy_4', 'SLRCK005': 'CCWD_Rock', 'CHVCT000_dup': 'CCWD_Victoria_dup',
-        'RSAC054': 'Martinez_input_dup'}
+    col_rename_dict = {'CHDMC006': 'trp', 'CHSWP003': 'wci', 'CHVCT000': 'vcu', 
+                       'OLD_MID': 'uni', 'ROLD024': 'rsl', 'ROLD059': 'old', 
+                       'RSAC064': 'pct', 'RSAC075': 'mal', 'RSAC081': 'cse',
+                       'RSAC092': 'emm2', 'RSAC101': 'srv', 'RSAN007': 'anc', 
+                       'RSAN018': 'jer', 'RSAN032': 'sal', 'RSAN037': 'ppt', 
+                       'RSAN058': 'rri2', 'RSAN072': 'bdt', 'RSMKL008': 'lps',
+                       'SLCBN002': 'snc', 'SLDUT007': 'dsj', 'SLMZU011': 'bdl', 
+                       'SLMZU025': 'nsl2', 'SLSUS012': 'vol', 'SLTRM004': 'tss', 
+                       'SSS': 'sss', 'ROLD034': 'oh4', 'SLRCK005': 'inb', 'RSAC054': 'mrz'}
 
     df_model_ec.rename(columns=col_rename_dict, inplace=True)
-    df_model_ec.to_csv(output_folder + '/df_model_ec.csv', float_format="%.2f")
 
-def csv_to_ann_xlsx(csv_dir, xlsx_filepath):
-    csv_to_xlsx_dict = { 'base_ec_output':['df_model_ec.csv',None,None],
-                        'sac_ec':['df_sac_ec.csv','RSAC139','sac_greens_ec'],
-                        'sjr_vernalis_ec':['df_sjr_ec.csv','RSAN112','sjr_vernalis_ec'],
-                        'mtz_tidal_nrg':['df_mtz_tidal_energy.csv','tidal_energy','daily_nrg'],
-                        'net_delta_cu': ['df_cu_total.csv','cu_total','div+seep-drain_dcd+smcd'],
-                        'dxc_gate_fraction':['dcc_gate_op.csv','gate_pos',
-                                             'gate_pos'],
-                        'suisun_gate_fraction':['suisun_gate_op.csv','gate_pos',
-                                             's_gate_pos'],
-                        'exports':['df_exports_flow.csv','exports','exports'],
-                        'sjr_flow':['df_sjr_flow.csv','RSAN112','sjr_flow'],
-                        'northern_flow':['df_northern_flow.csv', 'northern_flow', 'northern_flow']
-    }
+    out_df = pd.merge(out_df, df_model_ec, left_index=True, right_index=True, how='outer')
 
-    ordered_sheets = ['northern_flow','sjr_flow','exports','dxc_gate_fraction','suisun_gate_fraction','net_delta_cu',
-                      'mtz_tidal_nrg','sjr_vernalis_ec','sac_ec','base_ec_output']
-    
-    with pd.ExcelWriter(xlsx_filepath) as writer:
-        for sheet in ordered_sheets:
-            df = pd.read_csv(os.path.join(csv_dir,csv_to_xlsx_dict[sheet][0]))
-            if csv_to_xlsx_dict[sheet][1] is not None:
-                df = df.loc[:,['Unnamed: 0', csv_to_xlsx_dict[sheet][1]]]
-                df = df.set_axis(['Time',csv_to_xlsx_dict[sheet][2]], axis=1)
-                df.to_excel(writer, sheet_name=sheet, index=False)
-            else:
-                df.to_excel(writer, sheet_name=sheet, index=False)
+    return out_df
 
 def run_ann_input(in_fname, e_part_dict=None):
 
     with open(in_fname, 'r') as f:
         # loader = RawLoader(stream)
         inputs = schism_yaml.load(f)
-    
-    dsp_home = inputs.get('dsp_home')
+
     experiment = inputs.get('experiment')
 
     base_study_folder = inputs.get('base_study_folder').format(**locals())
@@ -279,52 +231,44 @@ def run_ann_input(in_fname, e_part_dict=None):
     model_output_folder = inputs.get('model_output_folder').format(**locals())
     smcd_dss_file = inputs.get('smcd_dss_file').format(**locals())
     
-    if 'cases' in inputs.keys():
-        cases = inputs.get('cases')
-        for case in cases:
-            case_num = case.get('case_num')
-            hist_dss_file = inputs.get('hist_dss_file').format(**locals())
-            gate_dss_file = inputs.get('gate_dss_file').format(**locals())
-            model_ec_file = inputs.get('model_ec_file').format(**locals())
-            output_folder = inputs.get('output_folder').format(**locals())
-            xlsx_filepath = inputs.get('xlsx_filepath').format(**locals())
-            dcd_dss_file = inputs.get('dcd_dss_file').format(**locals())
+    col_order = ['model','scene','case',
+                 'northern_flow','sac_flow','sjr_flow','exports','delta_cu','ndo',
+                 'dcc','smscg',
+                 'mrz_tidal_energy','mrz_tidal_filter',
+                #  'x2',
+                 'trp','wci','vcu','uni','rsl','old','pct','mal',
+                 'emm2','srv','anc','jer','sal','ppt','rri2','bdt','lps',
+                 'snc','dsj','bdl','nsl2','vol','tss','sss','cse',
+                 'oh4','rsl','vcu','god',
+                #  'frk','bac','hol','mtz','cll','tms','anh','gzl'
+                 ]
 
-            # generate aggregated ANN inputs from DSM2 outputs
-            generate_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file, model_ec_file, output_folder,
-                                b_part_e_part_dict=e_part_dict)
-
-            # combine ANN input csv files into xlsx file (TODO: make this unecessary?)
-            csv_to_ann_xlsx(output_folder, xlsx_filepath)
-
-    else:
+    cases = list(eval(inputs.get('cases')))
+    for case_num in cases:
         hist_dss_file = inputs.get('hist_dss_file').format(**locals())
         gate_dss_file = inputs.get('gate_dss_file').format(**locals())
         model_ec_file = inputs.get('model_ec_file').format(**locals())
         output_folder = inputs.get('output_folder').format(**locals())
-        xlsx_filepath = inputs.get('xlsx_filepath').format(**locals())
         dcd_dss_file = inputs.get('dcd_dss_file').format(**locals())
-        
-    # generate aggregated ANN inputs from DSM2 outputs
-    generate_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file, model_ec_file, output_folder,
-                        b_part_e_part_dict=e_part_dict)
 
-    # combine ANN input csv files into xlsx file (TODO: make this unecessary?)
-    csv_to_ann_xlsx(output_folder, xlsx_filepath)
+        # generate aggregated ANN inputs from DSM2 outputs
+        case_out_df = generate_ann_inputs(hist_dss_file, gate_dss_file, dcd_dss_file, smcd_dss_file, model_ec_file, output_folder,
+                            b_part_e_part_dict=e_part_dict)
+        case_out_df['case'] = case_num
+        case_out_df['model'] = 'dsm2'
+        case_out_df['scene'] = 'baseline'
+        
+        case_out_df = case_out_df[[col for col in col_order if col in case_out_df.columns]]
+        
+        case_out_df.to_csv(os.path.join(output_folder,f'dsm2_base_{case_num}.csv'), float_format="%.2f", index=True)
+
 
 if __name__ == '__main__':
 
     from schimpy import schism_yaml
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
-    in_fname = "./input/ann_config_lathypcub_v3_dsm2.yaml"
-    # e_part_dict={'CHDMC006': '1DAY', 'CHSWP003': '1DAY', 'CHVCT000': '1DAY', 'OLD_MID': '1DAY', 
-    #              'ROLD024': '1DAY', 'ROLD059': '1DAY', 'RSAC064': '1DAY', 'RSAC075': '1DAY', 
-    #              'RSAC081': '1DAY', 'RSAC092': '1DAY', 'RSAC101': '1DAY', 'RSAN007': '1DAY', 
-    #              'RSAN018': '1DAY', 'RSAN032': '1DAY', 'RSAN037': '1DAY', 'RSAN058':'1DAY',
-    #              'RSAN072':'1DAY','RSMKL008':'1DAY','SLCBN002':'1DAY','SLDUT007':'1DAY',
-    #              'SLMZU011':'1DAY', 'SLMZU025': '1DAY','SLSUS012': '1DAY', 'SLTRM004': '1DAY', 
-    #              'SSS': '1DAY', 'RSAC054': '1HOUR'} # LAT: I don't remember why I did this...
+    in_fname = "./input/ann_config_lathypcub_v4_dsm2.yaml"
     e_part_dict = None
 
 

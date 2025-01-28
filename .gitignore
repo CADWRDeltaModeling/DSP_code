@@ -42,3 +42,10 @@ scripts/**/*.log
 
 # ignore ~ xlsx files
 ~$*.xlsx
+
+# ignore R files
+*.Rproj.user
+*.Rproj
+*.Rproj.user
+*.Rhistory
+*.RData

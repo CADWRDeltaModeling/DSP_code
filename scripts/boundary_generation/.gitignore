@@ -6,4 +6,7 @@ plots/*
 *.RData
 *.RHistory
 
+data_out/*mtz*
+data_out/*subtide*
+
 **- Copy*
