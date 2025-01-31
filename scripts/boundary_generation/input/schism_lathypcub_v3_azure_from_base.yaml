@@ -1,10 +1,9 @@
 # env_vars are used to populate the rest of the variables below 
 env_vars:
-- dsp_home: /scratch/tomkovic/DSP_code # where the main folder of this project is (HPC4/HPC5)
 - bds_home: /home/tomkovic/BayDeltaSCHISM # where the BayDeltaSCHISM repository is housed
 - experiment: lhc_v3 # name of folder to look inside of test_file for azure setup
 # - experiment: latinhypercube_v3 # name of folder to look inside of test_file for HPC5 setup
-- schism_dir: '{dsp_home}/model/schism'
+- schism_dir: '../../model/schism'
 - exp_dir: '{schism_dir}/azure_dsp_2024_{experiment}' # for azure setup
 # - exp_dir: '{schism_dir}/dsp_202402_{experiment}' # for HPC55 setup
 - th_repo: '{bds_home}/data/time_history'
@@ -12,9 +11,10 @@ env_vars:
 - sflux_src_dir: '{schism_dir}/atmos/baydelta_sflux_v20220916'
 - sflux_narr_dir: '{schism_dir}/atmos/NARR_cropped'
 - common_dir: '{exp_dir}' # where to copy common files from
+- simulation_dir: '{exp_dir}/simulations' # where to store simulation data
 
 # auxiliary yaml files
-case_setup: '{dsp_home}/scripts/boundary_generation/input/lathypcub_v3_setup.yaml'
+case_setup: '../../scripts/boundary_generation/input/lathypcub_v3_setup.yaml'
 
 # setup files
 param_tropic_base: '{exp_dir}/param.nml.tropic'
@@ -43,6 +43,8 @@ meshes:
   indir: '{exp_dir}/baseline_inputs'
 - name: suisun
   indir: '{exp_dir}/suisun_inputs'
+- name: franks
+  indir: '{exp_dir}/franks_inputs'
 - name: cache
   indir: '{exp_dir}/cache_inputs'
 
@@ -128,7 +130,7 @@ model_config:
   method: read
   
 - model_input: suisgate
-  th_file: '{dsp_home}/scripts/boundary_generation/data_out/suisun_gates/montezuma_{gate}_lhc_v{gate_ver}.th'
+  th_file: '../../scripts/boundary_generation/data_out/suisun_gates/montezuma_{gate}_{cname}.th'
   method: copy
 
 - model_input: tide
@@ -148,11 +150,11 @@ model_config:
   method: read
   
 - model_input: dcdsink
-  th_file: '{dsp_home}/scripts/boundary_generation/data_out/schism_dcd/vsink_{cname}_dated.th'
+  th_file: '../../scripts/boundary_generation/data_out/schism_dcd/vsink_{cname}_dated.th'
   method: read_sourcesink
     
 - model_input: dcdsource
-  th_file: '{dsp_home}/scripts/boundary_generation/data_out/schism_dcd/vsource_{cname}_dated.th'
+  th_file: '../../scripts/boundary_generation/data_out/schism_dcd/vsource_{cname}_dated.th'
   method: read_sourcesink
 
 linked_th_files:
@@ -197,17 +199,18 @@ common_files:
 versioned_th_files:
 - key: ccfb_gate.th
   # this is unique since these are all already clipped to the start date etc
-  linked_fn: '{dsp_home}/scripts/boundary_generation/data_out/ccfb_gates/ccfb_{cname}.th'
+  linked_fn: '../../scripts/boundary_generation/data_out/ccfb_gates/ccfb_{cname}.th'
 
 cases_exclude:
   # - lhc_1
   # - lhc_2
   # - lhc_3
-  - lhc_4
+  # - lhc_4
   # - lhc_5
   # - lhc_6
   # - lhc_7
-  # - none
+  - lhc_2021
+  - none
 
 meshcases_exclude:
   - none
@@ -215,6 +218,6 @@ meshcases_exclude:
 
 meshes_exclude:
   - baseline
-  # - suisun
+  - suisun
   - cache
-  - franks
+  # - franks

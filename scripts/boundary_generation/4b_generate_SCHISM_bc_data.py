@@ -825,15 +825,15 @@ if __name__ == "__main__":
 
         mbc = ModelBCGen(yml_fname, 'schism', machine='azure')
 
-    elif True:  # run for azure SLR
+    elif False:  # run for azure SLR
         yml_fname = "./input/schism_slr_lathypcub_v3_azure.yaml"
 
         mbc = ModelBCGen(yml_fname, 'schism', machine='hpc5')
 
-    elif False:  # run for azure
+    elif True:  # run for azure
         yml_fname = "./input/schism_lathypcub_v3_azure_from_base.yaml"
 
-        mbc = ModelBCGen(yml_fname, 'schism', machine='azure')
+        mbc = ModelBCGen(yml_fname, 'schism', machine='hpc5')
 
     else:
         yml_fname = "./input/schism_lathypcub_v3_hpc5.yaml"
