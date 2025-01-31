@@ -3,11 +3,38 @@ training_set: latinhypercube_v3
 dsp_home: "/scratch/tomkovic/DSP_code" # LAT Computer: D:/projects/delta_salinity, EA computer: f:/projects/ann_dsp HPC5: /scratch/tomkovic
 
 # Define DSS data/parameters
-in_dss_dir: "model/dsm2/2021DSM2FP_202301/timeseries"
-out_dss_dir: "model/dsm2/DSP_DSM2_202307"
+in_dss_dir: "../../model/dsm2/2021DSM2FP_202301/timeseries"
+out_dss_dir: "../../model/dsm2/DSP_DSM2_202307"
 hist_dss: "hist.dss"
 gates_dss: "gates-v8.dss"
 dcd_dss: "DCD_hist_Lch5.dss"
+
+config_file: input/config_latinhypercube_CASE.inp
+hydro_file: input/hydro_latinhypercube_CASE.inp
+qual_file: input/qual_ec_latinhypercube_CASE.inp
+qual_x2_file: input/qual_ec_latinhypercube_x2_CASE.inp
+
+mod_spinup_days: 90
+
+treatments:
+  - name: tide
+    search: tide
+    default: '{HISTSTAGEVERSION}'
+  - name: dcc
+    search: dcc
+    default: DWR-DMS-DSM2
+  - name: flow
+    search: [sjr, exports]
+    default: '{HISTFLOWVERSION}'
+  - name: sac
+    search: sac
+    default: '{HISTFLOWVERSION}'
+  - name: dcd
+    search: dcd
+    default: DWR-BDO
+  - name: suis
+    search: suis
+    default: DWR-ESO
 
 model_config:
 - model_input: chcc

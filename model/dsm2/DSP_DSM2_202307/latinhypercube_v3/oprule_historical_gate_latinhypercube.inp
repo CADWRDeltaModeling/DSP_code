@@ -47,7 +47,7 @@ END
 OPRULE_TIME_SERIES
 NAME                FILLIN FILE        PATH                                                    
 clfct_op            last   ${GATEFILE} /HIST+GATE/CHWST000/POS//IR-YEAR/DWR-ESO/  
-dcc_op              last   ${GATEFILE} /HIST+GATE/RSAC128/POS//IR-YEAR/${GATE_EXPERIMENT}/      
+dcc_op              last   ${GATEFILE} /HIST+GATE/RSAC128/POS//IR-YEAR/${DCC_GATE_EXPERIMENT}/      
 mscs_fract_fromnode last   ${GATEFILE} /HIST+GATE/MTZSL/RADIAL_FRACT_FROM//IR-DECADE/DWR-ESO/  
 mscs_fract_tonode   last   ${GATEFILE} /HIST+GATE/MTZSL/RADIAL_FRACT_TO//IR-DECADE/DWR-ESO/  
 mscs_op             last   ${GATEFILE} /HIST+GATE/MTZSL/RADIAL_OP//IR-DECADE/${SUIS_GATE_EXPERIMENT}/     

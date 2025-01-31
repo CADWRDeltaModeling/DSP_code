@@ -158,6 +158,12 @@ def create_dsm2_ec_est(in_fname, dsm2_config_fname, write_dss=True, skip=0):
             case_file['perturbations'] = case_file.apply(create_perturbations, axis=1, args=(pert_vars,))
         
             case_items = case_file.iloc[skip:].copy() # this behaves the same as if the cases are defined in a yaml
+        else:
+            # make into pd.DataFrame
+            case_df = pd.DataFrame(columns=list(case_items[0].keys()))
+            for case in case_items:
+                case_df = pd.concat([case_df, pd.DataFrame.from_dict([case])], ignore_index=True)
+            case_items = case_df
 
     with open(dsm2_config_fname, 'r') as f:
         dsm2_inputs = schism_yaml.load(f)
@@ -244,13 +250,12 @@ def create_dsm2_ec_est(in_fname, dsm2_config_fname, write_dss=True, skip=0):
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    # model_dir = r"D:\projects\delta_salinity\model\schism\dsp_202311_baseline"
-    in_fname = "./input/lathypcub_v4_setup.yaml"
+    # in_fname = "./input/lathypcub_v4_setup.yaml"
+    # dsm2_config_fname = "./input/lathypcub_v4_dsm2_config.yaml"
+    # skip_cases = 1000
 
-    # cases = create_cases()
-    dsm2_config_fname = "./input/lathypcub_v4_dsm2_config.yaml"
-    # in_fname = "../../../../model/schism/dsp_202311_baseline/dsp_baseline_bay_delta.yaml"
+    in_fname = "./input/lathypcub_v3_setup.yaml"
+    dsm2_config_fname = "./input/lathypcub_v3_dsm2_config.yaml"
+    skip_cases = 0
 
-    # args = Namespace(main_inputfile=in_fname)
-
-    create_dsm2_ec_est(in_fname, dsm2_config_fname, skip=105)
+    create_dsm2_ec_est(in_fname, dsm2_config_fname, skip=skip_cases)

@@ -8,9 +8,10 @@ DSM2INPUTDIR             ../../2021DSM2FP_202301/common_input
 VERSIONDATE              202112
 HISTFLOWVERSION          DWR-DMS-${VERSIONDATE}
 HISTSTAGEVERSION         ${HISTFLOWVERSION}
+ASTRO_STAGE_VERSION      NAVD
 HISTQUALVERSION          DWR-DMS-${VERSIONDATE}
 STAGE_EXPERIMENT		 DSP_LHC_1
-GATE_EXPERIMENT			 DSP_LHC_1
+DCC_GATE_EXPERIMENT		 DSP_LHC_1
 FLOW_EXPERIMENT			 ${HISTFLOWVERSION}
 SAC_EXPERIMENT			 ${HISTFLOWVERSION}
 EXPORT_EXPERIMENT	     ${HISTFLOWVERSION}
@@ -18,8 +19,8 @@ DCD_EXPERIMENT			 DSP_LHC_1
 SUIS_GATE_EXPERIMENT	 DSP_LHC_1
 
 #runtime
-START_DATE               24AUG2013
-QUAL_START_DATE          01SEP2013
+START_DATE               26JUL2013
+QUAL_START_DATE          27JUL2013
 PTM_START_DATE           ${QUAL_START_DATE}
 END_DATE                 31DEC2015
 START_TIME               0000
@@ -32,12 +33,15 @@ TSINPUTDIR               ../../2021DSM2FP_202301/timeseries
 BNDRYINPUT               ./timeseries/${DSM2MODIFIER}_hist.dss
 GATEFILE                 ./timeseries/${DSM2MODIFIER}_gates.dss
 DICUFILE                 ./timeseries/${DSM2MODIFIER}_dcd.dss
+MTZECFILE                ./timeseries/${DSM2MODIFIER}_ec_est.dss
 SSCDFILE                 ${TSINPUTDIR}/SMCD_hist.dss     #202309
 QUALBNDINP               ${BNDRYINPUT}
 DICUFILE_ECE             ${TSINPUTDIR}/dicuwq_3vals_extended.dss
 SMCDFILEEC               ${TSINPUTDIR}/SMCD_hist_wq_ec.dss
 STOCKTON_FLOW_FILE       constant
 STOCKTON_EFF_FLOW        0.0                                    #needed for DO runs, if not available use 0.0
+QUALBOUNDARYFILE         ${BNDRYINPUT}
+STAGE_SOURCE_FILE		 ${BNDRYINPUT}
 
 #Output
 DSM2OUTPUTDIR            ${STUDYDIR}/output

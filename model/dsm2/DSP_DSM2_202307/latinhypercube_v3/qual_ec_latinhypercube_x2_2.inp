@@ -52,7 +52,7 @@ ${DSM2INPUTDIR}/group_sourcetracking.inp                      #20110131
 END
 
 QUAL_TIME_SERIES
-${DSM2INPUTDIR}/node_concentration_delta_historical_qual.inp  #20121214
+./node_concentration_delta_historical_qual_mod_ec.inp  #20121214
 ${DSM2INPUTDIR}/node_concentration_dicu_ec.inp                #20200722 CS3 changes and Banta Carbona div
 ${DSM2INPUTDIR}/reservoir_concentration_dicu_ec.inp           #20090715
 ${DSM2INPUTDIR}/node_concentration_jones_qual.inp             #20090715
@@ -67,5 +67,6 @@ OUTPUT_TIME_SERIES
 # ${DSM2INPUTDIR}/output_ec_rki.inp                             #202102
 # ${DSM2INPUTDIR}/output_ec_csdp.inp                            #202102
 ./x2_ec_locs.inp                                                           # X2 profile along sac river
+# ./station_dbase_ec_locs.inp                                                # dms datastore station_dbase csv
 END
 

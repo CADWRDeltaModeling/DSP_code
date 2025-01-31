@@ -3,6 +3,8 @@
 # produces boundary inputs for DSM2 within existing folders
 
 import pandas as pd
+import numpy as np
+
 from schimpy import schism_yaml
 from schimpy.prepare_schism import process_output_dir, check_nested_match, item_exist
 
@@ -75,6 +77,13 @@ def create_dsm2_inps(in_fname, dsm2_config_fname):
             case_file['perturbations'] = case_file.apply(create_perturbations, axis=1, args=(pert_vars,))
         
             case_items = case_file # this behaves the same as if the cases are defined in a yaml
+        else:
+            # make into pd.DataFrame
+            case_df = pd.DataFrame(columns=list(case_items[0].keys()))
+            for case in case_items:
+                case_df = pd.concat([case_df, pd.DataFrame.from_dict([case])], ignore_index=True)
+            case_items = case_df
+
 
     with open(dsm2_config_fname, 'r') as f:
         dsm2_inputs = schism_yaml.load(f)
@@ -104,6 +113,9 @@ def create_dsm2_inps(in_fname, dsm2_config_fname):
                        'case_name': cname}
 
         perts = case.get('perturbations')
+        if perts is np.nan:
+            perts = [] 
+            
         # config vars:
         for treat in treatments:
             if isinstance(treat['search'], str):
@@ -137,13 +149,10 @@ def create_dsm2_inps(in_fname, dsm2_config_fname):
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    # model_dir = r"D:\projects\delta_salinity\model\schism\dsp_202311_baseline"
-    in_fname = "./input/lathypcub_v4_setup.yaml"
-
-    # cases = create_cases()
-    dsm2_config_fname = "./input/lathypcub_v4_dsm2_config.yaml"
-    # in_fname = "../../../../model/schism/dsp_202311_baseline/dsp_baseline_bay_delta.yaml"
-
-    # args = Namespace(main_inputfile=in_fname)
-
+    # in_fname = "./input/lathypcub_v4_setup.yaml"
+    # dsm2_config_fname = "./input/lathypcub_v4_dsm2_config.yaml"
+    
+    in_fname = "./input/lathypcub_v3_setup.yaml"
+    dsm2_config_fname = "./input/lathypcub_v3_dsm2_config.yaml"
+    
     create_dsm2_inps(in_fname, dsm2_config_fname)
