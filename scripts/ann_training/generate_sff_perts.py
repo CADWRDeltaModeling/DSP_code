@@ -51,7 +51,7 @@ def calc_filt_nrg(df):
 
     return out_df
     
-sf_fn = "./input/9414290_gageheight.txt"
+sf_fn = "../boundary_generation/input/9414290_gageheight.txt"
 sf_raw_ts = pd.read_csv(sf_fn, index_col=0, parse_dates=[0], 
                         usecols=["Date Time", "Water Level"], 
                         skipinitialspace=True,
@@ -63,7 +63,8 @@ sf_raw_ts = sf_raw_ts.resample('15min').ffill()
 sf_raw_ts.index.freq = pd.infer_freq(sf_raw_ts.index)
 
 # load lhc_v4
-lhc_fn = "./data_out/lhc_v4.csv"
+# lhc_fn = "../boundary_generation/data_out/lhc_v4.csv"
+lhc_fn = "../boundary_generation/data_out/lhc_v3.csv"
 lhc_df = pd.read_csv(lhc_fn)
 
 # casanntra dir
@@ -82,9 +83,9 @@ shift_plus100_df = shift_ts(sf_raw_ts, 100, 'shift+100')
 shift_plus100_df = calc_filt_nrg(shift_plus100_df)
 
 # Subtidal Pert
-pert_fn = "./data_out/perturb_historical_subtide_v1.csv"
-mrz_fn = "./input/dsm2_mrz_stage_ft_15min_clean.csv "
-mrz_filt_fn = "./data_out/dsm2_mrz_stage_ft_15min_clean_filtered.csv"
+pert_fn = "../boundary_generation/data_out/perturb_historical_subtide_v1.csv"
+mrz_fn = "../boundary_generation/input/dsm2_mrz_stage_ft_15min_clean.csv "
+mrz_filt_fn = "../boundary_generation/data_out/dsm2_mrz_stage_ft_15min_clean_filtered.csv"
 mrz_pert_df = pd.read_csv(pert_fn, index_col=[0], parse_dates=[0], header=None)
 mrz_df = pd.read_csv(mrz_fn, index_col=[0], parse_dates=[0])
 mrz_filt_df = pd.read_csv(mrz_filt_fn, index_col=[0], parse_dates=[0])
@@ -141,6 +142,7 @@ for index, row in lhc_df.iterrows():
     cdf = pd.read_csv(casanntra_casefile,
                       parse_dates=[0],
                       index_col=0)
+    
     if 'sf_tidal_filter' in cdf.columns:
         cdf.drop(columns=['sf_tidal_filter','sf_tidal_energy'], inplace=True)
     
@@ -172,4 +174,6 @@ for index, row in lhc_df.iterrows():
         print("NO METHOD")
         
     merge_df = merge_df[[col for col in col_order if col in merge_df.columns]]
+    if isinstance(merge_df.index, pd.DatetimeIndex):
+        merge_df.index = merge_df.index.to_period('D')
     merge_df.to_csv(casanntra_casefile, float_format="%.2f", index=True, index_label='datetime')
