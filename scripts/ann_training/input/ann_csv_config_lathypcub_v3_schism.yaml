@@ -1,13 +1,12 @@
 # Define Environmental Variables  ---------------------------------------------------------------
 # env_vars are used to populate the rest of the variables below
 env_vars: 
-- dsp_home: /scratch/tomkovic/DSP_code # where the main folder of this project is (HPC4)
 - bds_home: /home/tomkovic/BayDeltaSCHISM # where the BayDeltaSCHISM repository is housed
 - experiment: lhc_v3 # name of folder to look inside of test_file for azure setup
-- schism_out_dir: '{dsp_home}/scripts/post-processing/data_out/schism_{experiment}' # where the SCHISM data comes from
-- out_dir: '{dsp_home}/scripts/ann_training/data_out/schism_{experiment}'
-- x2_dir: '{dsp_home}/scripts/x2/data_out'
-- evap_dir: '{dsp_home}/scripts/evap/data_out'
+- schism_out_dir: '../../scripts/post-processing/data_out/schism_{experiment}' # where the SCHISM data comes from
+- out_dir: '../../../casanntra/data'
+- x2_dir: '../../scripts/x2/data_out'
+- evap_dir: '../../scripts/evap/data_out'
 
 csv_indx_fmt: '{schism_out_dir}/{mesh}_{case_name}.csv'
 model: SCHISM
@@ -209,11 +208,11 @@ meshes:
 # Model Cases -----------------------------------------------------------------------------------
 
 cases:
-# - lhc_1
-# - lhc_2
-# - lhc_3
-# - lhc_4
-# - lhc_5
-# - lhc_6
-# - lhc_7
+- lhc_1
+- lhc_2
+- lhc_3
+- lhc_4
+- lhc_5
+- lhc_6
+- lhc_7
 - mss_2021

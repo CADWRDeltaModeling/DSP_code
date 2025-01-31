@@ -142,7 +142,7 @@ def schism_to_ann_csv(in_fname, mesh, mesh_outname):
             output_df_daily = pd.DataFrame(
                 index=input_df_daily.index, columns=['model', 'scene', 'case'] + ann_var_names + out_ec_locs['ann_colnames'])  # creates an empty dataframe with spaces for each ANN variable
             output_df_daily['model'] = 'SCHISM'
-            output_df_daily['scene'] = mesh
+            output_df_daily['scene'] = mesh_outname
             output_df_daily['case'] = case_number
 
             # go through each sheet and store inputs
