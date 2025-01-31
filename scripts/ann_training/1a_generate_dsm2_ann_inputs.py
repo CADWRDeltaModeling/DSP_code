@@ -286,7 +286,7 @@ def run_ann_input(in_fname, case_nums=range(0,9999)):
             
             if mod_case_num:
                 case_num = case_num + 1000
-            case_out_df['case'] = case_num
+            case_out_df['case'] = str(case_num)
             case_out_df['model'] = 'dsm2'
             case_out_df['scene'] = 'base'
             case_out_df = case_out_df.loc[pd.to_datetime(row['start']):(pd.to_datetime(row['end'])-pd.Timedelta(days=1)),:]
@@ -305,6 +305,7 @@ if __name__ == '__main__':
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
     in_fname = "./input/ann_config_lathypcub_v3_dsm2.yaml"
+    run_ann_input(in_fname, case_nums=range(1001,1008))
 
-    # run_ann_input(in_fname, case_nums=range(1001,1008))
-    run_ann_input(in_fname, case_nums=range(1007,1008))
+    # in_fname = "./input/ann_config_lathypcub_v4_dsm2.yaml"
+    # run_ann_input(in_fname, case_nums=range(1,108))
