@@ -75,8 +75,8 @@ model_config:
   
 - model_input: suisgate
   dss_file: gates_dss
-  unit_part: UNSPECIF
-  get_parts_from_csv: data_out/MTZSL_markov_pert_v1.csv #v2 not necessary this is just for the pathnames in the column headers
+  unit_part: und
+  get_parts_from_csv: data_out/suisun_gates_lhc_v4/MTZSL_markov_pert_head.csv #v2 not necessary this is just for the pathnames in the column headers
 
 - model_input: tide
   dss_file: hist_dss

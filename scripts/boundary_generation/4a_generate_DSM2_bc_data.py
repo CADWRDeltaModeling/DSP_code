@@ -124,7 +124,7 @@ def create_perturbations(row, pert_vars):
     return perturbations
 
 
-def create_dsm2_bcs(in_fname, dsm2_config_fname, skip=0):
+def create_dsm2_bcs(in_fname, dsm2_config_fname, skip=0, end=np.inf):
     with open(in_fname, 'r') as f:
         # loader = RawLoader(stream)
         inputs = schism_yaml.load(f)
@@ -150,7 +150,7 @@ def create_dsm2_bcs(in_fname, dsm2_config_fname, skip=0):
                                       'end':'case_end'}, inplace=True)
             case_file['perturbations'] = case_file.apply(create_perturbations, axis=1, args=(pert_vars,))
         
-            case_items = case_file.iloc[skip:].copy() # this behaves the same as if the cases are defined in a yaml
+            case_items = case_file.iloc[skip:min(end,case_file.index[-1])].copy() # this behaves the same as if the cases are defined in a yaml
         else:
             # make into pd.DataFrame
             case_df = pd.DataFrame(columns=list(case_items[0].keys()))
@@ -308,17 +308,29 @@ def create_dsm2_bcs(in_fname, dsm2_config_fname, skip=0):
                 else:
                     model_input = configs[pdict['model_input']]
                     if 'get_parts_from_csv' in model_input.keys():
-                        in_df = pd.read_csv(
-                            model_input['get_parts_from_csv'], parse_dates=[0], index_col=[0])
+                        head_df = pd.read_csv(
+                            model_input['get_parts_from_csv']) # this is only for the header
+                        in_df = pd.read_csv(pdict['args']['file'], index_col=[0], parse_dates=[0]) # where the actual data will come from
 
-                        for cpath in in_df.columns:
+                        for i, cpath in enumerate(head_df.columns):
                             path_parts = cpath.split("/")
                             primary_part = path_parts[2]
                             in_dss = locals()[model_input.get('dss_file')]
                             pathname = get_pathname(
                                 in_dss, primary_part, path_parts[3], e_part=path_parts[5], f_part=path_parts[6])[0]
                             unit_part = model_input.get('unit_part')
-                            ts_df = in_df[[cpath]].copy()
+                            if 'read_dss' in model_input.keys():
+                                ts_dss = model_input['read_dss'].format(**locals())
+                                pathread = get_pathname(ts_dss, primary_part, path_parts[3])[0]
+                                with pyhecdss.DSSFile(ts_dss) as d:
+                                    ts_df, units, ptype = d.read_its(pathread)
+                            else:
+                                ts_df = in_df.iloc[:,i].copy()
+
+                            if 'Timestamp' not in str(type(ts_df.index[0])):
+                                ts_df.index = ts_df.index.to_timestamp()
+                            if 'Series' in str(type(ts_df)):
+                                ts_df = ts_df.to_frame()
                             ts_df.columns = ['Modified']
 
                             paths_out = update_DSS(pdict, case_dir, crange, in_dss, out_dss, pathname,
@@ -368,10 +380,12 @@ def create_dsm2_bcs(in_fname, dsm2_config_fname, skip=0):
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    # in_fname = "./input/lathypcub_v4_setup.yaml"
-    # dsm2_config_fname = "./input/lathypcub_v4_dsm2_config.yaml"
+    in_fname = "./input/lathypcub_v4_setup.yaml"
+    dsm2_config_fname = "./input/lathypcub_v4_dsm2_config.yaml"
 
-    in_fname = "./input/lathypcub_v3_setup.yaml"
-    dsm2_config_fname = "./input/lathypcub_v3_dsm2_config.yaml"
+    # in_fname = "./input/lathypcub_v3_setup.yaml"
+    # dsm2_config_fname = "./input/lathypcub_v3_dsm2_config.yaml"
 
-    create_dsm2_bcs(in_fname, dsm2_config_fname, skip=0)
+    create_dsm2_bcs(in_fname, dsm2_config_fname, skip=0) # end = np.inf
+
+    print("NOW YOU NEED TO RUN EC GENERATOR, INP FILES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
