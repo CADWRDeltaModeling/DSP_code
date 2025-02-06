@@ -83,6 +83,8 @@ def create_dsm2_inps(in_fname, dsm2_config_fname):
             for case in case_items:
                 case_df = pd.concat([case_df, pd.DataFrame.from_dict([case])], ignore_index=True)
             case_items = case_df
+            case_items['case_start'] = pd.to_datetime(case_items['case_start'])
+            case_items['case_end'] = pd.to_datetime(case_items['case_end'])
 
 
     with open(dsm2_config_fname, 'r') as f:
