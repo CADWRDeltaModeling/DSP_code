@@ -209,10 +209,9 @@ meshes:
 
 cases:
 - lhc_1
-- lhc_2
-- lhc_3
-- lhc_4
-- lhc_5
-- lhc_6
-- lhc_7
-- mss_2021
+# - lhc_2
+# - lhc_3
+# - lhc_4
+# - lhc_5
+# - lhc_6
+# - lhc_7

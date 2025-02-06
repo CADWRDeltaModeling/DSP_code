@@ -568,12 +568,16 @@ if __name__ == '__main__':
     #     annbc = ANNBCECGen(in_fname, model_type="SCHISM")
     #     annbc.get_meshcase_inouts('baseline', case)
 
-    # in_fname = "./input/pull_output_lathypcub_v3_schism.yaml"
+    in_fname = "./input/pull_output_lathypcub_v3_schism.yaml"
 
-    # for case in range(1, 8):
-    #     print(f"\n\n\t\t---------  Runnning Case {case} ----------")
-    #     annbc = ANNBCECGen(in_fname, model_type="SCHISM")
-    #     annbc.get_meshcase_inouts('baseline', case)
+    for case in range(1, 8):
+        print(f"\n\n\t\t---------  Runnning Case {case} ----------")
+        annbc = ANNBCECGen(in_fname, model_type="SCHISM")
+        annbc.get_meshcase_inouts('baseline', case)
+    for case in range(1, 8):
+        print(f"\n\n\t\t---------  Runnning Case {case} ----------")
+        annbc = ANNBCECGen(in_fname, model_type="SCHISM")
+        annbc.get_meshcase_inouts('suisun', case)
 
     in_fname = "./input/pull_output_mss_schism.yaml"
 

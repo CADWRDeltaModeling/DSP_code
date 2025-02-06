@@ -1,13 +1,12 @@
 # Define Environmental Variables  ---------------------------------------------------------------
 # env_vars are used to populate the rest of the variables below
 env_vars: 
-- dsp_home: /scratch/tomkovic/DSP_code # where the main folder of this project is (HPC4)
 - bds_home: /home/tomkovic/BayDeltaSCHISM # where the BayDeltaSCHISM repository is housed
 - experiment: lhc_v3 # name of folder to look inside of test_file for azure setup
-- schism_out_dir: '{dsp_home}/scripts/post-processing/data_out/schism_{experiment}' # where the SCHISM data comes from
-- out_dir: '{dsp_home}/scripts/ann_training/data_out/schism_{experiment}'
-- x2_dir: '{dsp_home}/scripts/x2/data_out'
-- evap_dir: '{dsp_home}/scripts/evap/data_out'
+- schism_out_dir: '../../scripts/post-processing/data_out/schism_{experiment}' # where the SCHISM data comes from
+- out_dir: '../../../casanntra/data'
+- x2_dir: '../../scripts/x2/data_out'
+- evap_dir: '../../scripts/evap/data_out'
 
 csv_indx_fmt: '{schism_out_dir}/{mesh}_{case_name}.csv'
 model: SCHISM
@@ -39,7 +38,7 @@ in_vars:
 
 - ann_colname: exports # Exports according to Malinda
   csv_file: '{schism_out_dir}/{mesh}_{case_name}.csv'
-  unit_conv: 35.3147
+  unit_conv: -35.3147
   csv_header: Exports Combined In [cms]
 
 - ann_colname: delta_cu
@@ -49,8 +48,8 @@ in_vars:
 
 - ann_colname: ndo
   csv_file: '{schism_out_dir}/{mesh}_{case_name}.csv'
-  unit_conv: 35.3147
-  csv_header: martinez Out [cms]
+  unit_conv: -35.3147
+  csv_header: Net Delta Outflow In [cms]
 
 - ann_colname: dcc # Delta_X according to Malinda
   csv_file: '{schism_out_dir}/{mesh}_{case_name}.csv'
@@ -70,6 +69,11 @@ in_vars:
   csv_file: '{schism_out_dir}/{mesh}_{case_name}.csv'
   unit_conv: 1 # none handled conversion in gather_schism_output.py
   csv_header: SF Tidal Energy Out
+
+- ann_colname: sf_tidal_filter # new variable (no CalSim standard)
+  csv_file: '{schism_out_dir}/{mesh}_{case_name}.csv'
+  unit_conv: 1 # none handled conversion in gather_schism_output.py
+  csv_header: SF Tidal Filter Out
 
 - ann_colname: x2
   csv_file: '{x2_dir}/x2_ts_bay_sac_{mesh}_{case_name}.csv'
@@ -127,7 +131,10 @@ out_ec_locs:
     - vol # SUISUN SL NEAR VOLANTI SL
     - tss # SLTRM004-THREE MILE SLOUGH NR SAN JOAQUIN R
     - sss # SSS-STEAMBOAT SL
-    # - mtz # Martinez_input_dup
+    - tms # Threemile slough near Sacramento River
+    - anh # Antioch
+    - cse
+    # - mtz # montezuma
     # - anc # Antioch_dup
     # - wci # CCFB_Intake_dup
     # - cll # Collinsville_dup
@@ -138,7 +145,12 @@ out_ec_locs:
     - oh4 # Old_River_Hwy_4
     - rsl  # CCWD_Rock
     - vcu # CCWD_Victoria_dup
-    - mtz # Martinez_input
+    - mtz # montezuma
+    - god # Godfather II on Suisun Slough
+    - gzl # grizzly Bay
+    - frk # Franks Tract, Mid Tract
+    - bac # Old River at Bacon Island
+    - hol # Holland Cut near Bethel Island
 - csv_headers: 
     - trp z=-0.5 EC Out [psu] # CHDMC006-CVP INTAKE
     - wci z=-0.5 EC Out [psu] # CHSWP003-CCFB_INTAKE
@@ -147,9 +159,9 @@ out_ec_locs:
     - rsl z=-0.5 EC Out [psu] # ROLD024-OLD RIVER AT BACON ISLAND
     - old z=-0.5 EC Out [psu] # ROLD059-OLD RIVER AT TRACY BLVD
     - pct z=-0.5 EC Out [psu] # RSAC064-SACRAMENTO R AT PORT CHICAGO
-    - mal_upper WSE Out [m NAVD88] # RSAC075-MALLARDISLAND
+    - mal z=-1.0 EC Out [psu] # RSAC075-MALLARDISLAND
     - cll z=-0.5 EC Out [psu] # RSAC081-COLLINSVILLE
-    - emm2_upper WSE Out [m NAVD88] # RSAC092-EMMATON
+    - emm2 z=-0.5 EC Out [psu] # RSAC092-EMMATON
     - srv z=-0.5 EC Out [psu] # RSAC101-SACRAMENTO R AT RIO VISTA
     - anc z=-0.5 EC Out [psu] # RSAN007-ANTIOCH
     - jer z=-0.5 EC Out [psu] # RSAN018-JERSEYPOINT
@@ -165,6 +177,9 @@ out_ec_locs:
     - vol z=-0.5 EC Out [psu] # SUISUN SL NEAR VOLANTI SL
     - tss z=-0.5 EC Out [psu] # SLTRM004-THREE MILE SLOUGH NR SAN JOAQUIN R
     - sss z=-0.5 EC Out [psu] # SSS-STEAMBOAT SL
+    - tms z=-0.5 EC Out [psu] # Threemile slough near Sacramento River
+    - anh z=-1.0 EC Out [psu]
+    - cse z=-0.5 EC Out [psu]
     # - mtz z=-0.5 EC Out [psu] # Martinez_input_dup
     # - anc z=-0.5 EC Out [psu] # Antioch_dup
     # - wci z=-0.5 EC Out [psu] # CCFB_Intake_dup
@@ -176,7 +191,12 @@ out_ec_locs:
     - oh4 z=-0.5 EC Out [psu] # Old_River_Hwy_4
     - rsl z=-0.5 EC Out [psu]  # CCWD_Rock
     - vcu z=-0.5 EC Out [psu] # CCWD_Victoria_dup
-    - mtz z=-0.5 EC Out [psu] # Martinez_input
+    - mtz z=-0.5 EC Out [psu] # montezuma
+    - god z=-0.5 EC Out [psu] # Godfather II on Suisun Slough
+    - gzl z=-0.5 EC Out [psu] # grizzly Bay
+    - frk z=-0.5 EC Out [psu] # Franks Tract, Mid Tract
+    - bac z=-0.5 EC Out [psu] # Old River at Bacon Island
+    - hol z=-0.5 EC Out [psu] # Holland Cut near Bethel Island
 
 # Model Meshes ----------------------------------------------------------------------------------
 
@@ -188,10 +208,4 @@ meshes:
 # Model Cases -----------------------------------------------------------------------------------
 
 cases:
-- lhc_1
-- lhc_2
-- lhc_3
-- lhc_4
-- lhc_5
-- lhc_6
-- lhc_7
+- lhc_2021
