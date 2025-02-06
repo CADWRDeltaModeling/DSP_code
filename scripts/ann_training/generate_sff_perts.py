@@ -13,6 +13,8 @@ import re
 
 import matplotlib.pyplot as plt
 
+import time
+
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # shifted subtide
@@ -63,8 +65,17 @@ sf_raw_ts = sf_raw_ts.resample('15min').ffill()
 sf_raw_ts.index.freq = pd.infer_freq(sf_raw_ts.index)
 
 # load lhc_v4
-# lhc_fn = "../boundary_generation/data_out/lhc_v4.csv"
-lhc_fn = "../boundary_generation/data_out/lhc_v3.csv"
+# lhc_fn = "../boundary_generation/data_out/lhc_v3.csv"
+# case_nums = range(1001,1008)
+# case_nums = [1001]
+
+lhc_fn = "../boundary_generation/data_out/lhc_v4.csv"
+# case_nums=range(1,108)
+case_nums=range(107,108)
+# case_nums=[5,12,17,21,27,33,34,41,42,44,48,49,50,55,70,71,72,73,75,78,82,88,89,98,99] # shifted - 50d cases
+# case_nums=[55,70,71,72,73,75,78,82,88,89,98,99]
+
+run_wait = False
 lhc_df = pd.read_csv(lhc_fn)
 
 # casanntra dir
@@ -76,7 +87,7 @@ reg_out_df = calc_filt_nrg(sf_raw_ts)
 
 # Shifted - 50d
 shift_minus50_df = shift_ts(sf_raw_ts, -50, 'shift-50')
-shift_minus50_out_df = calc_filt_nrg(shift_minus50_df)
+shift_minus50_df = calc_filt_nrg(shift_minus50_df)
 
 # Shifted + 100d
 shift_plus100_df = shift_ts(sf_raw_ts, 100, 'shift+100')
@@ -121,7 +132,7 @@ subtide_pert_shift_minus7_df = shift_subtide(sf_subtide_pert, -7, 'stage')
 subtide_pert_shift_minus7_df = calc_filt_nrg(subtide_pert_shift_minus7_df)
 
 col_order = ['model','scene','case',
-             'sac_flow','sjr_flow','exports','cu_flow','ndo',
+             'northern_flow','sac_flow','sjr_flow','exports','cu_flow','ndo',
              'dcc','smscg',
              'vern_ec',
              'mrz_tidal_energy','mrz_tidal_filter',
@@ -135,45 +146,56 @@ col_order = ['model','scene','case',
 
 # now write those into dsm2 dataframes
 for index, row in lhc_df.iterrows():
-    print(row['case'])
     case_num = re.search(r'(\d+)$', row['case']).group(1)
+    if int(case_num) in case_nums:
+        print(row['case'])
+        casanntra_casefile = os.path.join(cas_dir, csv_fmt.format(case_num=case_num))
 
-    casanntra_casefile = os.path.join(cas_dir, csv_fmt.format(case_num=case_num))
-    cdf = pd.read_csv(casanntra_casefile,
-                      parse_dates=[0],
-                      index_col=0)
-    
-    if 'sf_tidal_filter' in cdf.columns:
-        cdf.drop(columns=['sf_tidal_filter','sf_tidal_energy'], inplace=True)
-    
-    if row['tide'] == 'Shifted + 100d':
-        merge_df = pd.merge(cdf, shift_plus100_df.loc[cdf.index[0]:cdf.index[-1]], left_index=True, right_index=True, how='outer')
+        # to run this in parallel with ongoing/overnight check if the model is finished running
+        if run_wait:
+            next_ann_fn = casanntra_casefile.replace(f'_{case_num}', f'_{int(case_num)+1}')
+            while not os.path.exists(next_ann_fn):
+                print(f"Waiting for file {next_ann_fn} to appear so that case {case_num} is done...")
+                time.sleep(120)  # Wait for 30 seconds before checking again
 
-    elif row['tide'] == 'Subtidal Pert':
-        merge_df = pd.merge(cdf, subtide_pert_df.loc[cdf.index[0]:cdf.index[-1]], left_index=True, right_index=True, how='outer')
+            print(f"File {next_ann_fn} is now available! Post-processing model results for case {case_num}")
         
-    elif row['tide'] == 'Regular':
-        merge_df = pd.merge(cdf, reg_out_df.loc[cdf.index[0]:cdf.index[-1]], left_index=True, right_index=True, how='outer')
+        cdf = pd.read_csv(casanntra_casefile,
+                        parse_dates=[0],
+                        index_col=0)
         
-    elif row['tide'] == 'Shifted - 50d':
-        merge_df = pd.merge(cdf, shift_minus50_df.loc[cdf.index[0]:cdf.index[-1]], left_index=True, right_index=True, how='outer')
         
-    elif row['tide'] == 'Shifted Subtide + 7 days':
-        merge_df = pd.merge(cdf, shift_subtide_minus7_df.loc[cdf.index[0]:cdf.index[-1]], left_index=True, right_index=True, how='outer')
+        if 'sf_tidal_filter' in cdf.columns:
+            cdf.drop(columns=['sf_tidal_filter','sf_tidal_energy'], inplace=True)
         
-    elif row['tide'] == 'Shifted Subtide - 7 days':
-        merge_df = pd.merge(cdf, shift_subtide_plus7_df.loc[cdf.index[0]:cdf.index[-1]], left_index=True, right_index=True, how='outer')
-        
-    elif row['tide'] == 'Subtidal Pert + Shifted Subtide + 7 days':
-        merge_df = pd.merge(cdf, subtide_pert_shift_plus7_df.loc[cdf.index[0]:cdf.index[-1]], left_index=True, right_index=True, how='outer')
-        
-    elif row['tide'] == 'Subtidal Pert + Shifted Subtide - 7 days':
-        merge_df = pd.merge(cdf, subtide_pert_shift_minus7_df.loc[cdf.index[0]:cdf.index[-1]], left_index=True, right_index=True, how='outer')
+        if row['tide'] == 'Shifted + 100d':
+            merge_df = pd.merge(cdf, shift_plus100_df.loc[cdf.index[0]:cdf.index[-1]], left_index=True, right_index=True, how='outer')
 
-    else:
-        print("NO METHOD")
-        
-    merge_df = merge_df[[col for col in col_order if col in merge_df.columns]]
-    if isinstance(merge_df.index, pd.DatetimeIndex):
-        merge_df.index = merge_df.index.to_period('D')
-    merge_df.to_csv(casanntra_casefile, float_format="%.2f", index=True, index_label='datetime')
+        elif row['tide'] == 'Subtidal Pert':
+            merge_df = pd.merge(cdf, subtide_pert_df.loc[cdf.index[0]:cdf.index[-1]], left_index=True, right_index=True, how='outer')
+            
+        elif row['tide'] == 'Regular':
+            merge_df = pd.merge(cdf, reg_out_df.loc[cdf.index[0]:cdf.index[-1]], left_index=True, right_index=True, how='outer')
+            
+        elif row['tide'] == 'Shifted - 50d':
+            merge_df = pd.merge(cdf, shift_minus50_df.loc[cdf.index[0]:cdf.index[-1]], left_index=True, right_index=True, how='outer')
+            
+        elif row['tide'] == 'Shifted Subtide + 7 days':
+            merge_df = pd.merge(cdf, shift_subtide_minus7_df.loc[cdf.index[0]:cdf.index[-1]], left_index=True, right_index=True, how='outer')
+            
+        elif row['tide'] == 'Shifted Subtide - 7 days':
+            merge_df = pd.merge(cdf, shift_subtide_plus7_df.loc[cdf.index[0]:cdf.index[-1]], left_index=True, right_index=True, how='outer')
+            
+        elif row['tide'] == 'Subtidal Pert + Shifted Subtide + 7 days':
+            merge_df = pd.merge(cdf, subtide_pert_shift_plus7_df.loc[cdf.index[0]:cdf.index[-1]], left_index=True, right_index=True, how='outer')
+            
+        elif row['tide'] == 'Subtidal Pert + Shifted Subtide - 7 days':
+            merge_df = pd.merge(cdf, subtide_pert_shift_minus7_df.loc[cdf.index[0]:cdf.index[-1]], left_index=True, right_index=True, how='outer')
+
+        else:
+            print("NO METHOD")
+            
+        merge_df = merge_df[[col for col in col_order if col in merge_df.columns]]
+        if isinstance(merge_df.index, pd.DatetimeIndex):
+            merge_df.index = merge_df.index.to_period('D')
+        merge_df.to_csv(casanntra_casefile, float_format="%.2f", index=True, index_label='datetime')

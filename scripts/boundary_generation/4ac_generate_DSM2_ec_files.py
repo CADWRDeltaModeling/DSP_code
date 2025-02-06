@@ -17,6 +17,8 @@ import string
 import datetime as dt
 import os
 
+import time
+
 
 class SafeDict(dict):
     def __missing__(self, key):
@@ -135,7 +137,7 @@ def create_perturbations(row, pert_vars):
     return perturbations
 
 
-def create_dsm2_ec_est(in_fname, dsm2_config_fname, write_dss=True, skip=0):
+def create_dsm2_ec_est(in_fname, dsm2_config_fname, write_dss=True, skip=0, run_wait=False):
     with open(in_fname, 'r') as f:
         # loader = RawLoader(stream)
         inputs = schism_yaml.load(f)
@@ -201,6 +203,15 @@ def create_dsm2_ec_est(in_fname, dsm2_config_fname, write_dss=True, skip=0):
         flow_filename = os.path.normpath(os.path.join(os.getcwd(),config.getAttr('BNDRYINPUT'))).replace("\\", "/")
         dcd_filename = os.path.normpath(os.path.join(os.getcwd(),config.getAttr('DICUFILE'))).replace("\\", "/")
 
+        if run_wait:
+            next_hist_fn = flow_filename.replace(f'lhc_{index+1}_hist', f'lhc_{index+2}_hist')
+            while not os.path.exists(next_hist_fn):
+                print(f"Waiting for file {next_hist_fn} to appear so that case {index+1} is done...")
+                time.sleep(120)  # Wait for 30 seconds before checking again
+
+            print(f"File {next_hist_fn} is now available! Generating estimated model boundary EC for case {index+1}")
+
+
         df_ndo = calc_ndo(flow_filename, dcd_filename)
         # df_ndo.index = pd.to_datetime(df_ndo.index)
 
@@ -250,12 +261,12 @@ def create_dsm2_ec_est(in_fname, dsm2_config_fname, write_dss=True, skip=0):
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    # in_fname = "./input/lathypcub_v4_setup.yaml"
-    # dsm2_config_fname = "./input/lathypcub_v4_dsm2_config.yaml"
-    # skip_cases = 1000
+    in_fname = "./input/lathypcub_v4_setup.yaml"
+    dsm2_config_fname = "./input/lathypcub_v4_dsm2_config.yaml"
+    skip_cases = 106
 
-    in_fname = "./input/lathypcub_v3_setup.yaml"
-    dsm2_config_fname = "./input/lathypcub_v3_dsm2_config.yaml"
-    skip_cases = 0
+    # in_fname = "./input/lathypcub_v3_setup.yaml"
+    # dsm2_config_fname = "./input/lathypcub_v3_dsm2_config.yaml"
+    # skip_cases = 0
 
     create_dsm2_ec_est(in_fname, dsm2_config_fname, skip=skip_cases)

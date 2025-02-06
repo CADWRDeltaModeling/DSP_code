@@ -214,7 +214,7 @@ def calc_x2(dss_file, names):
     return x2_df
     
 
-def run_ann_input(in_fname, case_nums=range(0,9999)):
+def run_ann_input(in_fname, case_nums=range(0,9999), run_wait=False):
 
     with open(in_fname, 'r') as f:
         # loader = RawLoader(stream)
@@ -230,7 +230,7 @@ def run_ann_input(in_fname, case_nums=range(0,9999)):
     
                  
     col_order = ['model','scene','case',
-                 'sac_flow','sjr_flow','exports','cu_flow','ndo',
+                 'northern_flow','sac_flow','sjr_flow','exports','cu_flow','ndo',
                  'dcc','smscg',
                  'vern_ec','mrz_tidal_energy','mrz_tidal_filter',
                  'anc','anh','bac','bdl','bdt','bet','cll','cse',
@@ -271,12 +271,14 @@ def run_ann_input(in_fname, case_nums=range(0,9999)):
             casanntra_folder = inputs.get('casanntra_folder').format(**locals())
             dcd_dss_file = inputs.get('dcd_dss_file').format(**locals())
 
-            # # to run this in parallel with ongoing/overnight check if the model is finished running
-            # while not os.path.exists(model_x2_ec_file):
-            #     print(f"Waiting for file {model_x2_ec_file} to appear...")
-            #     time.sleep(120)  # Wait for 30 seconds before checking again
+            # to run this in parallel with ongoing/overnight check if the model is finished running
+            if run_wait:
+                next_hydro_fn = model_ec_file.replace(f'lhc_{case_num}_EC', f'lhc_{int(case_num)+1}_FLOW')
+                while not os.path.exists(next_hydro_fn):
+                    print(f"Waiting for file {next_hydro_fn} to appear so that case {case_num} is done...")
+                    time.sleep(120)  # Wait for 30 seconds before checking again
 
-            # print(f"File {model_x2_ec_file} is now available! Post-processing model results")
+                print(f"File {next_hydro_fn} is now available! Post-processing model results for case {case_num}")
 
             # calculate x2
             case_x2 = calc_x2(model_x2_ec_file, x2_names) # takes a while
@@ -304,8 +306,10 @@ if __name__ == '__main__':
     from schimpy import schism_yaml
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
-    in_fname = "./input/ann_config_lathypcub_v3_dsm2.yaml"
-    run_ann_input(in_fname, case_nums=range(1001,1008))
+    # in_fname = "./input/ann_config_lathypcub_v3_dsm2.yaml"
+    # run_ann_input(in_fname, case_nums=range(1001,1008))
+    # run_ann_input(in_fname, case_nums=range(1001,1002))
 
-    # in_fname = "./input/ann_config_lathypcub_v4_dsm2.yaml"
-    # run_ann_input(in_fname, case_nums=range(1,108))
+    in_fname = "./input/ann_config_lathypcub_v4_dsm2.yaml"
+    run_ann_input(in_fname, case_nums=range(107,108))
+    
