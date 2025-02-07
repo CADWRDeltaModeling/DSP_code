@@ -3,6 +3,7 @@ import pandas as pd
 import os
 import string
 import re
+import numpy as np
 
 from vtools.functions.unit_conversions import psu_ec_25c
 
@@ -133,6 +134,7 @@ def schism_to_ann_csv(in_fname, mesh, mesh_outname):
         cases = inputs.get('cases')
         for case_num in cases:
             case_name = case_num  # f'lhc_{case_num}'
+            print(case_name)
             case_number = re.findall(r"\d+", case_num)[0]
             # uses this csv just to get the datetime indices for the other variables and to get EC outputs
             csv_indx_fmt = string.Formatter().vformat(inputs.get('csv_indx_fmt'), (),
@@ -157,8 +159,7 @@ def schism_to_ann_csv(in_fname, mesh, mesh_outname):
                                                                                 **locals()}))))
                 var_df = var_df_daily.loc[:, csv_header]
                 if isinstance(unit_conv, list):
-                    unit_dict = build_dict(unit_conv)
-                    var_df = var_df.replace(unit_dict)
+                    var_df.loc[:] = np.interp(var_df.values,unit_conv[0], unit_conv[1])
                 else:
                     var_df = var_df * unit_conv
                 var_df.columns = ann_colname
@@ -195,14 +196,14 @@ if __name__ == '__main__':
     from schimpy import schism_yaml
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    # in_fname = "./input/ann_csv_config_lathypcub_v3_schism.yaml"
-    # mesh = 'suisun'
-    # mesh_outname = 'suisun'
-    # schism_to_ann_csv(in_fname, mesh, mesh_outname)
+    in_fname = "./input/ann_csv_config_lathypcub_v3_schism.yaml"
+    mesh = 'baseline'
+    mesh_outname = 'base'
+    schism_to_ann_csv(in_fname, mesh, mesh_outname)
 
-    # mesh = 'baseline'
-    # mesh_outname = 'base'
-    # schism_to_ann_csv(in_fname, mesh, mesh_outname)
+    mesh = 'suisun'
+    mesh_outname = 'suisun'
+    schism_to_ann_csv(in_fname, mesh, mesh_outname)
 
     in_fname = "./input/ann_csv_config_lathypcub_v3_mss_schism.yaml"
     mesh = 'baseline'

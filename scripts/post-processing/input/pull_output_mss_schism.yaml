@@ -115,7 +115,7 @@ in_vars:
     - '{dcc_file}'
   th_header: '{bds_home}/data/time_history/delta_cross_channel.th' # use this to get the headers to match the inputs
   inputs:
-    - op_up # this is what will consider the operation of the gate (1=Open, 0=Closed)
+    - height # this is what will consider the operation of the gate (1=Open, 0=Closed)
   method: read_single_column_th
 
 # Suisun Marsh Salinity Control Gate schedule (if used in the restoration scenarios) (definitely double check this one!)

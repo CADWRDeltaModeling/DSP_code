@@ -54,15 +54,15 @@ in_vars:
 - ann_colname: dcc # Delta_X according to Malinda
   csv_file: '{schism_out_dir}/{mesh}_{case_name}.csv'
   unit_conv: 
-    - 10: 1 # open
-    - 0: 0 # closed
+    - [0, 10] # closed, open
+    - [0, 1] # closed, open
   csv_header: DCC Gate In
 
 - ann_colname: smscg # SMSCG according to Malinda
   csv_file: '{schism_out_dir}/{mesh}_{case_name}.csv'
   unit_conv: 
-    - 0: 1  # tidally operate
-    - 1: 0  # open
+    - [0, 1] # tidally operate, open
+    - [1, 0] # tidally operate, open
   csv_header: Suisun Radial opup In
 
 - ann_colname: sf_tidal_energy # new variable (no CalSim standard)
