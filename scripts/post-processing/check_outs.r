@@ -40,6 +40,28 @@ for (case in cases) {
 x2_ndo_df$case <- as.factor(x2_ndo_df$case)
 
 
+# Load obs data -----------------------------------------------------------
+
+obs_stas<- c("des_bdl", "des_cse", "ncro_emm2","usbr_jer", "dwr_rsl")
+obs_label <- c("bdl", "cse", "emm2", "jer", "rsl")
+
+for (s in seq(1,length(obs_stas))) {
+  df <- read.csv(paste0("./data_out/",obs_stas[s],"_obs_ec_1990_2025.csv"))
+  df$datetime <- lubridate::ymd_hms(df$datetime)
+  df <- df %>%
+    mutate(datetime = as.Date(datetime)) %>%  # Extract the date
+    group_by(datetime) %>%                    # Group by date
+    summarise(!!sym(obs_label[s]) := mean(value, na.rm = TRUE))
+  df <- melt(df, id.vars=c("datetime"))
+  
+  if (s==1) {
+    obs_df <- df
+  } else {
+    obs_df <- rbind(obs_df, df)
+  }
+}
+
+
 # Plot NDO ----------------------------------------------------------------
 
 
@@ -180,7 +202,6 @@ dsm2_cases <- seq(1001,1007)
 for (case in dsm2_cases) {
   df <- read.csv(paste0(casanntra.dir,'/dsm2_base_',case,'.csv'))
   df$datetime <- lubridate::ymd(df$datetime)
-  df <- df[, setdiff(names(df), "northern_flow")]
   
   if (case==1001) {
     dsm2_df <- df
@@ -190,20 +211,27 @@ for (case in dsm2_cases) {
 }
 
 compare_std <- c("datetime", "model", "scene", "case")
-compare_flux <- c("sac_flow", "sjr_flow", "exports", "ndo", "cu_flow")
+compare_flux <- c("northern_flow", "sjr_flow", "exports", "cu_flow", "ndo")
 compare_tide <- c("sf_tidal_energy","sf_tidal_filter")
 compare_x2 <- c("x2")
 compare_gates <- c("smscg","dcc")
-compare_ec <- c('emm2','rsl','jer','bdl','cse') #,'anh','mal','vcu','wci','tms','anh','cll')
+compare_ec <- c('bdl','emm2','rsl','jer','cse') #,'anh','mal','vcu','wci','tms','anh','cll')
 #c("trp", "wci", "vcu", "uni", "rsl", "old", "pct", "mal", "cll", "emm2", "srv", "anc", "jer", "sal", "ppt", "rri2", "bdt", "lps", "snc", "dsj", "bdl", "nsl2", "vol", "tss", "sss", "tms", "anh", "oh4", "rsl.1", "vcu.1", "mtz")
 all_vars <- c(compare_std, compare_flux, compare_tide, 
+              compare_x2, compare_gates, compare_ec)
+plt_vars <- c(compare_flux, compare_tide, 
               compare_x2, compare_gates, compare_ec)
 
 dsm2_df <- dsm2_df[,names(dsm2_df) %in% all_vars]
 sch_df <- sch_df[,names(sch_df) %in% all_vars]
 comb.df <- rbind(dsm2_df, sch_df)
 comb.df <- melt(comb.df, id.vars=compare_std)
+comb.df$variable <- factor(comb.df$variable, levels=plt_vars)
 
+plt.obs.df <- obs_df
+plt.obs.df$model <- 'Observed'
+plt.obs.df$scene <- 'base'
+plt.obs.df$case <- NA
 
 compare_cases <- seq(1001,1007)
 
@@ -211,11 +239,18 @@ for (case in compare_cases) {
   
   # plot
   plt.df <- comb.df[comb.df$case == case, ]
+  plt.df <- rbind(plt.df, plt.obs.df[plt.obs.df$datetime >= 
+                                       min(plt.df$datetime) & 
+                                       plt.obs.df$datetime <= 
+                                       max(plt.df$datetime), ])
+  plt.df$model <- factor(plt.df$model, levels=c('Observed','dsm2','SCHISM'))
   
   plt <- ggplot(data=plt.df) + 
     geom_line(aes(x=datetime, y=value, color=model)) +
     facet_wrap(~variable, ncol=2, scales='free_y') +
     scale_x_date(date_breaks = "6 month", date_labels = "%b-%Y", expand=c(0,0)) +
+    scale_color_manual(values=c("black", "#377EB8", "#E41A1C"),
+                       breaks=c("Observed","dsm2","SCHISM")) +
     theme(text=element_text(size=12),
           axis.text.x = element_text(angle=90),
           panel.border=element_rect(colour = "black", fill=NA, linewidth=0.5),
