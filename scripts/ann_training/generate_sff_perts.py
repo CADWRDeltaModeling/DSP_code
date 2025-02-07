@@ -167,8 +167,11 @@ reg_filt_df.columns = ['mrz','sf']
 reg_filt_df = reg_filt_df.dropna()
 model = LinearRegression() # create linreg model
 model.fit(reg_filt_df[['mrz']], reg_filt_df[['sf']]) # Fit Linear Regression
+print("======Tidal Filter Linear Regression Statistics=========")
 r_squared = model.score(reg_filt_df[['mrz']], reg_filt_df[['sf']])
 print(f"R² value: {r_squared:.4f}")
+print(f"intercept value: {model.intercept_[0]:.4f}")
+print(f"Coefficient/Scaling value: {model.coef_[0][0]:.4f}")
 
 pred_filt_df = pd.DataFrame(index=mrz_15min_filt.index)
 pred_filt_df['sf_pred'] = model.predict(mrz_15min_filt[['mrz']])
@@ -218,8 +221,11 @@ reg_nrg_df.columns = ['sf_harm','sf_obs']
 reg_nrg_df = reg_nrg_df.dropna()
 model = LinearRegression() # create linreg model
 model.fit(reg_nrg_df[['sf_harm']], reg_nrg_df[['sf_obs']]) # Fit Linear Regression
+print("======Tidal Energy Linear Regression Statistics=========")
 r_squared = model.score(reg_nrg_df[['sf_harm']], reg_nrg_df[['sf_obs']])
 print(f"R² value: {r_squared:.4f}")
+print(f"intercept value: {model.intercept_[0]:.4f}")
+print(f"Coefficient/Scaling value: {model.coef_[0][0]:.4f}")
 
 pred_nrg_df = pd.DataFrame(index=sf_harm_nrg.index)
 pred_nrg_df['sf_pred'] = model.predict(sf_harm_nrg[['sf_harm']])
