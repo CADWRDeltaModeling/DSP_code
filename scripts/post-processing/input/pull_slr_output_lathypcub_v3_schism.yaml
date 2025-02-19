@@ -7,13 +7,15 @@ env_vars: # env_vars are used to populate the rest of the variables below
 - schism_dir: '{dsp_home}/model/schism'
 - exp_dir: '{schism_dir}/azure_dsp_2024_{experiment}'
 - common_dir: '{exp_dir}'
-- mc_dir: '{exp_dir}/slr_simulations/{mesh}_lhc_{case_num}'
+- mc_dir: '{exp_dir}/slr_simulations/{mesh}_slr_lhc_{case_num}'
 
 mod_th_dict: '{meshcase_dir}/mod_th_dict_lhc_{case_num}.yaml'
 
 out_dir: '{dsp_home}/scripts/post-processing/data_out/schism_slr_{experiment}' # where the ANN-ready data will go
 
-station_in: '{exp_dir}/station.in'
+case_setup: '{dsp_home}/scripts/boundary_generation/input/lathypcub_v3_setup.yaml'
+
+station_in: '{mc_dir}/station.in'
 flux_in: '{exp_dir}/flow_station_xsects.yaml'
 
 # Input Variables to the ANN ==========================================================================
@@ -25,12 +27,22 @@ in_vars:
     - '{flux_file}'
   th_header: '{bds_home}/data/time_history/flux.th' # use this to get the headers to match the inputs
   inputs:
-    - sac # Sacramento River - RSAC155
+    - sac # Sacramento River - RSAC155 (Sacramento component)
+    - american # American River -RSAC155 (American component)
     - yolo # Yolo Bypass
     - yolo_toedrain # Yolo Toe Drain - BYOLO040
     - east # Mokelumne/Cosumnes - RMKL070 & RCSM075
     - calaveras # Calaveras - RCAL009
     - -northbay # North Bay Aqueduct (negative) -  SLBAR002
+  method: read_multiple_column_th
+
+- name: Yolo In [cms] #{'RSAC155': hist_dss_file, 'BYOLO040': hist_dss_file, 'RMKL070': hist_dss_file, 'RCSM075': hist_dss_file, 'RCAL009': hist_dss_file, 'SLBAR002': hist_dss_file}
+  th_files: 
+    - '{flux_file}'
+  th_header: '{bds_home}/data/time_history/flux.th' # use this to get the headers to match the inputs
+  inputs:
+    - yolo # Yolo Bypass
+    - yolo_toedrain # Yolo Toe Drain - BYOLO040
   method: read_multiple_column_th
 
 # Sacramento and San Joaquin Inflow.  Compare daily (or weekly) average time series from boundary inflows.
@@ -49,6 +61,15 @@ in_vars:
   th_header: '{bds_home}/data/time_history/flux.th' # use this to get the headers to match the inputs
   inputs:
     - sjr
+  method: read_single_column_th
+
+# Calaveras Inflow.  Compare daily (or weekly) average time series from boundary inflows.
+- name: calaveras In [cms]
+  th_files: 
+    - '{flux_file}'
+  th_header: '{bds_home}/data/time_history/flux.th' # use this to get the headers to match the inputs
+  inputs:
+    - calaveras # Calaveras - RCAL009
   method: read_single_column_th
 
 # ANN
@@ -94,41 +115,95 @@ in_vars:
     - '{dcc_file}'
   th_header: '{bds_home}/data/time_history/delta_cross_channel.th' # use this to get the headers to match the inputs
   inputs:
-    - op_up # this is what will consider the operation of the gate (1=Open, 0=Closed)
+    - height # this is what will consider the operation of the gate (1=Open, 0=Closed)
   method: read_single_column_th
 
 # Suisun Marsh Salinity Control Gate schedule (if used in the restoration scenarios) (definitely double check this one!)
-- name: Suisun Gate In
+- name: Suisun Boatlock In
   th_files: 
-    - '{smscg_file}'
+    - '{smscg_boatlock_file}'
+  th_header: '{bds_home}/data/time_history/montezuma_boat_lock.th' # use this to get the headers to match the inputs
+  inputs:
+    - op_up # this is what will consider the operation of the gate (1=Open, 0=Tidally Operated)
+  method: read_single_column_th
+
+# Suisun Marsh Salinity Control Gate schedule (if used in the restoration scenarios) (definitely double check this one!)
+- name: Suisun Radial opdown In
+  th_files: 
+    - '{smscg_radial_file}'
+  th_header: '{bds_home}/data/time_history/montezuma_radial.th' # use this to get the headers to match the inputs
+  inputs:
+    - op_down # this is what will consider the operation of the gate (1=Open, 0=Tidally Operated)
+  method: read_single_column_th
+
+# Suisun Marsh Salinity Control Gate schedule (if used in the restoration scenarios) (definitely double check this one!)
+- name: Suisun Radial opup In
+  th_files: 
+    - '{smscg_radial_file}'
   th_header: '{bds_home}/data/time_history/montezuma_radial.th' # use this to get the headers to match the inputs
   inputs:
     - op_up # this is what will consider the operation of the gate (1=Open, 0=Tidally Operated)
   method: read_single_column_th
 
+  # Suisun Marsh Salinity Control Gate schedule (if used in the restoration scenarios) (definitely double check this one!)
+- name: Suisun Flashboard In
+  th_files: 
+    - '{smscg_flashboard_file}'
+  th_header: '{bds_home}/data/time_history/montezuma_flash.th' # use this to get the headers to match the inputs
+  inputs:
+    - op_up # this is what will consider the operation of the gate (1=Open, 0=Tidally Operated)
+  method: read_single_column_th
+
 # ANN
-- name: Net Delta CU In [cms] # daily (DIV+SEEP-DRAIN) for DCD and SMCD 
+- name: Delta CU In [cms] # daily (DIV+SEEP-DRAIN) for DCD and SMCD 
   th_files: 
     - '{vsource_file}'
     - '{vsink_file}'
+  th_header: '{bds_home}/data/channel_depletion/v{ss_type}_dated.th' # use this to get the headers to match the inputs
   method: calc_dcu
+  source_sink_search: delta
 
 # ANN
-- name: Tidal Energy In
+- name: Suisun CU In [cms] # daily (DIV+SEEP-DRAIN) for DCD and SMCD 
+  th_files: 
+    - '{vsource_file}'
+    - '{vsink_file}'
+  th_header: '{bds_home}/data/channel_depletion/v{ss_type}_dated.th' # use this to get the headers to match the inputs
+  method: calc_dcu
+  source_sink_search: suisun
+
+# ANN
+- name: SF Tidal Energy Out
   station_output: '{meshcase_dir}/outputs/staout_1'
   loc:
     - sffpx # San Francisco
   method: calc_tidal_energy
 
+  # ANN
+- name: SF Tidal Filter Out
+  station_output: '{meshcase_dir}/outputs/staout_1'
+  loc:
+    - sffpx # San Francisco
+  method: calc_tidal_filter
+
+
 # intermediate for NDO
-- name: Other Flux In [cms]
+- name: american in [cms]
   th_files: 
     - '{flux_file}'
   th_header: '{bds_home}/data/time_history/flux.th' # use this to get the headers to match the inputs
   inputs:
     - american 
+  method: read_single_column_th
+
+  # intermediate for NDO
+- name: napa in [cms]
+  th_files: 
+    - '{flux_file}'
+  th_header: '{bds_home}/data/time_history/flux.th' # use this to get the headers to match the inputs
+  inputs:
     - napa 
-  method: read_multiple_column_th
+  method: read_single_column_th
 
 # South Delta temporary barriers schedule (if used in the restoration scenarios)
 - name: Grantline Barrier In
@@ -142,8 +217,8 @@ in_vars:
 # South Delta temporary barriers schedule (if used in the restoration scenarios)
 - name: Old River Barrier In
   th_files: 
-    - '{meshcase_dir}/oldr_head_barrier.th'
-  th_header: '{bds_home}/data/time_history/oldr_head_barrier.th' # use this to get the headers to match the inputs
+    - '{meshcase_dir}/oldr_tracy_weir.th'
+  th_header: '{bds_home}/data/time_history/oldr_tracy_weir.th' # use this to get the headers to match the inputs
   inputs:
     - install # TODO: determine the appropriate header and condition to evaluate for barrier operation
   method: read_single_column_th
@@ -151,17 +226,17 @@ in_vars:
 # Combined inputs ===================================================================================
 comb_in_vars:
 # Net Delta Outflow at Martinez.  Compare daily (or weekly) average time series based on summation of all boundary conditions.
+# RMA:  (Sac, SJR, Yolo Bypass, Mokelumne, Cosumnes, Calaveras), exports (SWP, CVP, Contra Costa, NBA) and net DICU
 - name: Net Delta Outflow In [cms]
   vars:
-    - Other Flux In [cms]
-    - Net Delta CU In [cms]
+    - Delta CU In [cms]
     - Exports Combined In [cms]
     - sjr In [cms]
     - Northern Flow In [cms]
 
 # Output Variables to the ANN =========================================================================
 
-station_output: '{meshcase_dir}/outputs/staout_6'
+station_output: '{meshcase_dir}/outputs/staout_{stanum}'
 param_clinic: '{meshcase_dir}/param.nml.clinic'
 
 # ANN
@@ -169,7 +244,7 @@ out_vars:
 - name: EC Out [psu]
   locs:
   # CalSim Stations -----------------------------------------
-  - emm2 #'RSAC101' Sacramento River at Emmaton
+  - emm2 #'RSAC092' Sacramento River at Emmaton
   - rsl # 'ROLD024' Rock Slough at Old River
   - jer # 'RSAN018' Jersey point
   - cll # 'RSAC081' Collinsville
@@ -195,24 +270,33 @@ out_vars:
   - bet # 'BET' Piper Slough at Bethal Tract
   - ibs # 'IBS' Cordelia Slough at Ibis club
   - gys # 'GYS' Goodyear Slough at Morrow Island club
-  # - uni # 'OLD_MID' Old River near Middle River
-  # - old # 'ROLD059' Old River at Tracy Blvd 
-  # - cse # 'RSAC081' Sacramento River at Collinsville 
-  # - rri2 # 'RSAN058' Rough and Ready Island
-  # - bdt # 'RSAN072' San Joaquin River at Brandt Bridge
-  # - lps # 'RSMKL008' Little Potato Slough at Terminous 
-  # - snc # 'SLCBN002' Chadbourne Slough at Sunrise Duck Club 
-  # - tss # 'SLTRM004' Threemile Slough near San Joaquin River 
-  # - sss # 'SSS' Steamboat Slough btw Sacramento R and Sutter Sl 
+  - ver # 'VER' Vernalis
+  - anh # 'ANH' Antioch
+  # Needed for ANN .xlsx  -------------------------------
+  - uni # 'OLD_MID' Old River near Middle River
+  - old # 'ROLD059' Old River at Tracy Blvd 
+  - cse # 'RSAC081' Sacramento River at Collinsville 
+  - rri2 # 'RSAN058' Rough and Ready Island
+  - bdt # 'RSAN072' San Joaquin River at Brandt Bridge
+  - lps # 'RSMKL008' Little Potato Slough at Terminous 
+  - snc # 'SLCBN002' Chadbourne Slough at Sunrise Duck Club 
+  - tss # 'SLTRM004' Threemile Slough near San Joaquin River 
+  - sss # 'SSS' Steamboat Slough btw Sacramento R and Sutter Sl 
   # - carqb # Carquinez Strait at Carquinez Bridge near Crockett
   # Stations not in DSM2 ------------------------------------
   # - inb # 'SLRCK005' CWD Rock Slough PP
   - mdm # 'MDM' Middle R at Middle River
+  - sffpx
   # Additional stations of curiousity
-  - mtz # 'MTZ' Martinez ------------------------------------
+  - mtz # 'MTZ' Montezuma ------------------------------------
   - carqb # 'CARQB' Carquinez Strait at Carquinez Bridge
   - gzm # Grizzly Bay at Head of Montezuma Slough
   - msl # Montezuma Slough at Roaring River
+  - god # Godfather II on Suisun Slough
+  - gzl # grizzly Bay
+  - frk # Franks Tract, Mid Tract
+  - bac # Old River at Bacon Island
+  - hol # Holland Cut near Bethel Island
   method: assign_multiple_ec
 
 # Rio Vista, Emmaton and Jersey Point.  Compare tidally average time series from cross section flow computed at salinity monitoring locations.
@@ -234,6 +318,20 @@ out_vars:
   flux_output: '{meshcase_dir}/outputs/flux.out'
   loc:
     - martinez # Martinez
+  method: read_single_flux
+
+# DCC gate operations.  Compare tidally averaged time series through the cross channel
+- name: dlc Out [cms]
+  flux_output: '{meshcase_dir}/outputs/flux.out'
+  loc:
+    - dlc # Delta Cross Channel
+  method: read_single_flux
+
+# DCC gate operations.  Compare tidally averaged time series through the cross channel
+- name: dlc Out [cms]
+  flux_output: '{meshcase_dir}/outputs/flux.out'
+  loc:
+    - dlc # Delta Cross Channel
   method: read_single_flux
 
 # DCC gate operations.  Compare tidally averaged time series through the cross channel
@@ -275,7 +373,7 @@ out_vars:
 - name: WSE Out [m NAVD88]
   locs:
   # CalSim Stations -----------------------------------------
-  - emm2 #'RSAC101' Sacramento River at Emmaton
+  - emm2 #'RSAC092' Sacramento River at Emmaton
   - rsl # 'ROLD024' Rock Slough at Old River
   - jer # 'RSAN018' Jersey point
   - cll # 'RSAC081' Collinsville
@@ -301,19 +399,21 @@ out_vars:
   - bet # 'BET' Piper Slough at Bethal Tract
   - ibs # 'IBS' Cordelia Slough at Ibis club
   - gys # 'GYS' Goodyear Slough at Morrow Island club
-  # - uni # 'OLD_MID' Old River near Middle River
-  # - old # 'ROLD059' Old River at Tracy Blvd 
+  - ver # 'VER' Vernalis
+  - uni # 'OLD_MID' Old River near Middle River
+  - old # 'ROLD059' Old River at Tracy Blvd 
   # - cse # 'RSAC081' Sacramento River at Collinsville 
-  # - rri2 # 'RSAN058' Rough and Ready Island
-  # - bdt # 'RSAN072' San Joaquin River at Brandt Bridge
-  # - lps # 'RSMKL008' Little Potato Slough at Terminous 
-  # - snc # 'SLCBN002' Chadbourne Slough at Sunrise Duck Club 
-  # - tss # 'SLTRM004' Threemile Slough near San Joaquin River 
-  # - sss # 'SSS' Steamboat Slough btw Sacramento R and Sutter Sl 
+  - rri2 # 'RSAN058' Rough and Ready Island
+  - bdt # 'RSAN072' San Joaquin River at Brandt Bridge
+  - lps # 'RSMKL008' Little Potato Slough at Terminous 
+  - snc # 'SLCBN002' Chadbourne Slough at Sunrise Duck Club 
+  - tss # 'SLTRM004' Threemile Slough near San Joaquin River 
+  - sss # 'SSS' Steamboat Slough btw Sacramento R and Sutter Sl 
   # - carqb # Carquinez Strait at Carquinez Bridge near Crockett
   # Stations not in DSM2 ------------------------------------
-  # - inb # 'SLRCK005' CWD Rock Slough PP
+  - inb # 'SLRCK005' CWD Rock Slough PP
   - mdm # 'MDM' Middle R at Middle River
+  - sffpx
   # Additional stations of curiousity
   - mtz # 'MTZ' Martinez ------------------------------------
   - carqb # 'CARQB' Carquinez Strait at Carquinez Bridge

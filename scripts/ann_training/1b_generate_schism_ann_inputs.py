@@ -196,16 +196,21 @@ if __name__ == '__main__':
     from schimpy import schism_yaml
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    in_fname = "./input/ann_csv_config_lathypcub_v3_schism.yaml"
-    mesh = 'baseline'
-    mesh_outname = 'base'
-    schism_to_ann_csv(in_fname, mesh, mesh_outname)
+    # in_fname = "./input/ann_csv_config_lathypcub_v3_schism.yaml"
+    # mesh = 'baseline'
+    # mesh_outname = 'base'
+    # schism_to_ann_csv(in_fname, mesh, mesh_outname)
 
-    mesh = 'suisun'
-    mesh_outname = 'suisun'
-    schism_to_ann_csv(in_fname, mesh, mesh_outname)
+    # mesh = 'suisun'
+    # mesh_outname = 'suisun'
+    # schism_to_ann_csv(in_fname, mesh, mesh_outname)
 
-    in_fname = "./input/ann_csv_config_lathypcub_v3_mss_schism.yaml"
+    # in_fname = "./input/ann_csv_config_lathypcub_v3_mss_schism.yaml"
+    # mesh = 'baseline'
+    # mesh_outname = 'base'
+    # schism_to_ann_csv(in_fname, mesh, mesh_outname)
+    
+    in_fname = "./input/ann_csv_config_lathypcub_v3_schism_slr.yaml"
     mesh = 'baseline'
-    mesh_outname = 'base'
+    mesh_outname = 'slr_base'
     schism_to_ann_csv(in_fname, mesh, mesh_outname)
