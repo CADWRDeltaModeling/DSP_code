@@ -307,6 +307,7 @@ out_vars:
   - frk # Franks Tract, Mid Tract
   - bac # Old River at Bacon Island
   - hol # Holland Cut near Bethel Island
+  - ori # Old River - Clifton Court Forebay Intake
   method: assign_multiple_ec
 
 # Rio Vista, Emmaton and Jersey Point.  Compare tidally average time series from cross section flow computed at salinity monitoring locations.

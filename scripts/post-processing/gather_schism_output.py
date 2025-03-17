@@ -645,13 +645,6 @@ if __name__ == "__main__":
 
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    in_fname = "./input/pull_slr_output_lathypcub_v3_schism.yaml"
-
-    for case in range(1, 8):
-        annbc = ANNBCECGen(in_fname, model_type="SCHISM")
-        print(f"Gathering case {case} ===========================================")
-        annbc.get_meshcase_inouts("baseline", case)
-
     in_fname = "./input/pull_output_lathypcub_v3_schism.yaml"
 
     for case in range(1, 8):
@@ -662,13 +655,20 @@ if __name__ == "__main__":
         print(f"\n\n\t\t---------  Runnning Case {case} ----------")
         annbc = ANNBCECGen(in_fname, model_type="SCHISM")
         annbc.get_meshcase_inouts("suisun", case)
-    # for case in range(1, 8):
-    #     print(f"\n\n\t\t---------  Runnning Case {case} ----------")
-    #     annbc = ANNBCECGen(in_fname, model_type="SCHISM")
-    #     annbc.get_meshcase_inouts("franks", case)
+    for case in range(1, 8):
+        print(f"\n\n\t\t---------  Runnning Case {case} ----------")
+        annbc = ANNBCECGen(in_fname, model_type="SCHISM")
+        annbc.get_meshcase_inouts("franks", case)
 
     in_fname = "./input/pull_output_mss_schism.yaml"
 
     print(f"\n\n\t\t---------  Runnning MSS ----------")
     annbc = ANNBCECGen(in_fname, model_type="SCHISM")
     annbc.get_meshcase_inouts("baseline", 2021)
+
+    in_fname = "./input/pull_slr_output_lathypcub_v3_schism.yaml"
+
+    for case in range(1, 8):
+        annbc = ANNBCECGen(in_fname, model_type="SCHISM")
+        print(f"Gathering case {case} ===========================================")
+        annbc.get_meshcase_inouts("baseline", case)

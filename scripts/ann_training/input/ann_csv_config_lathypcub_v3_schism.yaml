@@ -151,6 +151,7 @@ out_ec_locs:
     - frk # Franks Tract, Mid Tract
     - bac # Old River at Bacon Island
     - hol # Holland Cut near Bethel Island
+    - ori # Old River - Clifton Court Forebay Intake
 - csv_headers: 
     - trp z=-0.5 EC Out [psu] # CHDMC006-CVP INTAKE
     - wci z=-0.5 EC Out [psu] # CHSWP003-CCFB_INTAKE
@@ -197,6 +198,7 @@ out_ec_locs:
     - frk z=-0.5 EC Out [psu] # Franks Tract, Mid Tract
     - bac z=-0.5 EC Out [psu] # Old River at Bacon Island
     - hol z=-0.5 EC Out [psu] # Holland Cut near Bethel Island
+    - ori z=-0.5 EC Out [psu] # Old River - Clifton Court Forebay Intake
 
 # Model Meshes ----------------------------------------------------------------------------------
 
