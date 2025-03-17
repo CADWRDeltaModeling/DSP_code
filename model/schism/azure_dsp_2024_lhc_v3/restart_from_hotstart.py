@@ -46,6 +46,7 @@ class rst_fm_hotstart(object):
         mmatches = re.findall("TIME STEP=\s+(\d+);", str(mirrortail))
 
         self.crash_timestep = int(max(mmatches))
+        print(f"crash_timestep = self.crash_timestep")
 
     def get_last_hotstart(self):
 
@@ -53,15 +54,19 @@ class rst_fm_hotstart(object):
 
         # hotstart files are written as hotstart_[process_id]_[time_step].nc
         self.last_hotstart = str(int(num_timesteps))
+        print(f"last_hotstart = self.last_hotstart")
 
     def combine_hotstart(self, iteration, machine='hpc5', printout=False):
         
         os.chdir('outputs')
         if machine.lower()=='hpc5':
             modld = f'module purge; module load intel/2024.0 hmpt/2.29 hdf5/1.14.3 netcdf-c/4.9.2 netcdf-fortran/4.6.1 schism/5.11.1; '
+        elif machine.lower()=='hpc4':
+            modld = f'module purge; module load intel/2024.1 hmpt/2.30 hdf5/1.14.3 netcdf-c/4.9.2 netcdf-fortran/4.6.1 schism/5.11.1; ulimit -s unlimited; '
         else:
             modld = ''
         command = f'{modld}combine_hotstart7 --iteration {iteration}'
+        print(command)
 
         ret = subprocess.run(command, capture_output=True, shell=True)
         os.chdir('../')
