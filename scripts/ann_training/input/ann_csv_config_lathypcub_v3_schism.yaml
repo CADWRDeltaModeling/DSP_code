@@ -101,7 +101,7 @@ comb_vars:
     - delta_cu
     - evap_delta
   mult:
-    - -1 # consider use as positive
+    - 1 # consider use as positive
     - 1 # consider evaporation as positive
 
 out_ec_locs:
