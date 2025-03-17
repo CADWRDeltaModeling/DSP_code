@@ -28,7 +28,7 @@ in_vars:
   th_header: '{bds_home}/data/time_history/flux.th' # use this to get the headers to match the inputs
   inputs:
     - sac # Sacramento River - RSAC155 (Sacramento component)
-    - american # American River -RSAC155 (American component)
+    - american # American River - (American component)
     - yolo # Yolo Bypass
     - yolo_toedrain # Yolo Toe Drain - BYOLO040
     - east # Mokelumne/Cosumnes - RMKL070 & RCSM075
@@ -53,6 +53,16 @@ in_vars:
   inputs:
     - sac # Sacramento River - RSAC155
   method: read_single_column_th
+
+# Sacramento River at I St (includes American)
+- name: sac ist In [cms]
+  th_files: 
+    - '{flux_file}'
+  th_header: '{bds_home}/data/time_history/flux.th' # use this to get the headers to match the inputs
+  inputs:
+    - sac # Sacramento River - RSAC155
+    - american # American River - (American component)
+  method: read_multiple_column_th
 
 # Sacramento and San Joaquin Inflow.  Compare daily (or weekly) average time series from boundary inflows.
 - name: sjr In [cms]
@@ -434,6 +444,7 @@ meshes:
 - suisun
 - suisun_basebc
 - cache
+- franks
 
 # Model Cases =====================================================================================
 

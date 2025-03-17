@@ -29,7 +29,7 @@ in_vars:
 - ann_colname: sac_flow # Northern Flow according to Malinda
   csv_file: '{schism_out_dir}/{mesh}_{case_name}.csv'
   unit_conv: -35.3147
-  csv_header: sac In [cms]
+  csv_header: sac ist In [cms]
 
 - ann_colname: sjr_flow # SJR flow according to Malinda
   csv_file: '{schism_out_dir}/{mesh}_{case_name}.csv'
@@ -38,12 +38,12 @@ in_vars:
 
 - ann_colname: exports # Exports according to Malinda
   csv_file: '{schism_out_dir}/{mesh}_{case_name}.csv'
-  unit_conv: -35.3147
+  unit_conv: 35.3147
   csv_header: Exports Combined In [cms]
 
 - ann_colname: delta_cu
   csv_file: '{schism_out_dir}/{mesh}_{case_name}.csv'
-  unit_conv: 35.3147
+  unit_conv: -35.3147
   csv_header: Delta CU In [cms]
 
 - ann_colname: ndo
@@ -204,6 +204,7 @@ meshes:
 - baseline
 - suisun
 - cache
+- franks
 
 # Model Cases -----------------------------------------------------------------------------------
 
