@@ -15,18 +15,15 @@ import os
 
 def create_arg_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--path_out2d', default=None, type=Path,
-                        help='')
-    parser.add_argument('--path_polygons', default=None,  type=Path,
-                        help='')
-    parser.add_argument('--polygon_domain', default=None,  type=str,
-                        help='')
+    parser.add_argument("--path_out2d", default=None, type=Path, help="")
+    parser.add_argument("--path_polygons", default=None, type=Path, help="")
+    parser.add_argument("--polygon_domain", default=None, type=str, help="")
     return parser
 
 
-def extract_evap_daily(path_out2d, path_polygons, poly_ids,
-                       varname="evaporationRate",
-                       chunks={"time": 12}):
+def extract_evap_daily(
+    path_out2d, path_polygons, poly_ids, varname="evaporationRate", chunks={"time": 12}
+):
 
     # Read the out2d files and catalog number
     ds_out2d = xr.open_mfdataset(
@@ -38,7 +35,7 @@ def extract_evap_daily(path_out2d, path_polygons, poly_ids,
         coords="minimal",
         compat="override",
     ).astype(np.float64)
-    match = re.search(r'out2d_(\d+)\.nc', str(path_out2d))
+    match = re.search(r"out2d_(\d+)\.nc", str(path_out2d))
 
     if match:
         num_file = match.group(1)
@@ -46,7 +43,14 @@ def extract_evap_daily(path_out2d, path_polygons, poly_ids,
     # Create a grid object
     grid = sx.open_grid(path_out2d, chunks=chunks)
     # Create a dataset for the variable
-    sxds = sx.read_schism_nc(grid, ds_out2d[[varname,]],)
+    sxds = sx.read_schism_nc(
+        grid,
+        ds_out2d[
+            [
+                varname,
+            ]
+        ],
+    )
 
     # Read polygons from a shapefile
     gdf = gpd.read_file(path_polygons)
@@ -75,18 +79,19 @@ def extract_evap_daily(path_out2d, path_polygons, poly_ids,
         da_out = da_integrated.sum(dim="n_face") * kg_to_cfs
         # add 8 hours to timestamps there's an 8-hr shift issue from xarray converting to UTC.
         # SCHISM has time information attached so xarray shifts by 8 hours
-        da_out["time"] = da_out.time + pd.to_timedelta(8, 'h')
+        da_out["time"] = da_out.time + pd.to_timedelta(8, "h")
 
         # calculate daily average water evaporation cfs per day by averageing da_out over time (use xarray)
-        da_out_mean = da_out.resample(time='1D', closed='right').mean()
+        da_out_mean = da_out.resample(time="1D", closed="right").mean()
         # print(da_out_mean)
         out_df = da_out_mean.to_dataframe()
         out_df = out_df.head(1)
         # print(out_df)
 
         # write da_out
-        out_fn = os.path.join(os.path.dirname(
-            path_polygons), f'evap_{poly}_{num_file}.csv')
+        out_fn = os.path.join(
+            os.path.dirname(path_polygons), f"evap_{poly}_{num_file}.csv"
+        )
         print(out_fn)
         out_df.to_csv(out_fn, float_format="%.1f")
 
@@ -99,13 +104,28 @@ def main():
     polygon_domain = args.polygon_domain
 
     # Polygon Name options
-    polygon_dict = {'all': ['legal_delta', 'suisun_bay', 'grizzly_restoration',
-                            'prospect_restoration', 'lookout_restoration', 'egbert_restoration', 'full_domain'],
-                    'baseline': ['legal_delta', 'suisun_bay', 'full_domain'],
-                    'suisun': ['legal_delta', 'suisun_bay',
-                               'grizzly_restoration', 'full_domain'],
-                    'cache': ['legal_delta', 'suisun_bay', 'prospect_restoration',
-                              'lookout_restoration', 'egbert_restoration', 'full_domain']}
+    polygon_dict = {
+        "all": [
+            "legal_delta",
+            "suisun_bay",
+            "grizzly_restoration",
+            "prospect_restoration",
+            "lookout_restoration",
+            "egbert_restoration",
+            "full_domain",
+        ],
+        "baseline": ["legal_delta", "suisun_bay", "full_domain"],
+        "franks": ["legal_delta", "suisun_bay", "full_domain"],
+        "suisun": ["legal_delta", "suisun_bay", "grizzly_restoration", "full_domain"],
+        "cache": [
+            "legal_delta",
+            "suisun_bay",
+            "prospect_restoration",
+            "lookout_restoration",
+            "egbert_restoration",
+            "full_domain",
+        ],
+    }
 
     poly_ids = polygon_dict[polygon_domain]
 
