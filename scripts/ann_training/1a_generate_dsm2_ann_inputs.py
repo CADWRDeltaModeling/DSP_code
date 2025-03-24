@@ -250,7 +250,7 @@ def run_ann_input(in_fname, case_nums=range(0,9999), run_wait=False):
                      'x2']
 
     x2_csv_infile = inputs.get('x2_csv_infile').format(**locals())
-    x2_names = pd.read_csv(x2_csv_infile, comment='#')
+    x2_names = pd.read_csv(x2_csv_infile, comment='#', header=0, skiprows=1)
     x2_names = x2_names['distance'].tolist()[::10] # only use every 10 columns out of the ~1000
 
     case_setup = pd.read_csv(inputs.get('case_setup'))
@@ -273,12 +273,15 @@ def run_ann_input(in_fname, case_nums=range(0,9999), run_wait=False):
 
             # to run this in parallel with ongoing/overnight check if the model is finished running
             if run_wait:
-                next_hydro_fn = model_ec_file.replace(f'lhc_{case_num}_EC', f'lhc_{int(case_num)+1}_FLOW')
-                while not os.path.exists(next_hydro_fn):
-                    print(f"Waiting for file {next_hydro_fn} to appear so that case {case_num} is done...")
-                    time.sleep(120)  # Wait for 30 seconds before checking again
-
-                print(f"File {next_hydro_fn} is now available! Post-processing model results for case {case_num}")
+                if index != case_setup.index[-1]:
+                    next_hydro_fn = model_ec_file.replace(f'lhc_{case_num}_EC', f'lhc_{int(case_num)+1}_FLOW')
+                    while not os.path.exists(next_hydro_fn):
+                        print(f"Waiting for file {next_hydro_fn} to appear so that case {case_num} is done...")
+                        time.sleep(120)  # Wait for 120 seconds before checking again
+                    print(f"File {next_hydro_fn} is now available! Post-processing model results for case {case_num}")
+                else:
+                    print(f"Last case, waiting 5 minutes to finish")
+                    time.sleep(60*5)
 
             # calculate x2
             case_x2 = calc_x2(model_x2_ec_file, x2_names) # takes a while
@@ -306,10 +309,10 @@ if __name__ == '__main__':
     from schimpy import schism_yaml
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
-    # in_fname = "./input/ann_config_lathypcub_v3_dsm2.yaml"
-    # run_ann_input(in_fname, case_nums=range(1001,1008))
+    in_fname = "./input/ann_config_lathypcub_v3_dsm2.yaml"
+    run_ann_input(in_fname, case_nums=range(1001,1008), run_wait=True)
     # run_ann_input(in_fname, case_nums=range(1001,1002))
 
-    in_fname = "./input/ann_config_lathypcub_v4_dsm2.yaml"
-    run_ann_input(in_fname, case_nums=range(107,108))
+    # in_fname = "./input/ann_config_lathypcub_v4_dsm2.yaml"
+    # run_ann_input(in_fname, case_nums=range(107,108))
     
