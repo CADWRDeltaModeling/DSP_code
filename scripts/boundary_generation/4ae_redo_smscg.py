@@ -206,8 +206,15 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # schism_to_dsm2(cases, th_in, dss_fn_in, dss_fn_out)
 
+# ## DSM2 - RADIAL FROM-TO fix
+# cases = range(1,108)
+# dss_fn_in = "../../model/dsm2/DSP_DSM2_202412/latinhypercube_v4/timeseries/old_gates/{cname}_gates.dss"
+# dss_fn_out = "../../model/dsm2/DSP_DSM2_202412/latinhypercube_v4/timeseries/{cname}_gates.dss"
+# dsm2_smscg_from_to(cases, dss_fn_in, dss_fn_out)
+
 ## DSM2 - RADIAL FROM-TO fix
-cases = range(1,108)
-dss_fn_in = "../../model/dsm2/DSP_DSM2_202412/latinhypercube_v4/timeseries/old_gates/{cname}_gates.dss"
-dss_fn_out = "../../model/dsm2/DSP_DSM2_202412/latinhypercube_v4/timeseries/{cname}_gates.dss"
+cases = range(1,8)
+dss_fn_in = "../../model/dsm2/DSP_DSM2_202307/latinhypercube_v3/timeseries/old_gates/{cname}_gates.dss"
+dss_fn_out = "../../model/dsm2/DSP_DSM2_202307/latinhypercube_v3/timeseries/{cname}_gates.dss"
 dsm2_smscg_from_to(cases, dss_fn_in, dss_fn_out)
+
