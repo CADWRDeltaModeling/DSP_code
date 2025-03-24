@@ -4,8 +4,8 @@
 #source /opt/intel/parallel_studio_xe_2019_update1/parallel_studio_xe_2019.1.053/bin/psxevars.sh ia32
 
 ulimit -s unlimited
-RUNHYDRO=hydro #"/home/tomkovic/dsm2_repo/dsm2/BUILD/hydro"
-RUNQUAL=qual #"/home/tomkovic/dsm2_repo/dsm2/BUILD/qual"
+RUNHYDRO=D:/dsm2/DSM2v822/bin/hydro
+RUNQUAL=D:/dsm2/DSM2v822/bin/qual
 EXPERIMENT="latinhypercube"
 NUMEXPS=7
 
