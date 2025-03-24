@@ -309,7 +309,7 @@ def create_dsm2_bcs(in_fname, dsm2_config_fname, skip=0, end=np.inf):
                     model_input = configs[pdict['model_input']]
                     if 'get_parts_from_csv' in model_input.keys():
                         head_df = pd.read_csv(
-                            model_input['get_parts_from_csv']) # this is only for the header
+                            model_input['get_parts_from_csv'], index_col=[0]) # this is only for the header
                         in_df = pd.read_csv(pdict['args']['file'], index_col=[0], parse_dates=[0]) # where the actual data will come from
 
                         for i, cpath in enumerate(head_df.columns):
@@ -380,12 +380,12 @@ def create_dsm2_bcs(in_fname, dsm2_config_fname, skip=0, end=np.inf):
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    in_fname = "./input/lathypcub_v4_setup.yaml"
-    dsm2_config_fname = "./input/lathypcub_v4_dsm2_config.yaml"
+    # in_fname = "./input/lathypcub_v4_setup.yaml"
+    # dsm2_config_fname = "./input/lathypcub_v4_dsm2_config.yaml"
 
-    # in_fname = "./input/lathypcub_v3_setup.yaml"
-    # dsm2_config_fname = "./input/lathypcub_v3_dsm2_config.yaml"
+    in_fname = "./input/lathypcub_v3_setup.yaml"
+    dsm2_config_fname = "./input/lathypcub_v3_dsm2_config.yaml"
 
     create_dsm2_bcs(in_fname, dsm2_config_fname, skip=0) # end = np.inf
 
-    print("NOW YOU NEED TO RUN EC GENERATOR, INP FILES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    print("NOW YOU NEED TO RUN EC GENERATOR, SMSCG REDO, INP FILES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
