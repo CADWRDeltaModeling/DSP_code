@@ -280,6 +280,7 @@ def generate_ann_inputs(
         "ibs",
         "jer",
         "mal",
+        "mrz",
         "mtz",
         "nsl2",
         "obi",
@@ -399,6 +400,7 @@ def run_ann_input(in_fname, case_nums=range(0, 9999), run_wait=False):
         "ibs",
         "jer",
         "mal",
+        "mrz",
         "mtz",
         "nsl2",
         "obi",
@@ -450,6 +452,7 @@ def run_ann_input(in_fname, case_nums=range(0, 9999), run_wait=False):
         "ibs",
         "jer",
         "mal",
+        "mrz",
         "mtz",
         "nsl2",
         "obi",
@@ -565,5 +568,5 @@ if __name__ == "__main__":
     run_ann_input(in_fname, case_nums=range(1001, 1008), run_wait=True)
     # run_ann_input(in_fname, case_nums=range(1001,1002))
 
-    # in_fname = "./input/ann_config_lathypcub_v4_dsm2.yaml"
-    # run_ann_input(in_fname, case_nums=range(107,108))
+    in_fname = "./input/ann_config_lathypcub_v4_dsm2.yaml"
+    run_ann_input(in_fname, case_nums=range(100, 108))
