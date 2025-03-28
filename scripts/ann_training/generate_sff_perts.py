@@ -548,18 +548,23 @@ for index, row in lhc_df.iterrows():
 
         # to run this in parallel with ongoing/overnight check if the model is finished running
         if run_wait:
-            next_ann_fn = casanntra_casefile.replace(
-                f"_{case_num}", f"_{int(case_num)+1}"
-            )
-            while not os.path.exists(next_ann_fn):
-                print(
-                    f"Waiting for file {next_ann_fn} to appear so that case {case_num} is done..."
+            if index != case_setup.index[-1]:
+                next_ann_fn = casanntra_casefile.replace(
+                    f"_{case_num}", f"_{int(case_num)+1}"
                 )
-                time.sleep(120)  # Wait for 30 seconds before checking again
+                while not os.path.exists(next_ann_fn):
+                    print(
+                        f"Waiting for file {next_ann_fn} to appear so that case {case_num} is done..."
+                    )
+                    time.sleep(120)  # Wait for 30 seconds before checking again
 
-            print(
-                f"File {next_ann_fn} is now available! Post-processing model results for case {case_num}"
-            )
+                print(
+                    f"File {next_ann_fn} is now available! Post-processing model results for case {case_num}"
+                )
+
+            else:
+                print(f"Last case, waiting 5 minutes to finish")
+                time.sleep(60 * 5)
 
         cdf = pd.read_csv(casanntra_casefile, parse_dates=[0], index_col=0)
 
