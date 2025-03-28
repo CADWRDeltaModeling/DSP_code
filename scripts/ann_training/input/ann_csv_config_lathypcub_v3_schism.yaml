@@ -134,7 +134,7 @@ out_ec_locs:
     - tms # Threemile slough near Sacramento River
     - anh # Antioch
     - cse
-    # - mtz # montezuma
+    - mrz # Martinez
     # - anc # Antioch_dup
     # - wci # CCFB_Intake_dup
     # - cll # Collinsville_dup
@@ -181,7 +181,7 @@ out_ec_locs:
     - tms z=-0.5 EC Out [psu] # Threemile slough near Sacramento River
     - anh z=-1.0 EC Out [psu]
     - cse z=-0.5 EC Out [psu]
-    # - mtz z=-0.5 EC Out [psu] # Martinez_input_dup
+    - mrz z=-1.0 EC Out [psu] # Martinez
     # - anc z=-0.5 EC Out [psu] # Antioch_dup
     # - wci z=-0.5 EC Out [psu] # CCFB_Intake_dup
     # - cll z=-0.5 EC Out [psu] # Collinsville_dup
