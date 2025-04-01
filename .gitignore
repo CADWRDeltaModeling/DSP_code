@@ -32,7 +32,8 @@ scripts/post-processing/**/*.html
 
 # ignore plots
 scripts/post-processing/**/*.png
-scripts/post-processing/plots/*
+scripts/post-processing/plots/
+scripts/**/plots/*
 
 # ignore post-processing outputs for now
 scripts/evap/**/*.csv
