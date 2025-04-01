@@ -501,6 +501,7 @@ col_order = [
     "ibs",
     "jer",
     "mal",
+    "mrz",
     "mtz",
     "nsl2",
     "obi",
@@ -530,7 +531,7 @@ case_nums = range(1001, 1008)
 
 # # load lhc_v4
 # lhc_fn = "../boundary_generation/data_out/lhc_v4.csv"
-# case_nums=range(1,108)
+# case_nums = range(106, 108)
 
 run_wait = False
 
@@ -548,7 +549,8 @@ for index, row in lhc_df.iterrows():
 
         # to run this in parallel with ongoing/overnight check if the model is finished running
         if run_wait:
-            if index != case_setup.index[-1]:
+            # print(f"index: {index}, case_nums[-1]: {case_nums[-2]}")
+            if index < case_nums[-2]:
                 next_ann_fn = casanntra_casefile.replace(
                     f"_{case_num}", f"_{int(case_num)+1}"
                 )

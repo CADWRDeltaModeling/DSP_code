@@ -1,3 +1,6 @@
+# ignore VSCode workspace
+*.code-workspace
+
 # ignore model files
 model/*/output*
 
