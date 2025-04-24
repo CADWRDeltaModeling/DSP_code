@@ -64,8 +64,8 @@ OUTPUT_TIME_SERIES
 # ${DSM2INPUTDIR}/output_channel_std_qual_named.inp
 # ${DSM2INPUTDIR}/output_channel_std_qual_rki_addmore.inp
 # ${DSM2INPUTDIR}/output_reservoir_std_qual_named.inp
-${DSM2INPUTDIR}/output_ec_rki.inp                             #202102
-${DSM2INPUTDIR}/output_ec_csdp.inp                            #202102
-./station_dbase_ec_locs.inp                                                # dms datastore station_dbase csv
+#${DSM2INPUTDIR}/output_ec_rki.inp                             #202102
+#${DSM2INPUTDIR}/output_ec_csdp.inp                            #202102
+./x2_ec_locs.inp                                                           # X2 profile along sac river
 END
 

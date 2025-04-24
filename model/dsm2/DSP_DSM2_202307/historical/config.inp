@@ -3,7 +3,7 @@
 # 202107
 ENVVAR
 NAME                     VALUE
-DSM2MODIFIER             hist_v2023_01                              #Study name used for DSM2 output
+DSM2MODIFIER             dsp_hist_1999-2020                             #Study name used for DSM2 output
 DSM2INPUTDIR             ../../2021DSM2FP_202301/common_input
 VERSIONDATE              202112
 HISTFLOWVERSION          DWR-DMS-${VERSIONDATE}
@@ -11,10 +11,10 @@ HISTSTAGEVERSION         ${HISTFLOWVERSION}
 HISTQUALVERSION          DWR-DMS-${VERSIONDATE}
 
 #runtime
-START_DATE               01Jan1990  #01Jan2010  #01Jan1990  #
-QUAL_START_DATE          02Jan1990  #02Jan2010  #02Jan1990  #
+START_DATE               01Aug1999
+QUAL_START_DATE          02Aug1999
 PTM_START_DATE           ${QUAL_START_DATE}
-END_DATE                 31Dec2021
+END_DATE                 15Apr2021
 START_TIME               0000
 END_TIME                 0000
 TEMPDIR                  z:/temp                                #Spacious directory for scratch files
@@ -48,7 +48,7 @@ HYDROOUTDSSFILE_VEL      ${DSM2OUTPUTDIR}/${DSM2MODIFIER}_VEL.dss
 #Qual EC
 QUALOUTDSSFILE           ${DSM2OUTPUTDIR}/${DSM2MODIFIER}.dss
 QUALOUTDSSFILE_EC        ${DSM2OUTPUTDIR}/${DSM2MODIFIER}_EC.dss
-QUALOUTDSSFILE_ECX2      ${DSM2OUTPUTDIR}/${DSM2MODIFIER}_EC_X2.dss
+QUALOUTDSSFILE_X2_EC      ${DSM2OUTPUTDIR}/${DSM2MODIFIER}_EC_X2.dss
 QUAL_OUTDSS_EC_FP        ${DSM2OUTPUTDIR}/${DSM2MODIFIER}_EC_FP.dss
 QUALOUTFILE_EC           ${DSM2OUTPUTDIR}/${DSM2MODIFIER}_EC.qof
 QUALOUTFILE_VOL_FP       ${DSM2OUTPUTDIR}/${DSM2MODIFIER}_VOL_FP.qof
