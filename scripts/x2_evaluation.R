@@ -1,4 +1,3 @@
-
 # Libraries commonly used -------------------------------------------------
 
 library(lubridate)
@@ -8,12 +7,14 @@ library(plotly)
 library(htmlwidgets)
 library(dplyr)
 library(zoo)
+library(purrr)
 
 
 # Set wd to current file --------------------------------------------------
 
 rm(list=ls(all=TRUE)) #start with empty workspace
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) # Setworking directory to this file's directory
+Sys.setenv(RSTUDIO_PANDOC = "C:/Program Files/RStudio/resources/app/bin/quarto/bin/tools")  # Adjust the path to your pandoc installation
 
 
 # Load obs data -----------------------------------------------------------
@@ -29,73 +30,116 @@ head(dayflow.df)
 
 x2.out.df <- dayflow.df[,c('datetime','X2','OUT')]
 x2.out.df <- x2.out.df[complete.cases(x2.out.df),]
+x2.out.df$OUT <- x2.out.df$OUT/1000 # change outflow units to thousand-cfs
 
 
 # Analysis ----------------------------------------------------------------
 
+# Create monthly.out.df with monthly average of OUT
+monthly.out.df <- x2.out.df %>%
+  mutate(year_month = format(datetime, "%Y-%m")) %>%  # Extract year and month
+  group_by(year_month) %>%  # Group by year and month
+  summarize(out_monthly = mean(OUT, na.rm = TRUE)) %>%  # Calculate monthly average of OUT
+  ungroup() %>% 
+  mutate(datetime = as.Date(paste0(year_month, "-01"))) %>%  # Convert year_month to datetime
+  select(datetime, out_monthly)  # Select relevant columns
 
-# Function to compute NDAYS for a given threshold
-compute_ndays <- function(df, threshold) {
+# Function to compute NDAYS for a given threshold, standardized to a 30-day month
+compute_ndays_monthly <- function(df, threshold) {
   df %>%
-    mutate(below_thresh = X2 < threshold) %>%
-    group_by(group = cumsum(c(1, diff(below_thresh)) * below_thresh)) %>%
-    mutate(!!paste0("NDAYS", threshold) := ifelse(below_thresh, n(), 0)) %>%
+    mutate(
+      below_thresh = X2 < threshold,
+      year_month = format(datetime, "%Y-%m")  # Extract year and month
+    ) %>%
+    group_by(year_month) %>%
+    summarize(
+      NDAYS = sum(below_thresh, na.rm = TRUE),  # Count days below the threshold
+      actual_days = n()  # Count the actual number of days in the month
+    ) %>%
     ungroup() %>%
-    select(-group, -below_thresh)
+    mutate(
+      standardized_NDAYS = NDAYS * (30 / actual_days)  # Standardize to a 30-day month
+    ) %>%
+    select(year_month, standardized_NDAYS) %>%  # Keep only relevant columns
+    rename(!!paste0(threshold, "_km") := standardized_NDAYS)  # Rename column for the threshold
 }
 
-# Apply the function for different thresholds
-thresholds <- c(75, 70, 65, 60, 55, 50, 45)
-for (thresh in thresholds) {
-  x2.out.df <- compute_ndays(x2.out.df, thresh)
-}
+# Apply the function for different thresholds and combine results into a single dataframe
+thresholds <- c(80, 74)
+monthly_results <- thresholds %>%
+  lapply(function(thresh) compute_ndays_monthly(x2.out.df, thresh)) %>%
+  reduce(full_join, by = "year_month")  # Combine all results by year_month
 
+# Convert year_month to datetime for better handling
+monthly_results <- monthly_results %>%
+  mutate(datetime = as.Date(paste0(year_month, "-01"))) %>%
+  select(datetime, everything(), -year_month)  # Reorder columns
 
-# 70 km threshold ---------------------------------------------------------
+monthly_results  <- merge(monthly_results, monthly.out.df, by='datetime')
 
+# Add out-1month and out-2month columns
+monthly_results <- monthly_results %>%
+  arrange(datetime) %>%  # Ensure data is sorted by datetime
+  mutate(
+    `out-1month` = lag(out_monthly, 1),  # Previous month's OUT_monthly_avg
+    `out-2month` = lag(out_monthly, 2)   # Two months ago's OUT_monthly_avg
+  )
 
-df70 <- x2.out.df[,c("datetime", "X2", "OUT", paste0("NDAYS", 70))]
+# Reshape the data to long format for plotting
+plot.df <- melt(
+  monthly_results,
+  id.vars = c("datetime", "out_monthly", "out-1month", "out-2month"),  # Include out-1month and out-2month as identifiers
+  measure.vars = c("80_km", "74_km"),  # *_km columns
+  variable.name = "threshold",  # Name for the threshold column
+  value.name = "days_under_threshold"  # Name for the number of days column
+)
 
-# Compute 30-day rolling average
-df70 <- df70 %>%
-  arrange(datetime) %>%  # Ensure data is ordered by date
-  mutate(OUT_30 = rollmean(OUT, k = 30, fill = NA, align = "right"))
-df70 <- df70[complete.cases(df70),]
+# # Log-transform the out_monthly column for ggplotly compatibility
+# plot.df <- plot.df %>%
+#   mutate(log_out_monthly = log10(out_monthly))  # Add a log-transformed column
 
+# Plot Results ---------------------------------------------------------
 
-plt <- ggplot(df70, aes(x = NDAYS70, y = OUT, color = OUT_30)) +
+# Create the plot
+plt <- ggplot(plot.df, aes(x = out_monthly, y = days_under_threshold, color = `out-1month`)) +
   geom_point(size = 3, alpha = 0.8) +  # Scatter plot with transparency
   labs(
-    x = "Number of days under 70km",
-    y = "Outflow (cfs)",
-    color = "30 Antecedent Average (cfs)"
+    x = "Monthly Outflow (log10 scale, 1000-cfs)",
+    y = "Number of Days Under Threshold",
+    color = "Previous Month (1000-cfs)"
+  ) +  
+  scale_color_gradientn(
+    colors = c("beige", "khaki", "darkgreen", "darkblue"),  # Define a gradient from beige to dark blue
+    trans = "log",  # Apply a logarithmic transformation to the color scale
+    limits = c(1, 75),  # Set the range of the color scale (log scale cannot include 0)
+    oob = scales::squish,  # Squish values outside the range into the limits
+    breaks = c(1,5,10,25,50,70)
   ) +
-  scale_x_continuous(breaks=seq(0,1500,100), limits=c(0,1500)) +
-  scale_y_continuous(breaks=seq(0,575000,75000), limits=c(0,575000)) +
-  scale_color_viridis_c(
-    breaks = c(3000, 100000, 200000, 270000),  # Custom legend breaks
-    option = "C"  # Viridis color palette option
+  scale_x_log10() +
+  scale_y_continuous(
+    limits = c(0, 31),  # Set y-axis limits
+    breaks = seq(0, 30, 5)  # Define y-axis breaks
   ) +
-  theme(text=element_text(size=12),
-        panel.border=element_rect(colour = "black", fill=NA, linewidth=0.5),
-        panel.background = element_blank(),
-        legend.key=element_blank(),
-        panel.grid.major.x = element_line(linewidth=.25, colour='grey80', linetype = 'dashed'),
-        panel.grid.major.y = element_line(linewidth=.25, colour='grey80', linetype = 'dashed'),
-        axis.line = element_line(colour = "black"),
-        axis.title.y = element_text(color='black'),
-        legend.position.inside=c(0.975,0.975),
-        legend.justification=c(0.975,0.975),
-        legend.spacing=unit(c(0,0,0,0),"null"),
-        legend.background = element_rect(fill = "white", color = NULL),
-  )  
-plt
+  facet_wrap(~threshold, ncol = 1, scales = "fixed") +  # Ensure matching scales across facets
+  theme(
+    text = element_text(size = 12),
+    panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.5),
+    panel.background = element_blank(),
+    legend.key = element_blank(),
+    panel.grid.major.x = element_line(linewidth = 0.25, colour = 'grey80', linetype = 'dashed'),
+    panel.grid.major.y = element_line(linewidth = 0.25, colour = 'grey80', linetype = 'dashed'),
+    axis.line = element_line(colour = "black"),
+    axis.title.y = element_text(color = 'black'),
+    legend.position = "right",
+    legend.background = element_rect(fill = "white", color = NULL)
+  )
+# plt
 
-ggplotly(plt)
+gplt <- ggplotly(plt, dynamicTicks=TRUE, tooltip=c('days_under_threshold','out_monthly',"out-1month", "out-2month"))
+gplt
 
-gplt <- ggplotly(plt, dynamicTicks=TRUE)
-
+# Save the interactive plot as an HTML file -------------------------
 pltl_name <- "x2_outflow.html"
-saveWidget(gplt, pltl_name, selfcontained=TRUE)
-file.rename(pltl_name, paste0("./plots/",pltl_name))
+saveWidget(gplt, pltl_name, selfcontained = TRUE)
+file.rename(pltl_name, paste0("./plots/", pltl_name))
 
