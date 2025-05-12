@@ -46,6 +46,11 @@ in_vars:
   unit_conv: -35.3147
   csv_header: Delta CU In [cms]
 
+- ann_colname: suisun_cu
+  csv_file: '{schism_out_dir}/{mesh}_{case_name}.csv'
+  unit_conv: -35.3147
+  csv_header: Suisun CU In [cms]
+
 - ann_colname: ndo
   csv_file: '{schism_out_dir}/{mesh}_{case_name}.csv'
   unit_conv: -35.3147
@@ -96,13 +101,35 @@ in_vars:
 #   csv_header: emm2 z=-0.5 EC Out [psu]
 
 comb_vars:
-- ann_colname: cu_flow
+- ann_colname: cu_delta
   vars:
     - delta_cu
     - evap_delta
   mult:
-    - -1 # consider use as positive
+    - 1 # consider use as positive
     - 1 # consider evaporation as positive
+- ann_colname: cu_total
+  vars:
+    - delta_cu
+    - suisun_cu
+    - evap_delta
+  mult:
+    - 1 # consider use as positive
+    - 1 # consider use as positive
+    - 1 # consider evaporation as positive
+- ann_colname: cu_suisun
+  vars:
+    - delta_cu
+    - suisun_cu
+    - evap_delta
+  mult:
+    - 1 # consider use as positive
+    - 1 # consider use as positive
+    - 1 # consider evaporation as positive
+
+delete_vars:
+- delta_cu
+- suisun_cu
 
 out_ec_locs:
 - ann_colnames:

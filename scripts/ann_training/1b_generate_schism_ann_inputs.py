@@ -137,6 +137,7 @@ def schism_to_ann_csv(in_fname, mesh, mesh_outname):
     ann_var_names = [var["ann_colname"] for var in in_vars]
     ann_var_names = ann_var_names + [var["ann_colname"] for var in comb_vars]
     out_ec_locs = build_dict(inputs.get("out_ec_locs"))
+    delete_vars = inputs.get("delete_vars")
     out_dir = env_vars["out_dir"]
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
@@ -191,6 +192,11 @@ def schism_to_ann_csv(in_fname, mesh, mesh_outname):
                 var_df = (output_df_daily[vars].fillna(0) * mult).sum(axis=1)
                 var_df.columns = ann_colname
                 output_df_daily[ann_colname] = var_df
+
+            # delete the columns that are not needed
+            for var in delete_vars:
+                if var in output_df_daily.columns:
+                    del output_df_daily[var]
 
             # add EC ouptuts
             for ann_ec, col_ec in zip(
