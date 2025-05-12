@@ -46,7 +46,7 @@ def process_gate_data(
     df[eval(map_zero_one[1])] = 1
 
     # resample to 1 minute, then fill forward (with last value)
-    df_1min = df.resample("T", closed="right").ffill()
+    df_1min = df.resample("min", closed="right").ffill()
     # now find daily averages of one minute data
     df_daily_avg = df_1min.resample("D", closed="right").mean()
     df_daily_avg = df_daily_avg.rename(columns={df_daily_avg.columns[0]: "gate_pos"})
@@ -225,6 +225,10 @@ def generate_ann_inputs(
     )
 
     out_df["cu_flow"] = cu_total["cu_total"]
+    out_df["smcd_flow"] = (
+        + cu_total["smcd_divseep_total"]
+        - cu_total["smcd_drain_total"]
+    )
 
     # Net Delta Outflow RMA:  (Sac, SJR, Yolo Bypass, Mokelumne, Cosumnes, Calaveras), exports (SWP, CVP, Contra Costa, NBA) and net DICU
     out_df["ndo"] = (
@@ -352,7 +356,7 @@ def calc_x2(dss_file, names):
     return x2_df
 
 
-def run_ann_input(in_fname, case_nums=range(0, 9999), run_wait=False):
+def run_ann_input(in_fname, case_nums=range(0, 9999), run_wait=False, pseudo_case="", date_range=None):
 
     with open(in_fname, "r") as f:
         # loader = RawLoader(stream)
@@ -481,81 +485,133 @@ def run_ann_input(in_fname, case_nums=range(0, 9999), run_wait=False):
     x2_names = x2_names["distance"].tolist()[
         ::10
     ]  # only use every 10 columns out of the ~1000
+    # x2_names = x2_names["distance"].tolist()[
+    #     ::100
+    # ]  # debugging
 
-    case_setup = pd.read_csv(inputs.get("case_setup"))
+    if "case_setup" in inputs:
+        # Multiple cases. Run extraction for each case.
+        case_setup = pd.read_csv(inputs.get("case_setup"))
 
-    for index, row in case_setup.iterrows():
-        case_num = re.search(r"(\d+)$", row["case"]).group(1)
-        mod_case_num = False
-        if int(case_num) in case_nums:
-            if int(case_num) > 1000:
-                mod_case_num = True
-                case_num = int(case_num) - 1000
+        for index, row in case_setup.iterrows():
+            case_num = re.search(r"(\d+)$", row["case"]).group(1)
+            mod_case_num = False
+            if int(case_num) in case_nums:
+                if int(case_num) > 1000:
+                    mod_case_num = True
+                    case_num = int(case_num) - 1000
 
-            hist_dss_file = inputs.get("hist_dss_file").format(**locals())
-            gate_dss_file = inputs.get("gate_dss_file").format(**locals())
-            model_ec_file = inputs.get("model_ec_file").format(**locals())
-            model_x2_ec_file = inputs.get("model_x2_ec_file").format(**locals())
-            output_folder = inputs.get("output_folder").format(**locals())
-            casanntra_folder = inputs.get("casanntra_folder").format(**locals())
-            dcd_dss_file = inputs.get("dcd_dss_file").format(**locals())
+                hist_dss_file = inputs.get("hist_dss_file").format(**locals())
+                gate_dss_file = inputs.get("gate_dss_file").format(**locals())
+                model_ec_file = inputs.get("model_ec_file").format(**locals())
+                model_x2_ec_file = inputs.get("model_x2_ec_file").format(**locals())
+                output_folder = inputs.get("output_folder").format(**locals())
+                casanntra_folder = inputs.get("casanntra_folder").format(**locals())
+                dcd_dss_file = inputs.get("dcd_dss_file").format(**locals())
 
-            # to run this in parallel with ongoing/overnight check if the model is finished running
-            if run_wait:
-                if index != case_setup.index[-1]:
-                    next_hydro_fn = model_ec_file.replace(
-                        f"lhc_{case_num}_EC", f"lhc_{int(case_num)+1}_FLOW"
-                    )
-                    while not os.path.exists(next_hydro_fn):
-                        print(
-                            f"Waiting for file {next_hydro_fn} to appear so that case {case_num} is done..."
+                # to run this in parallel with ongoing/overnight check if the model is finished running
+                if run_wait:
+                    if index != case_setup.index[-1]:
+                        next_hydro_fn = model_ec_file.replace(
+                            f"lhc_{case_num}_EC", f"lhc_{int(case_num)+1}_FLOW"
                         )
-                        time.sleep(120)  # Wait for 120 seconds before checking again
-                    print(
-                        f"File {next_hydro_fn} is now available! Post-processing model results for case {case_num}"
-                    )
-                else:
-                    print(f"Last case, waiting 5 minutes to finish")
-                    time.sleep(60 * 5)
+                        while not os.path.exists(next_hydro_fn):
+                            print(
+                                f"Waiting for file {next_hydro_fn} to appear so that case {case_num} is done..."
+                            )
+                            time.sleep(120)  # Wait for 120 seconds before checking again
+                        print(
+                            f"File {next_hydro_fn} is now available! Post-processing model results for case {case_num}"
+                        )
+                    else:
+                        print(f"Last case, waiting 5 minutes to finish")
+                        time.sleep(60 * 5)
 
-            # calculate x2
-            case_x2 = calc_x2(model_x2_ec_file, x2_names)  # takes a while
+                # calculate x2
+                case_x2 = calc_x2(model_x2_ec_file, x2_names)  # takes a while
 
-            # generate aggregated ANN inputs from DSM2 outputs
-            case_out_df = generate_ann_inputs(
-                hist_dss_file,
-                gate_dss_file,
-                dcd_dss_file,
-                smcd_dss_file,
-                model_ec_file,
-                output_folder,
-            )
+                # generate aggregated ANN inputs from DSM2 outputs
+                case_out_df = generate_ann_inputs(
+                    hist_dss_file,
+                    gate_dss_file,
+                    dcd_dss_file,
+                    smcd_dss_file,
+                    model_ec_file,
+                    output_folder,
+                )
 
-            if mod_case_num:
-                case_num = case_num + 1000
-            case_out_df["case"] = str(case_num)
-            case_out_df["model"] = "dsm2"
-            case_out_df["scene"] = "base"
-            case_out_df = case_out_df.loc[
-                pd.to_datetime(row["start"]) : (
-                    pd.to_datetime(row["end"]) - pd.Timedelta(days=1)
-                ),
-                :,
-            ]
+                if mod_case_num:
+                    case_num = case_num + 1000
+                case_out_df["case"] = str(case_num)
+                case_out_df["model"] = "dsm2"
+                case_out_df["scene"] = "base"
+                case_out_df = case_out_df.loc[
+                    pd.to_datetime(row["start"]) : (
+                        pd.to_datetime(row["end"]) - pd.Timedelta(days=1)
+                    ),
+                    :,
+                ]
 
-            case_out_df["x2"] = case_x2.loc[case_out_df.index, "x2"]
+                case_out_df["x2"] = case_x2.loc[case_out_df.index, "x2"]
 
-            case_out_df = case_out_df[
-                [col for col in col_order if col in case_out_df.columns]
-            ]
-            case_out_df[float_columns] = case_out_df[float_columns].astype(float)
+                case_out_df = case_out_df[
+                    [col for col in col_order if col in case_out_df.columns]
+                ]
+                case_out_df[float_columns] = case_out_df[float_columns].astype(float)
 
-            case_out_df.to_csv(
-                os.path.join(casanntra_folder, f"dsm2_base_{case_num}.csv"),
-                float_format="%.2f",
-                index=True,
-                index_label="datetime",
-            )
+                case_out_df.to_csv(
+                    os.path.join(casanntra_folder, f"dsm2_base_{case_num}.csv"),
+                    float_format="%.2f",
+                    index=True,
+                    index_label="datetime",
+                )
+
+    else:
+        # Only one case. Run extraction.
+        hist_dss_file = inputs.get("hist_dss_file").format(**locals())
+        gate_dss_file = inputs.get("gate_dss_file").format(**locals())
+        model_ec_file = inputs.get("model_ec_file").format(**locals())
+        model_x2_ec_file = inputs.get("model_x2_ec_file").format(**locals())
+        output_folder = inputs.get("output_folder").format(**locals())
+        casanntra_folder = inputs.get("casanntra_folder").format(**locals())
+        dcd_dss_file = inputs.get("dcd_dss_file").format(**locals())
+
+        # calculate x2
+        case_x2 = calc_x2(model_x2_ec_file, x2_names)  # takes a while
+
+        # generate aggregated ANN inputs from DSM2 outputs
+        case_out_df = generate_ann_inputs(
+            hist_dss_file,
+            gate_dss_file,
+            dcd_dss_file,
+            smcd_dss_file,
+            model_ec_file,
+            output_folder,
+        )
+
+        case_out_df["case"] = pseudo_case
+        case_out_df["model"] = "dsm2"
+        case_out_df["scene"] = "base"
+        case_out_df = case_out_df.loc[
+            pd.to_datetime(date_range[0]) : (
+                pd.to_datetime(date_range[1]) - pd.Timedelta(days=1)
+            ),
+            :,
+        ]
+
+        case_out_df["x2"] = case_x2.loc[case_out_df.index, "x2"]
+
+        case_out_df = case_out_df[
+            [col for col in col_order if col in case_out_df.columns]
+        ]
+        case_out_df[float_columns] = case_out_df[float_columns].astype(float)
+
+        case_out_df.to_csv(
+            os.path.join(casanntra_folder, f"dsm2_base_{pseudo_case}.csv"),
+            float_format="%.2f",
+            index=True,
+            index_label="datetime",
+        )
 
 
 if __name__ == "__main__":
@@ -564,9 +620,12 @@ if __name__ == "__main__":
 
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    in_fname = "./input/ann_config_lathypcub_v3_dsm2.yaml"
-    run_ann_input(in_fname, case_nums=range(1001, 1008), run_wait=True)
+    # in_fname = "./input/ann_config_lathypcub_v3_dsm2.yaml"
+    # run_ann_input(in_fname, case_nums=range(1001, 1008), run_wait=True)
     # run_ann_input(in_fname, case_nums=range(1001,1002))
 
     # in_fname = "./input/ann_config_lathypcub_v4_dsm2.yaml"
     # run_ann_input(in_fname, case_nums=range(1, 100))
+
+    in_fname = "./input/ann_config_dsm2_historical_2000-2020.yml"
+    run_ann_input(in_fname, pseudo_case="historical", date_range=['1999-10-1','2021-3-31'])

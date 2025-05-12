@@ -1,0 +1,19 @@
+experiment: historical # name of folder to look inside of test_file dir
+
+base_study_folder: '../../model/dsm2/2021DSM2FP_202301'
+model_input_folder: '{base_study_folder}/timeseries'
+model_folder: '../../model/dsm2/DSP_DSM2_202307/{experiment}'
+model_output_folder: '{model_folder}/output'
+
+x2_csv_infile: 'D:\python\repositories\BayDeltaSCHISM\bdschism\bdschism\x2route_bay_sac.csv'
+smcd_dss_file: '{model_input_folder}/SMCD_hist.dss'
+
+dcd_dss_file: '{base_study_folder}/timeseries/DCD_hist_Lch5.dss'
+hist_dss_file: '{base_study_folder}/timeseries/hist.dss'
+gate_dss_file: '{base_study_folder}/timeseries/gates-v8.dss'
+model_ec_file: '{model_output_folder}/dsp_hist_1999-2020_EC.dss'
+model_x2_ec_file: '{model_output_folder}/dsp_hist_1999-2020_EC_X2.dss'
+output_folder: './data_out'
+casanntra_folder: '../../../casanntra/data'
+
+cases: None
