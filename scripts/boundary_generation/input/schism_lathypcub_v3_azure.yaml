@@ -23,8 +23,12 @@ param_clinic_base: '{exp_dir}/param.nml.clinic'
 
 make_links: '{exp_dir}/make_links_az.py'
 
-slurm_tropic: '{exp_dir}/slurm_MESHNAME_CASENAME.tropic.sh'
-slurm_clinic: '{exp_dir}/slurm_MESHNAME_CASENAME.clinic.sh'
+slurm_tropic: 
+- '{exp_dir}/slurm_MESHNAME_CASENAME.tropic.sh'
+- '{exp_dir}/slurm_hpc4_MESHNAME_CASENAME.tropic.sh'
+slurm_clinic: 
+- '{exp_dir}/slurm_MESHNAME_CASENAME.clinic.sh'
+- '{exp_dir}/slurm_hpc4_MESHNAME_CASENAME.clinic.sh'
 az_yml_file: '{exp_dir}/run_MESHNAME_CASENAME.from_baseline.yml'
 az_yml_dir: '{exp_dir}/az_yml_files' # where to copy azure yml files for run configurations
 job_name: dsp_2024
@@ -197,6 +201,7 @@ common_files:
   - '{bds_home}/bdschism/bdschism/x2_bay_mzm.bp'
   - '{bds_home}/bdschism/bdschism/x2_bay_sac.bp'  
   - '{common_dir}/schism.sh'
+  - '{common_dir}/schism_hpc4.sh'
 
 versioned_th_files:
 - key: ccfb_gate.th
@@ -204,10 +209,10 @@ versioned_th_files:
   linked_fn: '{dsp_home}/scripts/boundary_generation/data_out/ccfb_gates/ccfb_{cname}.th'
 
 cases_exclude:
-  - lhc_1
+  # - lhc_1
   # - lhc_2
   # - lhc_3
-  - lhc_4
+  # - lhc_4
   # - lhc_5
   # - lhc_6
   # - lhc_7
@@ -215,14 +220,11 @@ cases_exclude:
   # - none
 
 meshcases_exclude:
-  # - none
-  - baseline_lhc_2
-  - baseline_lhc_3
-  # - baseline_lhc_5
-  - baseline_lhc_7
+  - none
+  # - baseline_lhc_2
 
 meshes_exclude:
-  # - baseline
-  # - suisun
-  - cache
-  - franks
+  - baseline
+  - suisun
+  # - cache
+  # - franks
