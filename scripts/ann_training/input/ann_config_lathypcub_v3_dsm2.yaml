@@ -14,7 +14,7 @@ gate_dss_file: '{model_folder}/timeseries/lhc_{case_num}_gates.dss'
 model_ec_file: '{model_output_folder}/lhc_{case_num}_EC.dss'
 model_x2_ec_file: '{model_output_folder}/lhc_{case_num}_EC_X2.dss'
 output_folder: './data_out'
-casanntra_folder: '../../../casanntra/data'
+casanntra_folder: '../../../scripts/casanntra/data'
 
 case_setup: '../boundary_generation/data_out/lhc_v4.csv'
 
