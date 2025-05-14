@@ -627,5 +627,5 @@ if __name__ == "__main__":
     # in_fname = "./input/ann_config_lathypcub_v4_dsm2.yaml"
     # run_ann_input(in_fname, case_nums=range(1, 100))
 
-    in_fname = "./input/ann_config_dsm2_historical_2000-2020.yml"
-    run_ann_input(in_fname, pseudo_case="historical", date_range=['1999-10-1','2021-3-31'])
+    # in_fname = "./input/ann_config_dsm2_historical_2000-2020.yml"
+    # run_ann_input(in_fname, pseudo_case="historical", date_range=['1999-10-1','2021-3-31'])

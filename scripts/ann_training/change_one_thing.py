@@ -241,104 +241,123 @@ def fix_smscg(in_fname, lhc_fn, case_nums, col_order, ec_locs=["mrz"]):
                 index_label="datetime",
             )
 
-def split_dsm2_cu(in_fname, lhc_fn, case_nums, col_order):
+def split_dsm2_cu(inputs, cdf, case_num=None):
+    experiment = inputs.get("experiment")
+
+    base_study_folder = inputs.get("base_study_folder").format(**locals())
+    model_input_folder = inputs.get("model_input_folder").format(**locals())
+    model_folder = inputs.get("model_folder").format(**locals())
+    dcd_dss_file = inputs.get("dcd_dss_file").format(**locals())
+    smcd_dss_file = inputs.get("smcd_dss_file").format(**locals())
+
+    div_seep_dcd_c_part_dss_filename_dict = {
+        "DIV-FLOW": dcd_dss_file,
+        "SEEP-FLOW": dcd_dss_file,
+    }
+    div_seep_smcd_c_part_dss_filename_dict = {
+        "DIV-FLOW": smcd_dss_file,
+        "SEEP-FLOW": smcd_dss_file,
+    }
+    drain_dcd_c_part_dss_filename_dict = {"DRAIN-FLOW": dcd_dss_file}
+    drain_smcd_c_part_dss_filename_dict = {"DRAIN-FLOW": smcd_dss_file}
+
+    df_div_seep_dcd = get_dss_data(
+        div_seep_dcd_c_part_dss_filename_dict, "c_part", filter_b_part_numeric=True
+    )
+    df_div_seep_smcd = get_dss_data(
+        div_seep_smcd_c_part_dss_filename_dict, "c_part", filter_b_part_numeric=True
+    )
+    df_drain_dcd = get_dss_data(
+        drain_dcd_c_part_dss_filename_dict, "c_part", filter_b_part_numeric=True
+    )
+    df_drain_smcd = get_dss_data(
+        drain_smcd_c_part_dss_filename_dict, "c_part", filter_b_part_numeric=True
+    )
+
+    df_div_seep_dcd["dcd_divseep_total"] = df_div_seep_dcd[df_div_seep_dcd.columns].sum(
+        axis=1
+    )
+    df_div_seep_smcd["smcd_divseep_total"] = df_div_seep_smcd[
+        df_div_seep_smcd.columns
+    ].sum(axis=1)
+
+    df_drain_dcd["dcd_drain_total"] = df_drain_dcd[df_drain_dcd.columns].sum(axis=1)
+    df_drain_smcd["smcd_drain_total"] = df_drain_smcd[df_drain_smcd.columns].sum(axis=1)
+
+    cu_total_dcd = pd.merge(
+        df_div_seep_dcd, df_drain_dcd, how="left", left_index=True, right_index=True
+    )
+    cu_total_smcd = pd.merge(
+        df_div_seep_smcd, df_drain_smcd, how="left", left_index=True, right_index=True
+    )
+    cu_total = pd.merge(
+        cu_total_dcd, cu_total_smcd, how="left", left_index=True, right_index=True
+    )
+
+    cu_total["cu_total"] = (
+        cu_total["dcd_divseep_total"]
+        + cu_total["smcd_divseep_total"]
+        - cu_total["dcd_drain_total"]
+        - cu_total["smcd_drain_total"]
+    )
+    cu_total["cu_delta"] = (
+        cu_total["dcd_divseep_total"]
+        - cu_total["dcd_drain_total"]
+    )
+    cu_total["cu_suisun"] = (
+        + cu_total["smcd_divseep_total"]
+        - cu_total["smcd_drain_total"]
+    )
+    out_df = cu_total[["cu_total", "cu_delta", "cu_suisun"]]
+    out_df.index = out_df.index.to_timestamp()
+
+    merge_df = pd.merge(
+        cdf, out_df, how="left", left_index=True, right_index=True
+    )
+    merge_df = merge_df[[col for col in col_order if col in merge_df.columns]]
+
+    if isinstance(merge_df.index, pd.DatetimeIndex):
+        merge_df.index = merge_df.index.to_period("D")
+
+    return merge_df
+
+def split_dsm2_cu_cases(in_fname, lhc_fn, case_nums, col_order, pseudo_case=None):
     with open(in_fname, "r") as f:
         # loader = RawLoader(stream)
         inputs = schism_yaml.load(f)
-    lhc_df = pd.read_csv(lhc_fn)
-    for index, row in lhc_df.iterrows():
-        case_num = re.search(r"(\d+)$", row["case"]).group(1)
-        if int(case_num) in case_nums:
-            if int(case_num) > 1000:
-                mod_case_num = True
-                case_num = int(case_num) - 1000
-            casanntra_casefile = os.path.join(
-                cas_dir, csv_fmt.format(case_num=case_num)
-            )
-            print(row["case"])
-            cdf = pd.read_csv(casanntra_casefile, parse_dates=[0], index_col=0)
-            experiment = inputs.get("experiment")
+    if pseudo_case is not None:
+        casanntra_casefile = os.path.join(cas_dir, csv_fmt.format(case_num=pseudo_case))
+        cdf = pd.read_csv(casanntra_casefile, parse_dates=[0], index_col=0)
+        merge_df = split_dsm2_cu(inputs, cdf)
+        merge_df.to_csv(
+            casanntra_casefile,
+            float_format="%.2f",
+            index=True,
+            index_label="datetime",
+        )
+    else:
+        lhc_df = pd.read_csv(lhc_fn)
+        for index, row in lhc_df.iterrows():
+            case_num = re.search(r"(\d+)$", row["case"]).group(1)
+            if int(case_num) in case_nums:
+                casanntra_casefile = os.path.join(
+                    cas_dir, csv_fmt.format(case_num=case_num)
+                )
+                if int(case_num) > 1000:
+                    mod_case_num = True
+                    case_num = int(case_num) - 1000
+                print(row["case"])
+                cdf = pd.read_csv(casanntra_casefile, parse_dates=[0], index_col=0)
 
-            base_study_folder = inputs.get("base_study_folder").format(**locals())
-            model_input_folder = inputs.get("model_input_folder").format(**locals())
-            model_folder = inputs.get("model_folder").format(**locals())
-            dcd_dss_file = inputs.get("dcd_dss_file").format(**locals())
-            smcd_dss_file = inputs.get("smcd_dss_file").format(**locals())
+                merge_df = split_dsm2_cu(inputs, cdf, case_num=case_num)
+                merge_df.to_csv(
+                    casanntra_casefile,
+                    float_format="%.2f",
+                    index=True,
+                    index_label="datetime",
+                )
 
-            div_seep_dcd_c_part_dss_filename_dict = {
-                "DIV-FLOW": dcd_dss_file,
-                "SEEP-FLOW": dcd_dss_file,
-            }
-            div_seep_smcd_c_part_dss_filename_dict = {
-                "DIV-FLOW": smcd_dss_file,
-                "SEEP-FLOW": smcd_dss_file,
-            }
-            drain_dcd_c_part_dss_filename_dict = {"DRAIN-FLOW": dcd_dss_file}
-            drain_smcd_c_part_dss_filename_dict = {"DRAIN-FLOW": smcd_dss_file}
-
-            df_div_seep_dcd = get_dss_data(
-                div_seep_dcd_c_part_dss_filename_dict, "c_part", filter_b_part_numeric=True
-            )
-            df_div_seep_smcd = get_dss_data(
-                div_seep_smcd_c_part_dss_filename_dict, "c_part", filter_b_part_numeric=True
-            )
-            df_drain_dcd = get_dss_data(
-                drain_dcd_c_part_dss_filename_dict, "c_part", filter_b_part_numeric=True
-            )
-            df_drain_smcd = get_dss_data(
-                drain_smcd_c_part_dss_filename_dict, "c_part", filter_b_part_numeric=True
-            )
-
-            df_div_seep_dcd["dcd_divseep_total"] = df_div_seep_dcd[df_div_seep_dcd.columns].sum(
-                axis=1
-            )
-            df_div_seep_smcd["smcd_divseep_total"] = df_div_seep_smcd[
-                df_div_seep_smcd.columns
-            ].sum(axis=1)
-
-            df_drain_dcd["dcd_drain_total"] = df_drain_dcd[df_drain_dcd.columns].sum(axis=1)
-            df_drain_smcd["smcd_drain_total"] = df_drain_smcd[df_drain_smcd.columns].sum(axis=1)
-
-            cu_total_dcd = pd.merge(
-                df_div_seep_dcd, df_drain_dcd, how="left", left_index=True, right_index=True
-            )
-            cu_total_smcd = pd.merge(
-                df_div_seep_smcd, df_drain_smcd, how="left", left_index=True, right_index=True
-            )
-            cu_total = pd.merge(
-                cu_total_dcd, cu_total_smcd, how="left", left_index=True, right_index=True
-            )
-
-            cu_total["cu_total"] = (
-                cu_total["dcd_divseep_total"]
-                + cu_total["smcd_divseep_total"]
-                - cu_total["dcd_drain_total"]
-                - cu_total["smcd_drain_total"]
-            )
-            cu_total["cu_delta"] = (
-                cu_total["dcd_divseep_total"]
-                - cu_total["dcd_drain_total"]
-            )
-            cu_total["cu_suisun"] = (
-                + cu_total["smcd_divseep_total"]
-                - cu_total["smcd_drain_total"]
-            )
-            out_df = cu_total[["cu_total", "cu_delta", "cu_suisun"]]
-            out_df.index = out_df.index.to_timestamp()
-
-            merge_df = pd.merge(
-                cdf, out_df, how="left", left_index=True, right_index=True
-            )
-            merge_df = merge_df[[col for col in col_order if col in merge_df.columns]]
-
-            if isinstance(merge_df.index, pd.DatetimeIndex):
-                merge_df.index = merge_df.index.to_period("D")
-            merge_df.to_csv(
-                casanntra_casefile,
-                float_format="%.2f",
-                index=True,
-                index_label="datetime",
-            )
+                
 # casanntra dir
 cas_dir = "../../../scripts/casanntra/data"
 csv_fmt = "dsm2_base_{case_num}.csv"
@@ -379,4 +398,12 @@ csv_fmt = "dsm2_base_{case_num}.csv"
 in_fname = "./input/ann_config_lathypcub_v3_dsm2.yaml"
 lhc_fn = "../boundary_generation/data_out/lhc_v3.csv"
 case_nums = range(1001, 1008)
-split_dsm2_cu(in_fname, lhc_fn, case_nums, col_order)
+split_dsm2_cu_cases(in_fname, lhc_fn, case_nums, col_order)
+
+# in_fname = "./input/ann_config_lathypcub_v4_dsm2.yaml"
+# lhc_fn = "../boundary_generation/data_out/lhc_v4.csv"
+# case_nums = range(1, 108)
+# split_dsm2_cu_cases(in_fname, lhc_fn, case_nums, col_order)
+
+# in_fname = "./input/ann_config_dsm2_historical_2000-2020.yml"
+# split_dsm2_cu_cases(in_fname, None, None, col_order, pseudo_case="historical")

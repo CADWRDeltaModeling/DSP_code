@@ -14,6 +14,6 @@ gate_dss_file: '{base_study_folder}/timeseries/gates-v8.dss'
 model_ec_file: '{model_output_folder}/dsp_hist_1999-2020_EC.dss'
 model_x2_ec_file: '{model_output_folder}/dsp_hist_1999-2020_EC_X2.dss'
 output_folder: './data_out'
-casanntra_folder: '../../../casanntra/data'
+casanntra_folder: '../../../scripts/casanntra/data'
 
 cases: None
