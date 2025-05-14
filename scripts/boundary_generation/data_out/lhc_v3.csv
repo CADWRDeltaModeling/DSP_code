@@ -1,8 +1,8 @@
 year,tide,dcc,flows,dcd,suis,start,end,rndays,case
-2014,Shifted + 100d,Always Open,Regular,Perturbed - v1,Perturbed -v2,10/24/2013,12/31/2015,797,lhc_1001
-2012,Shifted + 100d,Regular,Sacramento + 10%,Perturbed - v2,Perturbed - v1,10/18/2011,12/31/2012,439,lhc_1002
-2014,Shifted + 100d,Always Open,Perturbed,Regular,Regular,10/24/2013,12/31/2015,797,lhc_1003
-2008,Regular,Regular,Regular,Regular,Regular,11/14/2006,12/31/2008,777,lhc_1004
-2008,Shifted + 100d,Regular,Perturbed,Perturbed - v2,Perturbed -v2,11/14/2006,12/31/2008,777,lhc_1005
-2012,Regular,Perturbed,Perturbed,Perturbed - v1,Perturbed - v1,10/18/2011,12/31/2012,439,lhc_1006
-2010,Regular,Always Closed,Sacramento + 10%,Perturbed - v1,Perturbed - v1,10/29/2009,12/31/2011,792,lhc_1007
+2014,Shifted + 100d,Always Open,Regular,Perturbed - v1,Perturbed -v2,10/24/2013,12/31/2015,797,lhc_1
+2012,Shifted + 100d,Regular,Sacramento + 10%,Perturbed - v2,Perturbed - v1,10/18/2011,12/31/2012,439,lhc_2
+2014,Shifted + 100d,Always Open,Perturbed,Regular,Regular,10/24/2013,12/31/2015,797,lhc_3
+2008,Regular,Regular,Regular,Regular,Regular,11/14/2006,12/31/2008,777,lhc_4
+2008,Shifted + 100d,Regular,Perturbed,Perturbed - v2,Perturbed -v2,11/14/2006,12/31/2008,777,lhc_5
+2012,Regular,Perturbed,Perturbed,Perturbed - v1,Perturbed - v1,10/18/2011,12/31/2012,439,lhc_6
+2010,Regular,Always Closed,Sacramento + 10%,Perturbed - v1,Perturbed - v1,10/29/2009,12/31/2011,792,lhc_7

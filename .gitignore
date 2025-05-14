@@ -12,6 +12,9 @@ data/mtz_ec_hist_bc.csv
 # ignore output from latinhypercube generation
 scripts/boundary_generation/data_out/*bundles*
 
+# ignore attempt at tidal boundary generation for CCFB
+scripts/boundary_generation/tide_shift_files/*
+
 # ignore caches
 **/__pycache__/*
 **/src
