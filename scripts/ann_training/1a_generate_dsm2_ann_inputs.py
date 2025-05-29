@@ -1,16 +1,12 @@
-import pandas as pd
 from vtools.functions.filter import cosine_lanczos
-import pyhecdss
-import os
-
-from pydelmod.create_ann_inputs import get_dss_data
-
-from bdschism.x2_time_series import find_x2
-
 from vtools.functions.unit_conversions import ec_psu_25c
-
-import re
+from pydelmod.create_ann_inputs import get_dss_data
+from bdschism.x2_time_series import find_x2
+import pandas as pd
+import pyhecdss
 import time
+import os
+import re
 
 
 def process_gate_data(
@@ -225,10 +221,7 @@ def generate_ann_inputs(
     )
 
     out_df["cu_flow"] = cu_total["cu_total"]
-    out_df["smcd_flow"] = (
-        + cu_total["smcd_divseep_total"]
-        - cu_total["smcd_drain_total"]
-    )
+    out_df["smcd_flow"] = +cu_total["smcd_divseep_total"] - cu_total["smcd_drain_total"]
 
     # Net Delta Outflow RMA:  (Sac, SJR, Yolo Bypass, Mokelumne, Cosumnes, Calaveras), exports (SWP, CVP, Contra Costa, NBA) and net DICU
     out_df["ndo"] = (
@@ -356,7 +349,9 @@ def calc_x2(dss_file, names):
     return x2_df
 
 
-def run_ann_input(in_fname, case_nums=range(0, 9999), run_wait=False, pseudo_case="", date_range=None):
+def run_ann_input(
+    in_fname, case_nums=range(0, 9999), run_wait=False, pseudo_case="", date_range=None
+):
 
     with open(in_fname, "r") as f:
         # loader = RawLoader(stream)
@@ -519,7 +514,9 @@ def run_ann_input(in_fname, case_nums=range(0, 9999), run_wait=False, pseudo_cas
                             print(
                                 f"Waiting for file {next_hydro_fn} to appear so that case {case_num} is done..."
                             )
-                            time.sleep(120)  # Wait for 120 seconds before checking again
+                            time.sleep(
+                                120
+                            )  # Wait for 120 seconds before checking again
                         print(
                             f"File {next_hydro_fn} is now available! Post-processing model results for case {case_num}"
                         )
@@ -620,8 +617,8 @@ if __name__ == "__main__":
 
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    # in_fname = "./input/ann_config_lathypcub_v3_dsm2.yaml"
-    # run_ann_input(in_fname, case_nums=range(1001, 1008), run_wait=True)
+    in_fname = "./input/ann_config_lathypcub_v3_dsm2.yaml"
+    run_ann_input(in_fname, case_nums=range(1001, 1008), run_wait=False)
     # run_ann_input(in_fname, case_nums=range(1001,1002))
 
     # in_fname = "./input/ann_config_lathypcub_v4_dsm2.yaml"
