@@ -77,6 +77,7 @@ col_order = [
     "x2",
 ]
 
+
 def process_gate_data(
     dss_filename,
     b_part,
@@ -241,6 +242,7 @@ def fix_smscg(in_fname, lhc_fn, case_nums, col_order, ec_locs=["mrz"]):
                 index_label="datetime",
             )
 
+
 def split_dsm2_cu(inputs, cdf, case_num=None):
     experiment = inputs.get("experiment")
 
@@ -300,26 +302,21 @@ def split_dsm2_cu(inputs, cdf, case_num=None):
         - cu_total["dcd_drain_total"]
         - cu_total["smcd_drain_total"]
     )
-    cu_total["cu_delta"] = (
-        cu_total["dcd_divseep_total"]
-        - cu_total["dcd_drain_total"]
-    )
+    cu_total["cu_delta"] = cu_total["dcd_divseep_total"] - cu_total["dcd_drain_total"]
     cu_total["cu_suisun"] = (
-        + cu_total["smcd_divseep_total"]
-        - cu_total["smcd_drain_total"]
+        +cu_total["smcd_divseep_total"] - cu_total["smcd_drain_total"]
     )
     out_df = cu_total[["cu_total", "cu_delta", "cu_suisun"]]
     out_df.index = out_df.index.to_timestamp()
 
-    merge_df = pd.merge(
-        cdf, out_df, how="left", left_index=True, right_index=True
-    )
+    merge_df = pd.merge(cdf, out_df, how="left", left_index=True, right_index=True)
     merge_df = merge_df[[col for col in col_order if col in merge_df.columns]]
 
     if isinstance(merge_df.index, pd.DatetimeIndex):
         merge_df.index = merge_df.index.to_period("D")
 
     return merge_df
+
 
 def split_dsm2_cu_cases(in_fname, lhc_fn, case_nums, col_order, pseudo_case=None):
     with open(in_fname, "r") as f:
@@ -340,12 +337,12 @@ def split_dsm2_cu_cases(in_fname, lhc_fn, case_nums, col_order, pseudo_case=None
         for index, row in lhc_df.iterrows():
             case_num = re.search(r"(\d+)$", row["case"]).group(1)
             if int(case_num) in case_nums:
-                casanntra_casefile = os.path.join(
-                    cas_dir, csv_fmt.format(case_num=case_num)
-                )
                 if int(case_num) > 1000:
                     mod_case_num = True
                     case_num = int(case_num) - 1000
+                casanntra_casefile = os.path.join(
+                    cas_dir, csv_fmt.format(case_num=case_num)
+                )
                 print(row["case"])
                 cdf = pd.read_csv(casanntra_casefile, parse_dates=[0], index_col=0)
 
@@ -357,7 +354,7 @@ def split_dsm2_cu_cases(in_fname, lhc_fn, case_nums, col_order, pseudo_case=None
                     index_label="datetime",
                 )
 
-                
+
 # casanntra dir
 cas_dir = "../../../scripts/casanntra/data"
 csv_fmt = "dsm2_base_{case_num}.csv"
