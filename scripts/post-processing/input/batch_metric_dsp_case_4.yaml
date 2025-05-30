@@ -6,34 +6,34 @@
 # $ batch_metrics batch_metric_yourname.yaml
 # batch_metrics batch_metric_dsp.yaml
 
-dest_dir: /scratch/tomkovic/DSP_code/scripts/post-processing/plots/baseline_lhc_4
+dest_dir: /scratch/tomkovic/DSP_code/scripts/post-processing/plots/lhc_4
 
 outputs_dir:
  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_4/outputs/
-#  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/franks_lhc_4/outputs/
-#  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_lhc_4/outputs/
-#  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/slr_simulations/baseline_slr_lhc_4/outputs/
-#  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_basebc_lhc_4/outputs/
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_lhc_4/outputs/
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/franks_lhc_4/outputs/
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/cache_lhc_4/outputs/
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/slr_simulations/baseline_slr_lhc_4/outputs/
 
 # Station database
 # This is correct for flow, the one without _new is correct for station.in
-stations_csv: /home/tomkovic/BayDeltaSCHISM/data/station_dbase.csv
+stations_csv: /home/tomkovic/dms_datastore/dms_datastore/config_data/station_dbase.csv
 obs_search_path: 
  - /scratch/nasbdo/modeling_data/repo/continuous/screened
 
 station_input: 
  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_4/station.in
-#  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/franks_lhc_4/station.in
-#  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_lhc_4/station.in
-#  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/slr_simulations/baseline_slr_lhc_4/station.in
-#  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_basebc_lhc_4/station.in
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_lhc_4/station.in
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/franks_lhc_4/station.in
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/cache_lhc_4/station.in
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/slr_simulations/baseline_slr_lhc_4/station.in
  
 flow_station_input:
  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_4/fluxflag.prop  
-#  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/franks_lhc_4/fluxflag.prop 
-#  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_lhc_4/fluxflag.prop 
-#  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/slr_simulations/baseline_slr_lhc_4/fluxflag.prop 
-#  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_basebc_lhc_4/fluxflag.prop
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_lhc_4/fluxflag.prop
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/franks_lhc_4/fluxflag.prop
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/cache_lhc_4/fluxflag.prop
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/slr_simulations/baseline_slr_lhc_4/fluxflag.prop 
  
 # Database of the field data file
 # This is correct for flow. Use the one without _new for station.in
@@ -44,18 +44,18 @@ time_basis:  2006-11-14  # ISO date format (e.g. 2009-05-05)
 # start_avg:   2007-01-01
 # end_avg:     2008-12-31
 # Times for debugging beginning of run
-start_inst:  2007-09-01 
-end_inst:    2007-12-31
-start_avg:   2007-11-01
-end_avg:     2007-12-01
-variable: elev # one of elev, salt, flow
+start_inst:  2007-11-01 
+end_inst:    2007-11-07
+start_avg:   2007-01-01
+end_avg:     2008-11-01
+variable: salt # one of elev, salt, flow
 labels: # Three labels for field data and two runs
   - Observed
   - DSP Baseline
-  # - DSP Franks Tract
-  # - DSP Suisun Restoration
-  # - DSP Baseline w/ SLR
-  # - DSP SuisunBaseBC Restoration
+  - DSP Suisun Restoration
+  - DSP Franks Tract
+  - DSP Cache Restoration
+  - DSP Baseline w SLR
 
 
 selected_stations:
@@ -95,6 +95,6 @@ selected_stations:
   - carqb # 'CARQB' Carquinez Strait at Carquinez Bridge
   - gzm # Grizzly Bay at Head of Montezuma Slough
   - msl # Montezuma Slough at Roaring River
-plot_all: False
+plot_all: True
 max_gap_to_fill: 4h
 remove_outliers: False

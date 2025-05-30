@@ -11,27 +11,33 @@ dest_dir: /scratch/tomkovic/DSP_code/scripts/post-processing/plots/lhc_5
 outputs_dir:
  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_5/outputs/
  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_lhc_5/outputs/
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/franks_lhc_5/outputs/
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/cache_lhc_5/outputs/
  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/slr_simulations/baseline_slr_lhc_5/outputs/
 
 # Station database
 # This is correct for flow, the one without _new is correct for station.in
-stations_csv: /home/tomkovic/BayDeltaSCHISM/data/station_dbase.csv
+stations_csv: /home/tomkovic/dms_datastore/dms_datastore/config_data/station_dbase.csv
 obs_search_path: 
  - /scratch/nasbdo/modeling_data/repo/continuous/screened
 
 station_input: 
  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_5/station.in
  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_lhc_5/station.in
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/franks_lhc_5/station.in
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/cache_lhc_5/station.in
  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/slr_simulations/baseline_slr_lhc_5/station.in
  
 flow_station_input:
  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/baseline_lhc_5/fluxflag.prop  
  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/suisun_lhc_5/fluxflag.prop
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/franks_lhc_5/fluxflag.prop
+ - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/simulations/cache_lhc_5/fluxflag.prop
  - /scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/slr_simulations/baseline_slr_lhc_5/fluxflag.prop 
  
 # Database of the field data file
 # This is correct for flow. Use the one without _new for station.in
-obs_links_csv: /scratch/nasbdo/modeling_data/repo/continuous/obs_links_screened_20240120.csv
+obs_links_csv: /scratch/nasbdo/modeling_data/repo/continuous/obs_links_screened_20250109.csv
 time_basis:  2006-11-14  # ISO date format (e.g. 2009-05-05)
 # start_inst:  2008-06-01  # 5-15 to 6-15 for gate install flow/elev 9/20-10/10 good
 # end_inst:    2008-07-01  # 11-15 for water levels
@@ -47,6 +53,8 @@ labels: # Three labels for field data and two runs
   - Observed
   - DSP Baseline
   - DSP Suisun Restoration
+  - DSP Franks Tract
+  - DSP Cache Restoration
   - DSP Baseline w SLR
 
 
@@ -86,6 +94,6 @@ selected_stations:
   - carqb # 'CARQB' Carquinez Strait at Carquinez Bridge
   - gzm # Grizzly Bay at Head of Montezuma Slough
   - msl # Montezuma Slough at Roaring River
-plot_all: False
+plot_all: True
 max_gap_to_fill: 4h
 remove_outliers: False
