@@ -19,12 +19,12 @@ rm(list=ls(all=TRUE)) #start with empty workspace
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) # Setworking directory to this file's directory
 
 
-casanntra.dir <- '../../../casanntra/data'
+casanntra.dir <- '../../../scripts/casanntra/data'
 
 # Load obs data -----------------------------------------------------------
 
 obs_stas<- c("des_bdl", "des_cse", "ncro_emm2","usbr_jer", "dwr_rsl")
-obs_label <- c("bdl", "cse", "emm2", "jer", "rsl")
+obs_label <- c("bdl", "cse", "emm2", "jer", "rsl", "mrz")
 
 for (s in seq(1,length(obs_stas))) {
   df <- read.csv(paste0("./data_out/",obs_stas[s],"_obs_ec_1990_2025.csv"))
@@ -51,7 +51,7 @@ cases <- c(seq(1,107), seq(1001,1007))
 for (case in cases) {
   df <- read.csv(paste0(casanntra.dir,'/dsm2_base_',case,'.csv'))
   df$datetime <- lubridate::ymd(df$datetime)
-  df <- df[,c('datetime','x2','ndo','case')]
+  df <- df[,c('datetime','x2','ndo','case',"bdl", "cse", "emm2", "jer", "rsl", "mrz")]
   # df <- df[-(1:30),c('datetime','x2','ndo','case')] # remove first 30 days (spinup) and subset variables
   
   if (case==1) {
@@ -178,7 +178,6 @@ ggplotly(plt, dynamicTicks=TRUE)
 
 # Compare SCHISM to DSM2 --------------------------------------------------
 
-casanntra.dir <- '../../../casanntra/data'
 
 # SCHISM
 sch_cases <- seq(1,7)
@@ -207,6 +206,20 @@ for (case in sch_cases) {
     sch_slr_df <- df
   } else {
     sch_slr_df <- rbind(sch_slr_df, df)
+  }
+}
+
+# SCHISM SUISUN
+
+for (case in sch_cases) {
+  df <- read.csv(paste0(casanntra.dir,'/schism_suisun_',case,'.csv'))
+  df$datetime <- lubridate::ymd(df$datetime)
+  df$case <- case + 1000
+  
+  if (case==1) {
+    sch_suisun_df <- df
+  } else {
+    sch_suisun_df <- rbind(sch_suisun_df, df)
   }
 }
 
@@ -247,7 +260,7 @@ compare_flux <- c("sac_flow", "sjr_flow", "exports", "cu_flow", "ndo")
 compare_tide <- c("sf_tidal_energy","sf_tidal_filter")
 compare_x2 <- c("x2")
 compare_gates <- c("smscg","dcc")
-compare_ec <- c('bdl','emm2','rsl','jer','cse') #,'anh','mal','vcu','wci','tms','anh','cll')
+compare_ec <- c('mrz','bdl','emm2','rsl','jer','cse') #,'anh','mal','vcu','wci','tms','anh','cll')
 #c("trp", "wci", "vcu", "uni", "rsl", "old", "pct", "mal", "cll", "emm2", "srv", "anc", "jer", "sal", "ppt", "rri2", "bdt", "lps", "snc", "dsj", "bdl", "nsl2", "vol", "tss", "sss", "tms", "anh", "oh4", "rsl.1", "vcu.1", "mtz")
 all_vars <- c(compare_std, compare_flux, compare_tide, 
               compare_x2, compare_gates, compare_ec)
@@ -259,11 +272,14 @@ dsm2_df <- dsm2_df[,names(dsm2_df) %in% all_vars]
 sch_df <- sch_df[,names(sch_df) %in% all_vars]
 rma_df <- rma_df[,names(rma_df) %in% all_vars]
 sch_slr_df <- sch_slr_df[,names(sch_slr_df) %in% all_vars]
+sch_suisun_df <- sch_suisun_df[,names(sch_suisun_df) %in% all_vars]
 sch_slr_df$model <- "SLR-SCHISM"
+sch_suisun_df$model <- "SCHISM-SUISUN"
 # setdiff(names(rma_df), names(sch_df))
 comb.df <- rbind(dsm2_df, sch_df)
 comb.df <- rbind(comb.df, rma_df)
 comb.df <- rbind(comb.df, sch_slr_df)
+comb.df <- rbind(comb.df, sch_suisun_df)
 comb.df <- melt(comb.df, id.vars=compare_std)
 comb.df$variable <- factor(comb.df$variable, levels=plt_vars)
 
@@ -272,54 +288,62 @@ plt.obs.df$model <- 'Observed'
 plt.obs.df$scene <- 'base'
 plt.obs.df$case <- NA
 
+model_levels <- c('Observed','dsm2','SCHISM','SCHISM-SUISUN','SLR-SCHISM','RMA')
+
 compare_cases <- seq(1001,1007)
 
 for (case in compare_cases) {
   
-  # plot
   plt.df <- comb.df[comb.df$case == case, ]
-  plt.df <- rbind(plt.df, plt.obs.df[plt.obs.df$datetime >= 
-                                       min(plt.df$datetime) & 
-                                       plt.obs.df$datetime <= 
+  plt.df <- rbind(plt.df, plt.obs.df[plt.obs.df$datetime >=
+                                       min(plt.df$datetime) &
+                                       plt.obs.df$datetime <=
                                        max(plt.df$datetime), ])
-  plt.df$model <- factor(plt.df$model, levels=c('Observed','dsm2','SCHISM','SLR-SCHISM','RMA'))
+  plt.df$model <- factor(plt.df$model, levels=model_levels)
   
-  plt <- ggplot(data=plt.df) + 
-    geom_line(aes(x=datetime, y=value, color=model)) +
-    facet_wrap(~variable, ncol=2, scales='free_y') +
-    scale_x_date(date_breaks = "6 month", date_labels = "%b-%Y", expand=c(0,0)) +
-    scale_color_manual(values=c("black", "#377EB8", "#E41A1C", "#E7298A", "#66A61E"),
-                       breaks=c("Observed","dsm2","SCHISM",'SLR-SCHISM',"RMA")) +
-    theme(text=element_text(size=12),
-          axis.text.x = element_text(angle=90),
-          panel.border=element_rect(colour = "black", fill=NA, linewidth=0.5),
-          panel.background = element_blank(),
-          legend.key=element_blank(),
-          panel.grid.major.y = element_line(linewidth=.25, colour='grey80', linetype = 'dashed'),
-          axis.line = element_line(colour = "black"),
-          legend.position.inside=c(0.975,0.975),
-          legend.justification=c(0.975,0.975),
-          legend.spacing=unit(c(0,0,0,0),"null"),
-          legend.background = element_rect(fill = "white", color = NULL),
-          legend.title=element_blank(),
-          axis.title.y = element_text(color='black')
-    )
-  
-  pltl <- ggplotly(plt, dynamicTicks=TRUE)
-  
-  pltl_name <- paste0("check_dsm2_v_schism_",case,".html")
-  
-  saveWidget(pltl, pltl_name, selfcontained=TRUE)
-  file.rename(pltl_name, paste0("plots/",pltl_name))
-  
+  # plot
+  # 
+  # plt <- ggplot(data=plt.df) + 
+  #   geom_line(aes(x=datetime, y=value, color=model)) +
+  #   facet_wrap(~variable, ncol=2, scales='free_y') +
+  #   scale_x_date(date_breaks = "6 month", date_labels = "%b-%Y", expand=c(0,0)) +
+  #   scale_color_manual(values=c("black", "#377EB8", "#E41A1C", "#984EA3", "#E7298A", "#66A61E"),
+  #                      breaks=c("Observed","dsm2","SCHISM",'SCHISM-SUISUN","SLR-SCHISM',"RMA")) +
+  #   theme(text=element_text(size=12),
+  #         axis.text.x = element_text(angle=90),
+  #         panel.border=element_rect(colour = "black", fill=NA, linewidth=0.5),
+  #         panel.background = element_blank(),
+  #         legend.key=element_blank(),
+  #         panel.grid.major.y = element_line(linewidth=.25, colour='grey80', linetype = 'dashed'),
+  #         axis.line = element_line(colour = "black"),
+  #         legend.position.inside=c(0.975,0.975),
+  #         legend.justification=c(0.975,0.975),
+  #         legend.spacing=unit(c(0,0,0,0),"null"),
+  #         legend.background = element_rect(fill = "white", color = NULL),
+  #         legend.title=element_blank(),
+  #         axis.title.y = element_text(color='black')
+  #   )
+  # 
+  # pltl <- ggplotly(plt, dynamicTicks=TRUE)
+  # 
+  # pltl_name <- paste0("check_dsm2_v_schism_",case,".html")
+  # 
+  # saveWidget(pltl, pltl_name, selfcontained=TRUE)
+  # file.rename(pltl_name, paste0("plots/",pltl_name))
+  # 
   # plot ec out only
   plt.ec.df <- plt.df[plt.df$variable %in% plt_ec_vars,]
+  plt.ec.df <- plt.ec.df %>%
+    mutate(model = factor(model, levels = model_levels))
   plt <- ggplot(data=plt.ec.df) + 
     geom_line(aes(x=datetime, y=value, color=model)) +
     facet_wrap(~variable, ncol=1, scales='free_y') +
     scale_x_date(date_breaks = "6 month", date_labels = "%b-%Y", expand=c(0,0)) +
-    scale_color_manual(values=c("black", "#377EB8", "#E41A1C", "#E7298A", "#66A61E"),
-                       breaks=c("Observed","dsm2","SCHISM",'SLR-SCHISM',"RMA")) +
+    xlab("") +
+    ylab("EC (psu)") +
+    scale_color_manual(values=c("black", "#377EB8", "#E41A1C", "#984EA3", "#E7298A", "#66A61E"),
+                       breaks=c("Observed","dsm2","SCHISM",'SCHISM-SUISUN","SLR-SCHISM',"RMA"),
+                       drop=FALSE) +
     theme(text=element_text(size=12),
           axis.text.x = element_text(angle=90),
           panel.border=element_rect(colour = "black", fill=NA, linewidth=0.5),
@@ -335,6 +359,7 @@ for (case in compare_cases) {
           axis.title.y = element_text(color='black')
     )
   
+  plt
   pltl <- ggplotly(plt, dynamicTicks=TRUE)
   
   pltl_name <- paste0("ec_check_dsm2_v_schism_",case,".html")
