@@ -3,6 +3,7 @@
 
 # ignore model files
 model/*/output*
+model/calsim/*
 
 # ignore lily's script to clean/modify file format of input data from DSS
 data/fix_csv.py
