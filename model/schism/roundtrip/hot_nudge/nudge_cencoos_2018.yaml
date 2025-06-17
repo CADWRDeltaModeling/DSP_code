@@ -1,0 +1,35 @@
+# To create nudging files based on this input file, run the following command in the terminal:
+#     "create_nudging --yaml_fn nudge_hycom.yaml"
+nudging:
+    start_date: 2018-03-15
+    rnday: 383  # total run time in days
+    step_nu_tr: 1h
+    hgrid_input_file: ../rt_v1/hgrid.gr3
+    vgrid_input_file: ../rt_v1/vgrid.in.3d
+    vgrid_version: '5.10'
+    default: 0.
+    crs: 'EPSG:26910'
+    output_suffix: 'cencoos_2018' # the suffix for output files, e.g, TEM nudging file will be named 'TEM_nu_hycom.nc'
+    polygons:
+      - name: ocean
+        type: 3dfield
+        attribute: max(0., min(1. / 2. / 86400., 1. / 2. / 86400. * (((x - 542699.) ** 2 / 32.3e3 / 32.3e3 + (y - 4183642.) **2 / 32.3e3 / 32.3e3) - 1.) / ((41.e3 / 32.3e3) ** 2 - 1.)))
+        vertices:
+            - [497085, 4213519]
+            - [531756, 4214317]
+            - [550885, 4170246]
+            - [552280, 4136745]
+            - [496487, 4137742]
+        interpolant: 
+            method: nearest
+            data: /scratch/nasbdo/modeling_data/coastal/roms/cencoos_ca_roms/processed/cencoos_hourly_pst  # path for the hycom data.
+            dt: 1h  #time step in the input nc file.
+            vcoords: Z    # Z coordinates or S coordinates. For Z coordinates, depths are directly given, for S coordinats, depths need to be calculated.  
+            variables: 
+                - name: temperature
+                  varname: temp  #variable name in the netcdf file/default is temp if not provided.
+                  none_values: 10 # values for pts outside bg grid in nc
+                  offset: 0.0 #only for temperature (optional).
+                - name: salinity
+                  varname: salt  #variable name in the netcdf file/default is temp if not provided.
+                  none_values: 33.5           
