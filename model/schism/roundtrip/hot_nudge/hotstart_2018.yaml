@@ -1,4 +1,4 @@
-out_dir: ./
+out_dir: ./2018/
 hotstart: 
     date: 2018-03-15
     run_start: default
