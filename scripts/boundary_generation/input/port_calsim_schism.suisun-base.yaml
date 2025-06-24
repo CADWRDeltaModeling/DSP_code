@@ -1,10 +1,10 @@
 
 config:
-  version: rt_v1
+  version: suisun-base
   out_dir: ${dsp_code}/model/schism/roundtrip/${version}/
   bds_home: /home/tomkovic/BayDeltaSCHISM # local: D:/python/repositories/BayDeltaSCHISM
   dsp_code: /scratch/tomkovic/DSP_code # Local: D:/projects/delta_salinity/DSP_code
-  calsim_dss: ${dsp_code}/model/calsim/9.3.1_danube_adj/DSS/output/DCR2023_DV_9.3.1_v2a_Danube_Adj_v1.8.dss
+  calsim_dss: ${dsp_code}/model/calsim/rma_roundtrip/schism-suisun-base/DSS/output/DCR2023_DV_9.3.1_Danube_Adj_v1.8.dss
   dsm2_dir: ${dsp_code}/model/dsm2/2021DSM2FP_202301/timeseries
 param:
   boundary_kinds: [flow,dcc_gate,smscg_radial_gate,smscg_boatlock_gate,smscg_flashboard_gate,cu] #[flow,dcc_gate,smscg_radial_gate,smscg_boatlock_gate,smscg_flashboard_gate,cu,salt,temp]
@@ -41,4 +41,4 @@ cu:
   end_date: ${ed}
   
 # Use:
-# bds port_bc port_calsim_schism.yaml -- --sd 2018/3/1 --ed 2019/4/1
+# bds port_bc port_calsim_schism.suisun-base.yaml -- --sd 2015/2/18 --ed 2016/5/15
