@@ -47,8 +47,11 @@ cp $OTHER_DIR/bctides.in.2d \
   $OTHER_DIR/fluxflag.prop \
   $OTHER_DIR/station.in \
   $OTHER_DIR/vgrid.in.2d \
+  $OTHER_DIR/interpolate_variables.in \
   .
 </pre>
+
+Fix number of days in interpolate_variables.in
 
 <pre>
 cd /scratch/tomkovic/DSP_code/model/schism/roundtrip/rt_v1;
@@ -135,8 +138,8 @@ Edit necessary fields
 Run create_hotstart_2018.py
 <pre>
 cd /scratch/tomkovic/DSP_code/model/schism/roundtrip/hot_nudge
-cp ./hotstart.20180315.nc ../rt_v1/
-cp ./elev.ic ../rt_v1/
+cp ./2018/hotstart.20180315.nc ../rt_v1/
+cp ./2018/elev.ic ../rt_v1/
 </pre>
 
 ## Sflux
@@ -185,24 +188,50 @@ ln -sf oldr_head_barrier_elapsed_20180315.th oldr_head_barrier.th;
 ln -sf oldr_tracy_culvert_elapsed_20180315.th oldr_tracy_culvert.th;
 ln -sf oldr_tracy_barrier_elapsed_20180315.th oldr_tracy_barrier.th;
 ln -sf oldr_tracy_weir_elapsed_20180315.th oldr_tracy_weir.th;
-ln -sf salt_elapsed_20180315.th salt.th;
-ln -sf temp_elapsed_20180315.th temp.th;
+ln -sf salt_elapsed_20180315.th SAL_1.th;
+ln -sf temp_elapsed_20180315.th TEM_1.th;
 ln -sf tom_paine_sl_culvert_elapsed_20180315.th tom_paine_sl_culvert.th;
 ln -sf west_false_river_barrier_leakage_elapsed_20180315.th west_false_river_barrier_leakage.th;
 ln -sf msource_elapsed_20180315.th msource.th
 ln -sf ccfb_gate_syn.rt_v1.dated_elapsed_20180315.th ccfb_gate.th
 </pre>
 
-# Setup run
+# Setup Barotropic Run
 <pre>
 cd /scratch/tomkovic/DSP_code/model/schism/roundtrip/rt_v1;
+mkdir -p outputs;
 ln -sf param.nml.tropic param.nml;
 ln -sf bctides.in.2d bctides.in;
 ln -sf vgrid.in.2d vgrid.in;
-bds set_nudge cencoos_2018;
+bds set_nudge cencoos_2018 --param param.nml.clinic;
 ln -sf hotstart.20180315.nc hotstart.nc;
 </pre>
 
 
 ### copying to hpc4
 rsync -avz tomkovic@10.3.80.51:/scratch/tomkovic/DSP_code/model/schism/roundtrip/rt_v1/* /scratch/dms/tomkovic/DSP_code/model/schism/roundtrip/rt_v1/  --dry-run
+
+# Setup Baroclinic Run
+<pre>
+<!-- cd /scratch/tomkovic/DSP_code/model/schism/roundtrip/rt_v1; -->
+cd /scratch/dms/tomkovic/DSP_code/model/schism/roundtrip/rt_v1;
+mkdir -p outputs_tropic;
+mv outputs/* outputs_tropic; 
+mkdir -p outputs;
+cd outputs_tropic;
+rsync -avz ../interpolate_variables.in;
+# link necessary files
+ln -sf ../hgrid.gr3 bg.gr3;
+ln -sf ../hgrid.gr3 fg.gr3;
+ln -sf ../vgrid.in.2d vgrid.bg;
+ln -sf ../vgrid.in.3d vgrid.fg;
+ulimit -s unlimited;
+interpolate_variables8; # this takes quite a while
+cp uv3D.th.nc ../uv3D.th.nc;
+cd ../;
+ln -sf param.nml.clinic param.nml;
+ln -sf bctides.in.3d bctides.in;
+ln -sf vgrid.in.3d vgrid.in;
+bds set_nudge cencoos_2018;
+ln -sf hotstart.20180315.nc hotstart.nc;
+</pre>
