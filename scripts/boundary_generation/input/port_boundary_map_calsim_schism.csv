@@ -1,16 +1,16 @@
 schism_boundary,boundary_kind,source_kind,derived,interp,source_file,var,sign,convert,rhistinterp_p,formula,note,
-ccc_rock,flow,DSS,,TRUE,${calsim_dss},/CALSIM/D408_RS/FLOW-DELIVERY//1MON/L2020A/,1,CFS_CMS,2,,uses historical mean ratio of ccc_rock to all CCC,ccc rs
-ccc_old,flow,DSS,,TRUE,${calsim_dss},/CALSIM/D408_OR/FLOW-DELIVERY//1MON/L2020A/,1,CFS_CMS,2,,uses historical mean ratio of ccc_old to all CCC,cccold
-ccc_victoria,flow,DSS,,TRUE,${calsim_dss},/CALSIM/D408_VC/FLOW-DELIVERY//1MON/L2020A/,1,CFS_CMS,2,,uses historical mean ratio of ccc_victoria to all CCC,ccc vic
-swp,flow,DSS,,TRUE,${calsim_dss},/CALSIM/C_CAA003_TD/FLOW-DELIVERY//1MON/L2020A/,1,CFS_CMS,2,,,swp
-cvp,flow,DSS,,TRUE,${calsim_dss},/CALSIM/C_DMC000_TD/FLOW-DELIVERY//1MON/L2020A/,1,CFS_CMS,2,,,cvp
+ccc_rock,flow,DSS,TRUE,TRUE,${calsim_dss},/CALSIM/D408_RS/FLOW-DELIVERY//1MON/L2020A/,1,CFS_CMS,2,"np.maximum(0,dss.D408_RS)",uses historical mean ratio of ccc_rock to all CCC,ccc rs
+ccc_old,flow,DSS,TRUE,TRUE,${calsim_dss},/CALSIM/D408_OR/FLOW-DELIVERY//1MON/L2020A/,1,CFS_CMS,2,"np.maximum(0,dss.D408_OR)",uses historical mean ratio of ccc_old to all CCC,cccold
+ccc_victoria,flow,DSS,TRUE,TRUE,${calsim_dss},/CALSIM/D408_VC/FLOW-DELIVERY//1MON/L2020A/,1,CFS_CMS,2,"np.maximum(0,dss.D408_VC)",uses historical mean ratio of ccc_victoria to all CCC,ccc vic
+swp,flow,DSS,TRUE,TRUE,${calsim_dss},/CALSIM/C_CAA003_TD/FLOW-DELIVERY//1MON/L2020A/,1,CFS_CMS,2,"np.maximum(0,dss.C_CAA003_TD)",,swp
+cvp,flow,DSS,TRUE,TRUE,${calsim_dss},/CALSIM/C_DMC000_TD/FLOW-DELIVERY//1MON/L2020A/,1,CFS_CMS,2,"np.maximum(0,dss.C_DMC000_TD)",,cvp
 sjr,flow,DSS,,TRUE,${calsim_dss}, /CALSIM/C_SJR070/CHANNEL//1MON/L2020A/,-1,CFS_CMS,1,,,sjr
 calaveras,flow,DSS,,TRUE,${calsim_dss},/CALSIM/C_CLV004/CHANNEL//1MON/L2020A/,-1,CFS_CMS,2,,,cal
 east,flow,DSS,,TRUE,${calsim_dss},/CALSIM/C_MOK019/CHANNEL//1MON/L2020A/,-1,CFS_CMS,2,,"SCHISM and CalSim ""east"" boundary is combo of Cosumnes and Mokelumne Rivers",east
-northbay,flow,DSS,,TRUE,${calsim_dss},/CALSIM/C_CSL004B/CHANNEL//1MON/L2020A/,1,CFS_CMS,2,,,nb
+northbay,flow,DSS,TRUE,TRUE,${calsim_dss},/CALSIM/C_CSL004B/CHANNEL//1MON/L2020A/,1,CFS_CMS,2,"np.maximum(0,dss.C_CSL004B)",,nb
 american,flow,DSS,TRUE,TRUE,${calsim_dss},/CALSIM/C_SAC041/CHANNEL//1MON/L2020A/,-1,CFS_CMS,2,np.nanmean(flux.american/(flux.sac+flux.american)) * (dss.C_SAC041),uses historical mean ratio of american to sacramento,amer
 sac,flow,DSS,TRUE,TRUE,${calsim_dss},/CALSIM/C_SAC041/CHANNEL//1MON/L2020A/,-1,CFS_CMS,2,np.nanmean(flux.sac/(flux.sac+flux.american)) * (dss.C_SAC041),uses historical mean ratio of sacramento to sacramento plus the WWTP along the Sac,sac
-yolo_toedrain,flow,DSS,TRUE,TRUE,${calsim_dss},/CALSIM/C_CSL004A/CHANNEL//1MON/L2020A/,-1,CFS_CMS,2,"np.minimum(3000, dss.C_CSL004A)",at most 3000 cfs goes down the toe drain,yolo td
+yolo_toedrain,flow,DSS,TRUE,TRUE,${calsim_dss},/CALSIM/C_CSL004A/CHANNEL//1MON/L2020A/,-1,CFS_CMS,2,"np.maximum(0,np.minimum(3000, dss.C_CSL004A))",at most 3000 cfs goes down the toe drain,yolo td
 yolo,flow,DSS,TRUE,TRUE,${calsim_dss},/CALSIM/C_CSL004A/CHANNEL//1MON/L2020A/,-1,CFS_CMS,2,"np.maximum(0,dss.C_CSL004A-3000)","After 3000 cfs to toe drain, main bypass receives remaining flow",yolo
 sourcesink,cu,YAML,TRUE,FALSE,./port_calsim_schism.${version}.yaml,/CALSIM/NET_DICU/DICU_FLOW//1MON/L2020A/,,,,,,
 height,dcc_gate,DSS,TRUE,FALSE,${calsim_dss},/CALSIM/DXC/GATE-DAYS-OPEN//1MON/L2020A/,,,,"var_df.DXC; 10; 0; month_days","dss is days closed out of the month",dcc

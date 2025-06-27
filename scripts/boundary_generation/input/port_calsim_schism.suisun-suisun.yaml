@@ -1,6 +1,6 @@
 
 config:
-  version: suisun-base
+  version: suisun-suisun
   out_dir: ${dsp_code}/model/schism/roundtrip/${version}/
   bds_home: /home/tomkovic/BayDeltaSCHISM # local: D:/python/repositories/BayDeltaSCHISM
   dsp_code: /scratch/tomkovic/DSP_code # Local: D:/projects/delta_salinity/DSP_code
@@ -41,6 +41,7 @@ cu:
   end_date: ${ed}
   
 # Use:
-# bds port_bc port_calsim_schism.suisun-base.yaml -- --sd 2015/2/18 --ed 2016/5/15
+# bds port_bc port_calsim_schism.suisun-suisun.yaml -- --sd 2015/2/18 --ed 2016/5/15
 # To plot the boundaries, go to out_dir and run:
-# bds plot_bds_bc -o --sim-dirs ./ --html-name bds_input_boundaries.suisun-base.html -- --flux_file flux.suisun-base.dated.th --vsource_file vsource.suisun-base.dated.th --vsink_file vsink.suisun-base.dated.th
+# cd /scratch/tomkovic/DSP_code/model/schism/roundtrip/suisun-suisun
+# bds plot_bds_bc -o --sim-dirs ./ --html-name bds_input_boundaries.suisun-suisun.html -- --flux_file flux.suisun-suisun.dated.th --vsource_file vsource.suisun-suisun.dated.th --vsink_file vsink.suisun-suisun.dated.th
