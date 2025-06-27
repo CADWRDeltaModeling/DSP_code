@@ -107,3 +107,8 @@ schism/**/evap*.csv
 
 # dsm2 pause
 dsm2/**/latinhypercube_v4/*
+
+# roundtrip files
+**/roundtrip/*suisun*/*
+**/roundtrip/*slr*/*
+**/roundtrip/rt_v1/*
