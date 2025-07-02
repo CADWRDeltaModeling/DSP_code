@@ -33,6 +33,7 @@ cp $GEOM_DIR/hgrid.gr3 \
   $GEOM_DIR/source_sink.in \
   $GEOM_DIR/fluxflag.prop \
   $GEOM_DIR/split_quad.prop \
+  $GEOM_DIR/tvd.prop \
   .
 </pre>
 
@@ -223,7 +224,7 @@ mkdir -p outputs_tropic;
 mv outputs/* outputs_tropic; 
 mkdir -p outputs;
 cd outputs_tropic;
-rsync -avz ../interpolate_variables.in;
+rsync -avz ../interpolate_variables.in ./;
 # link necessary files
 ln -sf ../hgrid.gr3 bg.gr3;
 ln -sf ../hgrid.gr3 fg.gr3;

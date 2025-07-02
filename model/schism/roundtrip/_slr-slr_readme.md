@@ -1,13 +1,13 @@
 # Go to folder and create simulation folder
 <pre>
 cd /scratch/tomkovic/DSP_code/model/schism/roundtrip;
-mkdir -p suisun-suisun;
-cd suisun-suisun;
+mkdir -p slr-slr;
+cd slr-slr;
 </pre>
 
 # Copy geometry files in
 <pre>
-cd /scratch/tomkovic/DSP_code/model/schism/roundtrip/suisun-suisun;
+cd /scratch/tomkovic/DSP_code/model/schism/roundtrip/slr-slr;
 GEOM_DIR=/scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/baseline_inputs
 cp $GEOM_DIR/hgrid.gr3 \
   $GEOM_DIR/vgrid.in.3d \
@@ -39,7 +39,7 @@ cp $GEOM_DIR/hgrid.gr3 \
 
 Copy others:
 <pre>
-cd /scratch/tomkovic/DSP_code/model/schism/roundtrip/suisun-suisun;
+cd /scratch/tomkovic/DSP_code/model/schism/roundtrip/slr-slr;
 BASE_DIR=../suisun-base
 cp $BASE_DIR/bctides.in.2d \
   $BASE_DIR/bctides.in.3d \
@@ -47,7 +47,6 @@ cp $BASE_DIR/bctides.in.2d \
   $BASE_DIR/station.in \
   $BASE_DIR/vgrid.in.2d \
   $BASE_DIR/interpolate_variables.in \
-  $BASE_DIR/elev2D.th.nc \
   $BASE_DIR/check_progress.sh \
   $BASE_DIR/param.nml.tropic \
   $BASE_DIR/param.nml.clinic \
@@ -58,14 +57,40 @@ HOTNUDGE_DIR=/scratch/tomkovic/DSP_code/model/schism/roundtrip/hot_nudge
 cp $HOTNUDGE_DIR/TEM_*2015* \
   $HOTNUDGE_DIR/SAL_*2015* \
   $HOTNUDGE_DIR/2015/hotstart.20150218.nc \
-  $HOTNUDGE_DIR/2015/elev.ic \
   .
 </pre>
 
+
+## Create ocean boundary files
+<pre>
+cd /scratch/tomkovic/DSP_code/model/schism/roundtrip/slr-slr;
+gen_elev2d --outfile elev2D.th.nc --hgrid=hgrid.gr3 --stime=2015-2-18 --etime=2016-05-15 --slr 1.07 ../noaa_download/noaa_pryc1_9415020_water_level_2015_2017.csv ../noaa_download/noaa_mtyc1_9413450_water_level_2015_2017.csv;
+</pre>
+
+## Create Hotstart elev.ic
+
+From select_polaris_date.R 2-18-2015 has 33 stations - golden.
+copy from \\nasbdo\Modeling_Data\usgs_cruise -> ./2015/usgs_cruise_2015.csv
+
+<pre>
+cd /scratch/tomkovic/DSP_code/model/schism/roundtrip/hot_nudge;
+cp ./create_hotstart_2015.py ./create_hotstart_2015_slr.py
+cp ./hotstart_2015.yaml ./hotstart_2015_slr.yaml
+cp ./elev.yaml ./elev_slr.yaml;
+</pre>
+
+Edit necessary fields
+- changed elev_slr.yaml so that 0.96 default becomes 2.03 (+1.07m SLR)
+
+Run create_hotstart_2015_slr.py
+<pre>
+cd /scratch/tomkovic/DSP_code/model/schism/roundtrip/hot_nudge
+cp ./2015_slr/elev.ic ../slr-slr/
+</pre>
 ## Sflux
 
 <pre>
-cd /scratch/tomkovic/DSP_code/model/schism/roundtrip/suisun-suisun;
+cd /scratch/tomkovic/DSP_code/model/schism/roundtrip/slr-slr;
 BASE_DIR=../suisun-base
 mkdir -p sflux;
 rsync -avz $BASE_DIR/sflux/make_links.py ./sflux/make_links.py;
@@ -78,40 +103,40 @@ cd ../;
 ## Create boundary files from CalSim
 <pre>
 cd /scratch/tomkovic/DSP_code/scripts/boundary_generation/input;
-cp ./port_calsim_schism.suisun-base.yaml ./port_calsim_schism.suisun-suisun.yaml;
+cp ./port_calsim_schism.suisun-base.yaml ./port_calsim_schism.slr-slr.yaml;
 </pre>
 
-Change the version to suisun-suisun
+Change the version to slr-slr
 
 <pre>
 cd /scratch/tomkovic/DSP_code/scripts/boundary_generation/input;
-bds port_bc port_calsim_schism.suisun-suisun.yaml -- --sd 2015/2/18 --ed 2016/5/15
+bds port_bc port_calsim_schism.slr-slr.yaml -- --sd 2015/2/18 --ed 2016/5/15
 </pre>
 
-produces *.suisun-suisun.dated.th files
+produces *.slr-slr.dated.th files
 
 ## Run CCFB gate op estimator
-run /scratch/tomkovic/DSP_code/model/schism/roundtrip/create_ccfb.py to create ccfb_gate_syn.suisun-suisun.dated.th
+run /scratch/tomkovic/DSP_code/model/schism/roundtrip/create_ccfb.py to create ccfb_gate_syn.slr-slr.dated.th
 
 ## Create elapsed .th files
 
 <pre>
 cd /scratch/tomkovic/DSP_code/model/schism/roundtrip/;
-cp ./multi_clip.suisun-base.py ./multi_clip.suisun-suisun.py
+cp ./multi_clip.suisun-base.py ./multi_clip.slr-slr.py
 </pre>
 
-Modify multi_clip.suisun-suisun.py by changing the version and run
+Modify multi_clip.slr-slr.py by changing the version and run
 
 ## Link boundary files
 <pre>
-cd /scratch/tomkovic/DSP_code/model/schism/roundtrip/suisun-suisun;
-ln -sf flux.suisun-suisun.dated_elapsed_20150218.th flux.th;
-ln -sf delta_cross_channel.suisun-suisun.dated_elapsed_20150218.th delta_cross_channel.th;
-ln -sf vsource.suisun-suisun.dated_elapsed_20150218.th vsource.th;
-ln -sf vsink.suisun-suisun.dated_elapsed_20150218.th vsink.th;
-ln -sf montezuma_radial.suisun-suisun.dated_elapsed_20150218.th montezuma_radial.th;
-ln -sf montezuma_boat_lock.suisun-suisun.dated_elapsed_20150218.th montezuma_boat_lock.th;
-ln -sf montezuma_flash.suisun-suisun.dated_elapsed_20150218.th montezuma_flash.th;
+cd /scratch/tomkovic/DSP_code/model/schism/roundtrip/slr-slr;
+ln -sf flux.slr-slr.dated_elapsed_20150218.th flux.th;
+ln -sf delta_cross_channel.slr-slr.dated_elapsed_20150218.th delta_cross_channel.th;
+ln -sf vsource.slr-slr.dated_elapsed_20150218.th vsource.th;
+ln -sf vsink.slr-slr.dated_elapsed_20150218.th vsink.th;
+ln -sf montezuma_radial.slr-slr.dated_elapsed_20150218.th montezuma_radial.th;
+ln -sf montezuma_boat_lock.slr-slr.dated_elapsed_20150218.th montezuma_boat_lock.th;
+ln -sf montezuma_flash.slr-slr.dated_elapsed_20150218.th montezuma_flash.th;
 ln -sf grantline_culvert_elapsed_20150218.th grantline_culvert.th;
 ln -sf grantline_barrier_elapsed_20150218.th grantline_barrier.th;
 ln -sf grantline_weir_elapsed_20150218.th grantline_weir.th;
@@ -127,12 +152,12 @@ ln -sf temp_elapsed_20150218.th TEM_1.th;
 ln -sf tom_paine_sl_culvert_elapsed_20150218.th tom_paine_sl_culvert.th;
 ln -sf west_false_river_barrier_leakage_elapsed_20150218.th west_false_river_barrier_leakage.th;
 ln -sf msource_elapsed_20150218.th msource.th
-ln -sf ccfb_gate_syn.suisun-suisun.dated_elapsed_20150218.th ccfb_gate.th
+ln -sf ccfb_gate_syn.slr-slr.dated_elapsed_20150218.th ccfb_gate.th
 </pre>
 
 # Setup Barotropic Run
 <pre>
-cd /scratch/tomkovic/DSP_code/model/schism/roundtrip/suisun-suisun;
+cd /scratch/tomkovic/DSP_code/model/schism/roundtrip/slr-slr;
 mkdir -p outputs;
 ln -sf param.nml.tropic param.nml;
 ln -sf bctides.in.2d bctides.in;
@@ -142,13 +167,14 @@ ln -sf hotstart.20150218.nc hotstart.nc;
 </pre>
 
 
-<!-- ### copying to hpc4
-rsync -avz tomkovic@10.3.80.51:/scratch/tomkovic/DSP_code/model/schism/roundtrip/suisun-suisun/* /scratch/dms/tomkovic/DSP_code/model/schism/roundtrip/suisun-suisun/  --dry-run -->
+### copying to hpc4
+rsync -avz tomkovic@10.3.80.51:/scratch/tomkovic/DSP_code/model/schism/roundtrip/slr-slr/* /scratch/dms/tomkovic/DSP_code/model/schism/roundtrip/slr-slr/  --dry-run
+cp ../rt_v1/s*_hpc4.sh ./
 
 # Setup Baroclinic Run
 <pre>
-cd /scratch/tomkovic/DSP_code/model/schism/roundtrip/suisun-suisun;
-<!-- cd /scratch/dms/tomkovic/DSP_code/model/schism/roundtrip/suisun-suisun; -->
+<!-- cd /scratch/tomkovic/DSP_code/model/schism/roundtrip/slr-slr; -->
+cd /scratch/dms/tomkovic/DSP_code/model/schism/roundtrip/slr-slr;
 mkdir -p outputs_tropic;
 mv outputs/* outputs_tropic; 
 mkdir -p outputs;
