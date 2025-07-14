@@ -1,0 +1,38 @@
+# Breaks down the cases for 7 latin hypercube cases
+
+training_set: roundtrip
+  
+output_dir: ./data_out/roundtrip
+
+perturbations:
+- name: sac_scaled_1.1
+  model_input: sac
+  variable: flow
+  method: scale
+  args:
+    file: ../../data/dsm2_rsac155_flow_histdss.csv
+    scale_factor: 1.1
+    # unecesary, but keeping around just in case for gather_schism_output.py
+    # updates to schimpy/bdschism have been made 
+
+cases:
+- name: suisun-base
+  extends: model_base
+  case_start: 2015-02-18
+  case_end: 2016-05-01
+  model_year: 2015
+- name: suisun-suisun
+  extends: model_base
+  case_start: 2015-02-18
+  case_end: 2016-05-01
+  model_year: 2015
+- name: slr-base
+  extends: model_base
+  case_start: 2015-02-18
+  case_end: 2016-05-01
+  model_year: 2015
+- name: slr-slr
+  extends: model_base
+  case_start: 2015-02-18
+  case_end: 2016-05-01
+  model_year: 2015
