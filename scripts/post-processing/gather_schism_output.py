@@ -10,6 +10,7 @@ import os
 from schimpy.station import *
 from schimpy.model_time import file_to_timestamp
 from schimpy.schism_sources_sinks import read_source_sink_in
+from schimpy.util.yaml_load import yaml_from_file, csv_from_file
 from vtools.functions.filter import cosine_lanczos
 import datetime
 import warnings
@@ -54,7 +55,7 @@ def get_start_date_from_param(param_in):
 
 def read_th(infile):
 
-    in_df = pd.read_table(infile, sep="\s+", index_col="datetime", comment="#")
+    in_df = pd.read_table(infile, sep=r"\s+", index_col="datetime", comment="#")
     in_df.index = pd.to_datetime(in_df.index, format="%Y-%m-%dT%H:%M")
 
     # monotonic increase check
@@ -81,10 +82,10 @@ def get_ts_from_th(infile, start, elapsed_unit="s"):
     else:
         raise ValueError("elapsed_unit must be 's' or 'd'")
     if type(start) == str:
-        start = datetime.datetime(*list(map(int, re.split("[^\d]", start))))
+        start = datetime.datetime(*list(map(int, re.split(r"[^\d]", start))))
 
     if type(infile) is str:
-        in_df = pd.read_table(infile, sep="\s+", comment="#", index_col=0, header=None)
+        in_df = pd.read_table(infile, sep=r"\s+", comment="#", index_col=0, header=None)
     else:
         in_df = infile
 
@@ -124,8 +125,7 @@ def get_headers(infile, no_index=True):
 
 def load_case_dts(case_setup_yaml):
 
-    with open(case_setup_yaml, "r") as f:
-        case_inputs = schism_yaml.load(f)
+    case_inputs = yaml_from_file(case_setup_yaml)
     cases = case_inputs["cases"]
 
     case_dts = {}
@@ -141,14 +141,16 @@ def load_case_dts(case_setup_yaml):
 
 class ANNBCECGen(object):
 
-    def __init__(self, yml_fname, model_type):
+    def __init__(self, yml_fname, model_type, envvar={}):
         # read input yaml ---------------------------------------------------------------------------
         self.yml_fname = yml_fname
-        with open(yml_fname, "r") as f:
-            self.inputs = schism_yaml.load(f)
+        local_envs = {
+            k: v for k, v in locals().items() if isinstance(v, (int, float, str, bool))
+        }
+        self.inputs = yaml_from_file(yml_fname, envvar={**envvar, **local_envs})
 
         # assign env vars to format strings with ----------------------------------------------------
-        self.env_vars = build_dict(self.inputs.get("env_vars"))
+        self.env_vars = build_dict(self.inputs.get("env"))
         for env_var in self.env_vars:
             self.env_vars[env_var] = string.Formatter().vformat(
                 self.env_vars[env_var], (), SafeDict((self.env_vars))
@@ -209,18 +211,19 @@ class ANNBCECGen(object):
                 "Need to define the cases using key 'cases' in the yaml file"
             )
 
-    def get_meshcase_inouts(self, mesh, case_num):
+    def get_meshcase_inouts(self, mesh, case):
+
+        local_envs = {
+            k: v for k, v in locals().items() if isinstance(v, (int, float, str, bool))
+        }
+
         meshcase_dir = string.Formatter().vformat(
             self.env_vars["mc_dir"], (), SafeDict(({**self.env_vars, **locals()}))
         )
-        with open(
-            string.Formatter().vformat(
-                self.mod_th_dict, (), SafeDict(({**self.env_vars, **locals()}))
-            ),
-            "r",
-        ) as f:
-            mesh_mod_th_dict = schism_yaml.load(f)
-            mesh_mod_th_dict = build_dict(mesh_mod_th_dict)
+
+        mesh_mod_th_dict = yaml_from_file(
+            self.mod_th_dict, envvar={**self.env_vars, **local_envs}
+        )
 
         outputs_fpath = string.Formatter().vformat(
             self.inputs["station_output"], (), SafeDict(({**self.env_vars, **locals()}))
@@ -231,7 +234,7 @@ class ANNBCECGen(object):
         station_inpath = os.path.join(meshcase_dir, "station.in")
         # station_inpath = os.path.join(self.env_vars['exp_dir'],'station_285.in')
         time_basis = get_start_date_from_param(param_fpath)
-        date_range = self.case_dts[f"lhc_{case_num}"]
+        date_range = self.case_dts[case]
 
         # Inputs ---------------------------------------------------------------------------------------
         invar_df = pd.DataFrame()
@@ -427,7 +430,7 @@ class ANNBCECGen(object):
             tot_df, outvar_df, left_index=True, right_index=True, how="outer"
         )
         tot_df.to_csv(
-            os.path.join(self.out_dir, f"{mesh}_lhc_{case_num}.csv"),
+            os.path.join(self.out_dir, f"{mesh}_{case}.csv"),
             index=True,
             float_format="%.2f",
         )
@@ -641,28 +644,26 @@ class ANNBCECGen(object):
 
 if __name__ == "__main__":
 
-    from schimpy import schism_yaml
-
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    in_fname = "./input/pull_output_lathypcub_v3_schism.yaml"
+    # in_fname = "./input/pull_output_lathypcub_v3_schism.yaml"
 
     # for case in range(1, 8):
     #     print(f"\n\n\t\t---------  Runnning Case {case} ----------")
     #     annbc = ANNBCECGen(in_fname, model_type="SCHISM")
-    #     annbc.get_meshcase_inouts("baseline", case)
+    #     annbc.get_meshcase_inouts("baseline", f"lhc_{case}")
     # for case in range(1, 8):
     #     print(f"\n\n\t\t---------  Runnning Case {case} ----------")
     #     annbc = ANNBCECGen(in_fname, model_type="SCHISM")
-    #     annbc.get_meshcase_inouts("suisun", case)
+    #     annbc.get_meshcase_inouts("suisun", f"lhc_{case}")
     # for case in range(1, 8):
     #     print(f"\n\n\t\t---------  Runnning Case {case} ----------")
     #     annbc = ANNBCECGen(in_fname, model_type="SCHISM")
-    #     annbc.get_meshcase_inouts("franks", case)
-    for case in range(6, 8):
-        print(f"\n\n\t\t---------  Runnning Case {case} ----------")
-        annbc = ANNBCECGen(in_fname, model_type="SCHISM")
-        annbc.get_meshcase_inouts("cache", case)
+    #     annbc.get_meshcase_inouts("franks", f"lhc_{case}")
+    # for case in range(6, 8):
+    #     print(f"\n\n\t\t---------  Runnning Case {case} ----------")
+    #     annbc = ANNBCECGen(in_fname, model_type="SCHISM")
+    #     annbc.get_meshcase_inouts("cache", f"lhc_{case}")
 
     # in_fname = "./input/pull_output_mss_schism.yaml"
 
@@ -676,3 +677,9 @@ if __name__ == "__main__":
     #     annbc = ANNBCECGen(in_fname, model_type="SCHISM")
     #     print(f"Gathering case {case} ===========================================")
     #     annbc.get_meshcase_inouts("baseline", case)
+
+    in_fname = "./input/pull_output_roundtrip_schism.yaml"
+    for case in ["suisun-base", "suisun-suisun", "slr-base", "slr-slr"]:
+        annbc = ANNBCECGen(in_fname, model_type="SCHISM", envvar={"case": case})
+        print(f"Gathering case {case} ===========================================")
+        annbc.get_meshcase_inouts("baseline", case)
