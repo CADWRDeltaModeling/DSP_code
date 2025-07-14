@@ -13,10 +13,10 @@ sac,flow,DSS,TRUE,TRUE,${calsim_dss},/CALSIM/C_SAC041/CHANNEL//1MON/L2020A/,-1,C
 yolo_toedrain,flow,DSS,TRUE,TRUE,${calsim_dss},/CALSIM/C_CSL004A/CHANNEL//1MON/L2020A/,-1,CFS_CMS,2,"np.maximum(0,np.minimum(3000, dss.C_CSL004A))",at most 3000 cfs goes down the toe drain,yolo td
 yolo,flow,DSS,TRUE,TRUE,${calsim_dss},/CALSIM/C_CSL004A/CHANNEL//1MON/L2020A/,-1,CFS_CMS,2,"np.maximum(0,dss.C_CSL004A-3000)","After 3000 cfs to toe drain, main bypass receives remaining flow",yolo
 sourcesink,cu,YAML,TRUE,FALSE,./port_calsim_schism.${version}.yaml,/CALSIM/NET_DICU/DICU_FLOW//1MON/L2020A/,,,,,,
-height,dcc_gate,DSS,TRUE,FALSE,${calsim_dss},/CALSIM/DXC/GATE-DAYS-OPEN//1MON/L2020A/,,,,"var_df.DXC; 10; 0; month_days","dss is days closed out of the month",dcc
-op_up,smscg_radial_gate,DSS,TRUE,FALSE,${calsim_dss},/CALSIM/SMSCG_OP/GATE-OP-RATIO//1MON/L2020A/,,,,var_df.SMSCG_OP; 1; 0; months,operate Tidally for 0 (op_up=0) and open for 1 (monthly increment),dcc
-op_down,smscg_radial_gate,CONSTANT,,FALSE,,1,,,,,operate Tidally for 0 (op_down=1) and open for 1 (monthly increment) (op_down=1),dcc
-op_up,smscg_boatlock_gate,CONSTANT,,FALSE,,1,,,,,Always open,dcc
-op_down,smscg_boatlock_gate,CONSTANT,,FALSE,,1,,,,,Always open,dcc
-op_up,smscg_flashboard_gate,CONSTANT,,FALSE,,0,,,,,Always closed,dcc
-op_down,smscg_flashboard_gate,CONSTANT,,FALSE,,0,,,,,Always closed,dcc
+height,delta_cross_channel,DSS,TRUE,FALSE,${calsim_dss},/CALSIM/DXC/GATE-DAYS-OPEN//1MON/L2020A/,,,,"var_df.DXC; 10; 0; month_days","dss is days closed out of the month",dcc
+op_up,montezuma_radial,DSS,TRUE,FALSE,${calsim_dss},/CALSIM/SMSCG_OP/GATE-OP-RATIO//1MON/L2020A/,,,,var_df.SMSCG_OP; 1; 0; months,operate Tidally for 0 (op_up=0) and open for 1 (monthly increment),dcc
+op_down,montezuma_radial,CONSTANT,,FALSE,,1,,,,,operate Tidally for 0 (op_down=1) and open for 1 (monthly increment) (op_down=1),dcc
+op_up,montezuma_boat_lock,CONSTANT,,FALSE,,1,,,,,Always open,smscg
+op_down,montezuma_boat_lock,CONSTANT,,FALSE,,1,,,,,Always open,smscg
+op_up,montezuma_flash,CONSTANT,,FALSE,,0,,,,,Always closed,smscg
+op_down,montezuma_flash,CONSTANT,,FALSE,,0,,,,,Always closed,smscg
