@@ -1,0 +1,84 @@
+---
+config:
+  look: classic
+  theme: base
+---
+%%{
+    init: {
+        'theme': 'base',
+        'themeVariables': {
+        'primaryColor': '#fff',
+        'primaryTextColor': '#000',
+        'primaryBorderColor': '#002570',
+        'lineColor': '#000',
+        'secondaryColor': '#d1d1d1',
+        'tertiaryColor': '#fff'
+        }
+    }
+}%%
+
+
+flowchart LR
+
+
+    %% Input Data
+    subgraph calsim["<strong style='font-size:18px'>CalSim 3</strong>"]
+        direction TB
+        cs3inputs@{ shape: docs, label: "CalSim Input Data"}
+        cs3model(["<strong style='font-size:18px'>CalSim 3</strong><br>Planning Model<br>Monthly Timestep"])
+
+        subgraph ann["<strong style='font-size:16px'>Machine Learning</strong>"]
+
+            anninputs@{ shape: docs, label: <strong style='font-size:18px'>"ANN<br>Input<br>Data</strong>"}
+            subgraph traintest["<strong>Build/Architecture</strong>"]
+                anntrain(["Training"])
+                anntest(["Testing"])
+                anntrain --> anntest
+            end
+            anninputs --> traintest
+            annnode(["<strong style='font-size:18px'>ANN</strong>"])
+            traintest --> annnode
+        end
+        annnode --> cs3model
+        cs3inputs --> cs3model --> cs3outputs@{ shape: docs, label: "CalSim<br>Output Data"}
+    end
+
+    subgraph schism["<strong style='font-size:18px'>SCHISM Round Trip Validation</strong>"]
+
+        cs3outputs --> modts
+        geominputs@{ shape: docs, label: "Geometric Inputs"}
+        atmosinputs@{ shape: docs, label: "Atmospheric Inputs"}
+        schismmod(["<strong style='font-size:18px'>SCHISM Model</strong>"])
+        subgraph timeseries["<strong style='font-size:18px'>Time Series Inputs</strong>"]
+            timeseriesinputs@{ shape: docs, label: "Historical<br>Timeseries Inputs"}
+            modts@{ shape: docs, label: "Modified<br>Timeseries Inputs"}
+        end
+
+        geominputs --> schismmod
+        atmosinputs --> schismmod
+        timeseries ---> schismmod
+
+        schismmod --> schismouts@{ shape: docs, label: "SCHISM<br>Outputs"} --> comparecs3(["Compare with<br>CalSim 3 Outputs"])
+        cs3outputs --> comparecs3
+        schismouts --> spatan(["Detailed Spatial Analysis"])
+    end
+
+    %% ANN styles
+    style ann fill:#e5d4fa, stroke:#1d0140, stroke-width:3px
+    style traintest fill:#f1edf5, stroke:#1d0140
+    style annnode fill:#c59ff5, stroke-width:4px
+
+    %% CalSim styles
+    style calsim fill:#d5eff7, stroke:#012d3b, stroke-width:3px
+    style cs3model fill:#b0e5f5, stroke-width:4px
+    style cs3outputs fill:#f1edf5
+
+    %% SCHISM styles
+    style schism fill:#d3f9d8, stroke:#0f5132, stroke-width:3px
+    style timeseries fill:#f2fff4, stroke:#0f5132
+    style modts fill:#d5eff7
+    style schismmod fill:#b5f7bd, stroke-width:4px
+    style schismouts fill:#edfaef
+
+%% Command Line prompt to produce the svg diagram
+%% > mmdc -i .\full_project.mmd -o ../img/full_project.svg

@@ -1,0 +1,152 @@
+---
+config:
+  look: classic
+  theme: base
+---
+%%{
+    init: {
+        'theme': 'base',
+        'themeVariables': {
+        'primaryColor': '#fff',
+        'primaryTextColor': '#000',
+        'primaryBorderColor': '#000',
+        'lineColor': '#000',
+        'secondaryColor': '#d1d1d1',
+        'tertiaryColor': '#fff',
+        'edgeLabelBackground': 'transparent'
+        },
+        'flowchart': {
+            'curve': 'basis'
+        }
+    }
+}%%
+
+
+flowchart TD
+
+
+    %% Input Data
+    subgraph inputdata["<strong style='font-size:18px'>Input Data Sources</strong>"]
+        
+        hydro(["<strong>SCHISM</strong>"])
+
+        schslrbasedocs@{ shape: docs, label: "Baseline <strong>SLR </strong>Outputs<br>(ex: schism_slr_base_1.csv)<br>Cases 1–7"}
+        schbasedocs@{ shape: docs, label: "<strong>Baseline</strong> Outputs<br>(ex: schism_base_1.csv)<br>Cases 1–7 & 2021"}
+        schsuiusndocs@{ shape: docs, label: "<strong>Suisun</strong> Outputs<br>(ex: schism_suisun_1.csv)<br>Cases 1–7"}
+
+        hydro --> schbasedocs
+        hydro --> schsuiusndocs
+        hydro --> schslrbasedocs
+
+        %% horizontal order L->R
+        %% schbasedocs ~~~ schsuiusndocs ~~~ schslrbasedocs
+    end
+
+
+    %% Geometry ANN
+    subgraph geomchange["<strong style='font-size:18px'>ANN for Geometry</strong>"]
+
+        schbasedocs ---> anngeomarch(["<strong>Trained ANN</strong><br>Geometry Change"])
+        schsuiusndocs ---> anngeomarch
+
+        geomhead{"<strong>Output Head:</strong><br>Which Geometry is Triggered?"}
+
+        anngeomarch --> geomhead
+
+        suisunann(["<strong>Suisun</strong><br>schism-suisun-ann"])
+        baselineann(["<strong>Baseline</strong><br>schism-suisun-base"])
+
+        geomhead --> suisunann
+        geomhead --> baselineann
+    end
+
+    %% SLR ANN
+    subgraph slrchange["<strong style='font-size:18px'>ANN for SLR</strong>"]
+        schbasedocs ---> annslrmarch(["<strong>Trained ANN</strong><br>SLR Change"])
+        schslrbasedocs ---> annslrmarch
+
+        slrhead{"<strong>Output Head:</strong><br>Which Sea Level is Triggered?"}
+
+        annslrmarch --> slrhead
+
+        slrann(["<strong>Sea Level Rise</strong><br>schism-slr-ann"])
+        baselineslrann(["<strong>None</strong><br>schism-slr-base"])
+
+        slrhead --> slrann
+        slrhead --> baselineslrann
+    end
+
+    %% SCHISM
+    subgraph schism["<strong style='font-size:18px'>SCHISM</strong>"]
+        subgraph Geometry
+            schbasegeom["Baseline"]
+            schsuisungeom["Suisun"]
+        end
+        subgraph Tides
+            basetide["Existing Sea Level"]
+            slrtide["Sea Level Rise"]
+        end
+        %% link node 11 starts here
+        baselineann --->|<strong style='font-size:18px'>CalSim</strong| schsuisbase 
+        schbasegeom --> schsuisbase
+        basetide ---> schsuisbase
+        schsuisbase(["Simulation<br>suisun-base"])
+
+        suisunann --->|<strong style='font-size:18px'>CalSim</strong| schsuissuis
+        schsuisungeom --> schsuissuis
+        basetide ---> schsuissuis
+        schsuissuis(["Simulation<br>suisun-suisun"])
+        
+        baselineslrann --->|<strong style='font-size:18px'>CalSim</strong| schslrbase
+        schbasegeom --> schslrbase
+        basetide ---> schslrbase
+        schslrbase(["Simulation<br>slr-base"])
+
+        slrann --->|<strong style='font-size:18px'>CalSim</strong| schslrslr
+        schbasegeom -->schslrslr
+        slrtide ---> schslrslr
+        schslrslr(["Simulation<br>slr-slr"])
+
+        schsuisbase ~~~ schslrbase
+        schsuissuis ~~~ schslrslr
+    end
+
+    blank[" "]
+    blank2[" "]
+    slrchange ~~~ blank
+    geomchange ~~~ blank
+    blank ~~~ blank2 ~~~ schism
+
+    %% styles --------
+    style inputdata fill:#c4c4c4,stroke:#000,stroke-width:4px
+    style geomchange fill:#9ed7ff,stroke:#003961,stroke-width:3px
+    style slrchange fill:#ffb59e,stroke:#4f1300,stroke-width:3px
+    style schism stroke:#000, stroke-width:3px
+    style Tides stroke:#000
+    style Geometry stroke:#000
+    %% geometry base
+    style baselineann stroke:#6bc2ff, stroke-width:2px
+    linkStyle 13 stroke:#6bc2ff, stroke-width:3px
+    linkStyle 14 stroke:#6bc2ff, stroke-width:3px
+    linkStyle 15 stroke:#6bc2ff, stroke-width:3px
+    style schsuisbase fill:#ebf7ff
+    %% geometry suisun
+    style suisunann fill:#c7e8ff, stroke:#0081db, stroke-width:2px
+    style schsuisungeom fill:#9ed7ff
+    linkStyle 16 stroke:#0081db, stroke-width:3px
+    linkStyle 17 stroke:#0081db, stroke-width:3px
+    style schsuissuis fill:#9ed7ff, stroke:#0081db, stroke-width:3px
+    %% slr base
+
+    linkStyle 22 stroke:#b83b14, stroke-width:3px
+    linkStyle 24 stroke:#b83b14, stroke-width:3px
+    style slrtide fill:#ffb59e
+    style schslrslr fill:#ffb59e
+    style blank fill:none, stroke:none
+    style blank2 fill:none, stroke:none
+    %% linkStyle 1 stroke:red
+
+    linkStyle default background:transparent
+
+%% Command Line prompt to produce the svg diagram
+%% > mmdc -i .\roundtrip_ann_details.mmd -o ../img/roundtrip_ann_details.svg

@@ -1,0 +1,103 @@
+---
+config:
+  look: classic
+  theme: base
+---
+%%{
+    init: {
+        'theme': 'base',
+        'themeVariables': {
+        'primaryColor': '#fff',
+        'primaryTextColor': '#000',
+        'primaryBorderColor': '#000',
+        'lineColor': '#000',
+        'secondaryColor': '#d1d1d1',
+        'tertiaryColor': '#fff',
+        'edgeLabelBackground': 'transparent'
+        }
+    }
+}%%
+
+
+flowchart LR
+
+
+    %% PreTrain I
+    subgraph pretrainI["<strong style='font-size:18px'>Pre-Training I</strong>"]
+        direction BT
+
+        dsm2outputs@{ shape: docs, label: "<strong>DSM2 Outputs</strong><br>100 Synthetic Years"}
+        
+        anndsm2inputs["Inputs"]
+
+        dsm2outputs --->|Exports| anndsm2inputs
+        dsm2outputs -->|Northern Flow| anndsm2inputs
+        dsm2outputs -->|Consumptive Use| anndsm2inputs
+        dsm2outputs -->|Gate Operations| anndsm2inputs
+        dsm2outputs --->|Tidal Energy| anndsm2inputs
+
+        anndsm2inputs --> dsm2feat1["<strong>Feature 1</strong><br>Output Coeficients<br>from Training"] --> dsm2feat2["<strong>Feature 2</strong><br>Output Coeficients<br>from Training"] --> outheadptI(["<strong>Output Head</strong><br>Output Coeficients<br>from Training"])
+    end
+
+    %% PreTrain II
+    subgraph pretrainII["<strong style='font-size:18px'>Pre-Training II</strong>"]
+        direction BT
+
+        schismoutputs@{ shape: docs, label: "<strong>SCHISM<br>Base Case Outputs</strong><br>8 Cases"}
+        
+        annschisminputs["Inputs"]
+
+        schismoutputs --->|Exports| annschisminputs
+        schismoutputs -->|Northern Flow| annschisminputs
+        schismoutputs -->|Consumptive Use| annschisminputs
+        schismoutputs -->|Gate Operations| annschisminputs
+        schismoutputs --->|Tidal Energy| annschisminputs
+
+        annschisminputs --> schfeat1["Feature 1"] --> schfeat2["Feature 2"] --> outheadptII(["Output Head"])
+    end
+
+    %% Baseline-Alt Contrast
+    subgraph basealt["<strong style='font-size:18px'>Base-Alt Training II</strong>"]
+        direction BT
+
+        baseoutputs@{ shape: docs, label: "SCHISM<br><strong>Base Case</strong> Outputs<br>8 Cases"} 
+        altoutputs@{ shape: docs, label: "SCHISM<br><strong>Alt. Case</strong> Outputs<br>8 Cases"}
+
+        annbasealtinputs["Inputs"]
+
+        baseoutputs ---> annbasealtinputs
+
+        altoutputs --->|Exports| annbasealtinputs
+        altoutputs -->|Northern Flow| annbasealtinputs
+        altoutputs -->|Consumptive Use| annbasealtinputs
+        altoutputs -->|Gate Operations| annbasealtinputs
+        altoutputs --->|Tidal Energy| annbasealtinputs
+
+        annbasealtinputs --> abfeat1["Feature 1"] --> abfeat2["Feature 2"] --> outheadbase(["Base Case<br>Output Head"])
+        abfeat2 --> outheadalt(["Alt. Case<br>Output Head"])
+        abfeat2 --> outheadcontr(["|Alt-Base|<br>Contrast<br>Output Head"])
+    end
+
+    %% Broad Connections
+    pretrainI -.-> |Copied Coeficients<br>and Initialize<br>Output Head<br>Remove Inputs| pretrainII -.-> |Copied Coeficients<br>and Initialize<br>Base and Alt<br>Output Heads| basealt
+    %% dsm2feat1 -.-> schfeat2
+
+    %% Styles
+    style pretrainI fill:#fafafa, stroke:#000, stroke-width:3px
+    style pretrainII fill:#f0f0f0, stroke:#000, stroke-width:3px
+    style schfeat1 fill:#d4d4d4, stroke-width:2px
+    style schfeat2 fill:#d4d4d4, stroke-width:2px
+    style basealt stroke:#000, stroke-width:4px
+    style abfeat1 fill:#d4d4d4, stroke-width:2px
+    style abfeat2 fill:#d4d4d4, stroke-width:2px
+    style annbasealtinputs fill:#f0f0f0, stroke:#454545, stroke-width:2px
+    style baseoutputs fill:#d4d4d4, stroke-width:2px
+    style outheadbase fill:#d4d4d4
+    style outheadalt fill:#d4d4d4
+    style pretrainI stroke:#000, stroke-width:1px
+    style outheadptI stroke:#000, stroke-width:3px
+    style outheadptII fill:#d4d4d4, stroke:#000, stroke-width:3px
+
+    linkStyle default background:transparent
+%% Command Line prompt to produce the svg diagram
+%% > mmdc -i .\ann_schematic.mmd -o ../img/ann_schematic.svg
