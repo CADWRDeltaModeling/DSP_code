@@ -1,0 +1,243 @@
+# Define Environmental Variables  ---------------------------------------------------------------
+# env_vars are used to populate the rest of the variables below
+
+env: 
+ bds_home: /home/tomkovic/BayDeltaSCHISM # where the BayDeltaSCHISM repository is housed
+ experiment: roundtrip # name of folder to look inside of test_file for azure setup
+ schism_out_dir: '../../scripts/post-processing/data_out/schism_{experiment}' # where the SCHISM data comes from
+ out_dir: '../../../casanntra/data'
+ x2_dir: '../../scripts/x2/data_out'
+ evap_dir: '../../scripts/evap/data_out'
+
+csv_indx_fmt: '${schism_out_dir}/{mesh}_{case_name}.csv'
+model: SCHISM
+
+# Input Variables to the ANN --------------------------------------------------------------------
+  # CalSim configuration:
+  # Delta_X channel operation: DXC -  (1-open first opening days for a month 0- closed rest of the days in a month)
+  # Exports: (C_CAA003_TD+C_DMC000_TD+d408+D_SJR028_WTPDWS) - SWP+CVP+CCWD+COSMA
+  # Northern Flow: (C_SAC041+C_CSL004A+C_MOK019+C_CLV004)- SAC+YOLO_BP+MOKEL+CALVER
+  # SJR flow: (C_SJR070)
+  # SF Tide Daily Amplitude difference(Max- Min): (STAGE-max-min - F-ASTRO_NAVD_20170607) – separately from tide file
+  # Net DICU/DCD: (NET_DICU) – separately from DICU file
+  # SMSCG: (SMSCG_OP) -  operations (1-tidally operate, 0-open)
+in_vars:
+- ann_colname: northern_flow # Northern Flow according to Malinda
+  csv_file: '${schism_out_dir}/{mesh}_{case_name}.csv'
+  unit_conv: -35.3147
+  csv_header: Northern Flow In [cms]
+  
+- ann_colname: sac_flow # Northern Flow according to Malinda
+  csv_file: '${schism_out_dir}/{mesh}_{case_name}.csv'
+  unit_conv: -35.3147
+  csv_header: sac ist In [cms]
+
+- ann_colname: sjr_flow # SJR flow according to Malinda
+  csv_file: '${schism_out_dir}/{mesh}_{case_name}.csv'
+  unit_conv: -35.3147
+  csv_header: sjr In [cms]
+
+- ann_colname: exports # Exports according to Malinda
+  csv_file: '${schism_out_dir}/{mesh}_{case_name}.csv'
+  unit_conv: 35.3147
+  csv_header: Exports Combined In [cms]
+
+- ann_colname: delta_cu
+  csv_file: '${schism_out_dir}/{mesh}_{case_name}.csv'
+  unit_conv: -35.3147
+  csv_header: Delta CU In [cms]
+
+- ann_colname: suisun_cu
+  csv_file: '${schism_out_dir}/{mesh}_{case_name}.csv'
+  unit_conv: -35.3147
+  csv_header: Suisun CU In [cms]
+
+- ann_colname: ndo
+  csv_file: '${schism_out_dir}/{mesh}_{case_name}.csv'
+  unit_conv: -35.3147
+  csv_header: Net Delta Outflow In [cms]
+
+- ann_colname: dcc # Delta_X according to Malinda
+  csv_file: '${schism_out_dir}/{mesh}_{case_name}.csv'
+  unit_conv: 
+    - [0, 10] # closed, open
+    - [0, 1] # closed, open
+  csv_header: DCC Gate In
+
+- ann_colname: smscg # SMSCG according to Malinda
+  csv_file: '${schism_out_dir}/{mesh}_{case_name}.csv'
+  unit_conv: 
+    - [0, 1] # tidally operate, open
+    - [1, 0] # tidally operate, open
+  csv_header: Suisun Radial opup In
+
+- ann_colname: sf_tidal_energy # new variable (no CalSim standard)
+  csv_file: '${schism_out_dir}/{mesh}_{case_name}.csv'
+  unit_conv: 1 # none handled conversion in gather_schism_output.py
+  csv_header: SF Tidal Energy Out
+
+- ann_colname: sf_tidal_filter # new variable (no CalSim standard)
+  csv_file: '${schism_out_dir}/{mesh}_{case_name}.csv'
+  unit_conv: 1 # none handled conversion in gather_schism_output.py
+  csv_header: SF Tidal Filter Out
+
+- ann_colname: x2
+  csv_file: '{x2_dir}/x2_ts_bay_sac_{mesh}_{case_name}.csv'
+  unit_conv: 1
+  csv_header: "1"
+
+- ann_colname: evap_delta
+  csv_file: '{evap_dir}/evap_ts_legal_delta_{mesh}_{case_name}.csv'
+  unit_conv: 1 # already computed in cfs in previous scripts
+  csv_header: evaporationRate
+
+# - sheet_name: sjr_vernalis_ec
+#   sheet_colnames:
+#     - sjr_vernalis_ec
+#   csv_header: ver z=-0.5 EC Out [psu]
+
+# - sheet_name: sac_ec
+#   sheet_colnames:
+#     - sac_greens_ec
+#   csv_header: emm2 z=-0.5 EC Out [psu]
+
+comb_vars:
+- ann_colname: cu_delta
+  vars:
+    - delta_cu
+    - evap_delta
+  mult:
+    - 1 # consider use as positive
+    - 1 # consider evaporation as positive
+- ann_colname: cu_total
+  vars:
+    - delta_cu
+    - suisun_cu
+    - evap_delta
+  mult:
+    - 1 # consider use as positive
+    - 1 # consider use as positive
+    - 1 # consider evaporation as positive
+- ann_colname: cu_suisun
+  vars:
+    - delta_cu
+    - suisun_cu
+    - evap_delta
+  mult:
+    - 1 # consider use as positive
+    - 1 # consider use as positive
+    - 1 # consider evaporation as positive
+
+delete_vars:
+- delta_cu
+- suisun_cu
+
+out_ec_locs:
+- ann_colnames:
+    - trp # CHDMC006-CVP INTAKE
+    - wci # CHSWP003-CCFB_INTAKE
+    - vcu # CHVCT000-VICTORIA INTAKE
+    - uni # OLD_MID-OLD RIVER NEAR MIDDLE RIVER
+    - rsl # ROLD024-OLD RIVER AT BACON ISLAND
+    - old # ROLD059-OLD RIVER AT TRACY BLVD
+    - pct # RSAC064-SACRAMENTO R AT PORT CHICAGO
+    - mal # RSAC075-MALLARDISLAND
+    - cll # RSAC081-COLLINSVILLE
+    - emm2 # RSAC092-EMMATON
+    - srv # RSAC101-SACRAMENTO R AT RIO VISTA
+    - anc # RSAN007-ANTIOCH
+    - jer # RSAN018-JERSEYPOINT
+    - sal # RSAN032-SACRAMENTO R AT SAN ANDREAS LANDING
+    - ppt # RSAN037-SAN JOAQUIN R AT PRISONERS POINT
+    - rri2 # RSAN058-ROUGH AND READY ISLAND
+    - bdt # RSAN072-SAN JOAQUIN R AT BRANDT BRIDGE
+    - lps # RSMKL008-S FORK MOKELUMNE AT TERMINOUS
+    - snc # SLCBN002-CHADBOURNE SLOUGH NR SUNRISE DUCK CLUB
+    - dsj # SLDUT007-DUTCH SLOUGH
+    - bdl # SLMZU011-MONTEZUMA SL AT BELDONS LANDING
+    - nsl2 # SLMZU025-MONTEZUMA SL AT NATIONAL STEEL
+    - vol # SUISUN SL NEAR VOLANTI SL
+    - tss # SLTRM004-THREE MILE SLOUGH NR SAN JOAQUIN R
+    - sss # SSS-STEAMBOAT SL
+    - tms # Threemile slough near Sacramento River
+    - anh # Antioch
+    - cse
+    - mrz # Martinez
+    # - anc # Antioch_dup
+    # - wci # CCFB_Intake_dup
+    # - cll # Collinsville_dup
+    # - trp # CVP_Intake_dup
+    # - emm2 # Emmaton_dup
+    # - jer # Jersey_Point_dup
+    # - mal # Mallard_Island_dup
+    - oh4 # Old_River_Hwy_4
+    - rsl  # CCWD_Rock
+    - vcu # CCWD_Victoria_dup
+    - mtz # montezuma
+    - god # Godfather II on Suisun Slough
+    - gzl # grizzly Bay
+    - frk # Franks Tract, Mid Tract
+    - bac # Old River at Bacon Island
+    - hol # Holland Cut near Bethel Island
+    - ori # Old River - Clifton Court Forebay Intake
+- csv_headers: 
+    - trp z=-0.5 EC Out [psu] # CHDMC006-CVP INTAKE
+    - wci z=-0.5 EC Out [psu] # CHSWP003-CCFB_INTAKE
+    - vcu z=-0.5 EC Out [psu] # CHVCT000-VICTORIA INTAKE
+    - uni z=-0.5 EC Out [psu] # OLD_MID-OLD RIVER NEAR MIDDLE RIVER
+    - rsl z=-0.5 EC Out [psu] # ROLD024-OLD RIVER AT BACON ISLAND
+    - old z=-0.5 EC Out [psu] # ROLD059-OLD RIVER AT TRACY BLVD
+    - pct z=-0.5 EC Out [psu] # RSAC064-SACRAMENTO R AT PORT CHICAGO
+    - mal z=-1.0 EC Out [psu] # RSAC075-MALLARDISLAND
+    - cll z=-0.5 EC Out [psu] # RSAC081-COLLINSVILLE
+    - emm2 z=-0.5 EC Out [psu] # RSAC092-EMMATON
+    - srv z=-0.5 EC Out [psu] # RSAC101-SACRAMENTO R AT RIO VISTA
+    - anc z=-0.5 EC Out [psu] # RSAN007-ANTIOCH
+    - jer z=-0.5 EC Out [psu] # RSAN018-JERSEYPOINT
+    - sal z=-0.5 EC Out [psu] # RSAN032-SACRAMENTO R AT SAN ANDREAS LANDING
+    - ppt z=-0.5 EC Out [psu] # RSAN037-SAN JOAQUIN R AT PRISONERS POINT
+    - rri2 z=-0.5 EC Out [psu] # RSAN058-ROUGH AND READY ISLAND
+    - bdt z=-0.5 EC Out [psu] # RSAN072-SAN JOAQUIN R AT BRANDT BRIDGE
+    - lps z=-0.5 EC Out [psu] # RSMKL008-S FORK MOKELUMNE AT TERMINOUS
+    - snc z=-0.5 EC Out [psu] # SLCBN002-CHADBOURNE SLOUGH NR SUNRISE DUCK CLUB
+    - dsj z=-0.5 EC Out [psu] # SLDUT007-DUTCH SLOUGH
+    - bdl z=-0.5 EC Out [psu] # SLMZU011-MONTEZUMA SL AT BELDONS LANDING
+    - nsl2 z=-0.5 EC Out [psu] # SLMZU025-MONTEZUMA SL AT NATIONAL STEEL
+    - vol z=-0.5 EC Out [psu] # SUISUN SL NEAR VOLANTI SL
+    - tss z=-0.5 EC Out [psu] # SLTRM004-THREE MILE SLOUGH NR SAN JOAQUIN R
+    - sss z=-0.5 EC Out [psu] # SSS-STEAMBOAT SL
+    - tms z=-0.5 EC Out [psu] # Threemile slough near Sacramento River
+    - anh z=-1.0 EC Out [psu]
+    - cse z=-0.5 EC Out [psu]
+    - mrz z=-1.0 EC Out [psu] # Martinez
+    # - anc z=-0.5 EC Out [psu] # Antioch_dup
+    # - wci z=-0.5 EC Out [psu] # CCFB_Intake_dup
+    # - cll z=-0.5 EC Out [psu] # Collinsville_dup
+    # - trp z=-0.5 EC Out [psu] # CVP_Intake_dup
+    # - emm2_upper WSE Out [m NAVD88] # Emmaton_dup
+    # - jer z=-0.5 EC Out [psu] # Jersey_Point_dup
+    # - mal_upper WSE Out [m NAVD88] # Mallard_Island_dup
+    - oh4 z=-0.5 EC Out [psu] # Old_River_Hwy_4
+    - rsl z=-0.5 EC Out [psu]  # CCWD_Rock
+    - vcu z=-0.5 EC Out [psu] # CCWD_Victoria_dup
+    - mtz z=-0.5 EC Out [psu] # montezuma
+    - god z=-0.5 EC Out [psu] # Godfather II on Suisun Slough
+    - gzl z=-0.5 EC Out [psu] # grizzly Bay
+    - frk z=-0.5 EC Out [psu] # Franks Tract, Mid Tract
+    - bac z=-0.5 EC Out [psu] # Old River at Bacon Island
+    - hol z=-0.5 EC Out [psu] # Holland Cut near Bethel Island
+    - ori z=-0.5 EC Out [psu] # Old River - Clifton Court Forebay Intake
+
+# Model Meshes ----------------------------------------------------------------------------------
+
+meshes:
+- baseline
+- suisun
+
+# Model Cases -----------------------------------------------------------------------------------
+
+cases:
+- suisun-base
+- suisun-suisun
+- slr-base
+- slr-slr
