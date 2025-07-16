@@ -34,7 +34,7 @@ def schism_to_ann_xlsx(in_fname, mesh):
         inputs = schism_yaml.load(f)
 
     # assign env vars to format strings with ----------------------------------------------------
-    env_vars = build_dict(inputs.get("env_vars"))
+    env_vars = build_dict(inputs.get("env"))
     for env_var in env_vars:
         env_vars[env_var] = string.Formatter().vformat(
             env_vars[env_var], (), SafeDict((env_vars))
@@ -119,14 +119,14 @@ def get_csv_df(csv_file):
     return var_df_daily
 
 
-def schism_to_ann_csv(in_fname, mesh, mesh_outname):
+def schism_to_ann_csv(in_fname, mesh, mesh_outname, cases=None):
 
     with open(in_fname, "r") as f:
         # loader = RawLoader(stream)
         inputs = schism_yaml.load(f)
 
     # assign env vars to format strings with ---------------------------------------------------
-    env_vars = build_dict(inputs.get("env_vars"))
+    env_vars = build_dict(inputs.get("env"))
     for env_var in env_vars:
         env_vars[env_var] = string.Formatter().vformat(
             env_vars[env_var], (), SafeDict((env_vars))
@@ -142,76 +142,81 @@ def schism_to_ann_csv(in_fname, mesh, mesh_outname):
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
-    if "cases" in inputs.keys():
+    if cases:
+        print(f'Gathering cases {','.join(cases)}')
+    elif "cases" in inputs.keys():
         cases = inputs.get("cases")
-        for case_num in cases:
-            case_name = case_num  # f'lhc_{case_num}'
-            print(case_name)
-            case_number = re.findall(r"\d+", case_num)[0]
-            # uses this csv just to get the datetime indices for the other variables and to get EC outputs
-            csv_indx_fmt = string.Formatter().vformat(
-                inputs.get("csv_indx_fmt"), (), SafeDict(({**env_vars, **locals()}))
-            )
-            input_df_daily = get_csv_df(csv_indx_fmt)
-            output_df_daily = pd.DataFrame(
-                index=input_df_daily.index,
-                columns=["model", "scene", "case"]
-                + ann_var_names
-                + out_ec_locs["ann_colnames"],
-            )  # creates an empty dataframe with spaces for each ANN variable
-            output_df_daily["model"] = "SCHISM"
-            output_df_daily["scene"] = mesh_outname
-            output_df_daily["case"] = case_number
-
-            # go through each sheet and store inputs
-            for varmap in in_vars:
-                ann_colname = varmap["ann_colname"]
-                unit_conv = varmap["unit_conv"]
-                csv_header = varmap["csv_header"]
-                csv_file = varmap["csv_file"]
-
-                var_df_daily = get_csv_df(
-                    string.Formatter().vformat(
-                        csv_file, (), SafeDict(({**env_vars, **locals()}))
-                    )
-                )
-                var_df = var_df_daily.loc[:, csv_header]
-                if isinstance(unit_conv, list):
-                    var_df.loc[:] = np.interp(var_df.values, unit_conv[0], unit_conv[1])
-                else:
-                    var_df = var_df * unit_conv
-                var_df.columns = ann_colname
-                output_df_daily[ann_colname] = var_df
-
-            # write combination variables
-            for varmap in comb_vars:
-                ann_colname = varmap["ann_colname"]
-                vars = varmap["vars"]
-                mult = varmap["mult"]
-
-                var_df = (output_df_daily[vars].fillna(0) * mult).sum(axis=1)
-                var_df.columns = ann_colname
-                output_df_daily[ann_colname] = var_df
-
-            # delete the columns that are not needed
-            for var in delete_vars:
-                if var in output_df_daily.columns:
-                    del output_df_daily[var]
-
-            # add EC ouptuts
-            for ann_ec, col_ec in zip(
-                out_ec_locs["ann_colnames"], out_ec_locs["csv_headers"]
-            ):
-                output_df_daily[ann_ec] = psu_ec_25c(input_df_daily.loc[:, col_ec])
-
-            # write out csv
-            out_fn = os.path.join(out_dir, f"schism_{mesh_outname}_{case_number}.csv")
-            # clean up the start and end rows
-            output_df_daily.index.name = "datetime"
-            output_df_daily.dropna(inplace=True)
-            output_df_daily.to_csv(out_fn, float_format="%.2f")
     else:
         print("Needs cases")
+    for case_num in cases:
+        case_name = case_num  # f'lhc_{case_num}'
+        print(case_name)
+        try:
+            case_number = re.findall(r"\d+", case_num)[0]
+        except:
+            case_number=case_name
+        # uses this csv just to get the datetime indices for the other variables and to get EC outputs
+        csv_indx_fmt = string.Formatter().vformat(
+            inputs.get("csv_indx_fmt"), (), SafeDict(({**env_vars, **locals()}))
+        )
+        input_df_daily = get_csv_df(csv_indx_fmt)
+        output_df_daily = pd.DataFrame(
+            index=input_df_daily.index,
+            columns=["model", "scene", "case"]
+            + ann_var_names
+            + out_ec_locs["ann_colnames"],
+        )  # creates an empty dataframe with spaces for each ANN variable
+        output_df_daily["model"] = "SCHISM"
+        output_df_daily["scene"] = mesh_outname
+        output_df_daily["case"] = case_number
+
+        # go through each sheet and store inputs
+        for varmap in in_vars:
+            ann_colname = varmap["ann_colname"]
+            unit_conv = varmap["unit_conv"]
+            csv_header = varmap["csv_header"]
+            csv_file = varmap["csv_file"]
+
+            var_df_daily = get_csv_df(
+                string.Formatter().vformat(
+                    csv_file, (), SafeDict(({**env_vars, **locals()}))
+                )
+            )
+            var_df = var_df_daily.loc[:, csv_header]
+            if isinstance(unit_conv, list):
+                var_df.loc[:] = np.interp(var_df.values, unit_conv[0], unit_conv[1])
+            else:
+                var_df = var_df * unit_conv
+            var_df.columns = ann_colname
+            output_df_daily[ann_colname] = var_df
+
+        # write combination variables
+        for varmap in comb_vars:
+            ann_colname = varmap["ann_colname"]
+            vars = varmap["vars"]
+            mult = varmap["mult"]
+
+            var_df = (output_df_daily[vars].fillna(0) * mult).sum(axis=1)
+            var_df.columns = ann_colname
+            output_df_daily[ann_colname] = var_df
+
+        # delete the columns that are not needed
+        for var in delete_vars:
+            if var in output_df_daily.columns:
+                del output_df_daily[var]
+
+        # add EC ouptuts
+        for ann_ec, col_ec in zip(
+            out_ec_locs["ann_colnames"], out_ec_locs["csv_headers"]
+        ):
+            output_df_daily[ann_ec] = psu_ec_25c(input_df_daily.loc[:, col_ec])
+
+        # write out csv
+        out_fn = os.path.join(out_dir, f"schism_{mesh_outname}_{case_number}.csv")
+        # clean up the start and end rows
+        output_df_daily.index.name = "datetime"
+        output_df_daily.dropna(inplace=True)
+        output_df_daily.to_csv(out_fn, float_format="%.2f")
 
 
 if __name__ == "__main__":
@@ -220,7 +225,7 @@ if __name__ == "__main__":
 
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    in_fname = "./input/ann_csv_config_lathypcub_v3_schism.yaml"
+    # in_fname = "./input/ann_csv_config_lathypcub_v3_schism.yaml"
     # mesh = "baseline"
     # mesh_outname = "base"
     # schism_to_ann_csv(in_fname, mesh, mesh_outname)
@@ -230,9 +235,9 @@ if __name__ == "__main__":
     # mesh = "franks"
     # mesh_outname = "franks"
     # schism_to_ann_csv(in_fname, mesh, mesh_outname)
-    mesh = "cache"
-    mesh_outname = "cache"
-    schism_to_ann_csv(in_fname, mesh, mesh_outname)
+    # mesh = "cache"
+    # mesh_outname = "cache"
+    # schism_to_ann_csv(in_fname, mesh, mesh_outname)
 
     # in_fname = "./input/ann_csv_config_lathypcub_v3_mss_schism.yaml"
     # mesh = "baseline"
@@ -243,3 +248,13 @@ if __name__ == "__main__":
     # mesh = "baseline"
     # mesh_outname = "slr_base"
     # schism_to_ann_csv(in_fname, mesh, mesh_outname)
+
+    in_fname = "./input/ann_csv_config_roundtrip_schism.yaml"
+    mesh = "baseline"
+    mesh_outname = "base"
+    schism_to_ann_csv(
+        in_fname, mesh, mesh_outname, cases=["suisun-base", "slr-base", "slr-slr"]
+    )
+    mesh = "suisun"
+    mesh_outname = "suisun"
+    schism_to_ann_csv(in_fname, mesh, mesh_outname, cases=["suisun-suisun"])
