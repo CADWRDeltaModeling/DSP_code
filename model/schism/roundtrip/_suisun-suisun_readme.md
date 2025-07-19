@@ -8,7 +8,7 @@ cd suisun-suisun;
 # Copy geometry files in
 <pre>
 cd /scratch/tomkovic/DSP_code/model/schism/roundtrip/suisun-suisun;
-GEOM_DIR=/scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/baseline_inputs
+GEOM_DIR=/scratch/tomkovic/DSP_code/model/schism/azure_dsp_2024_lhc_v3/suisun_inputs
 cp $GEOM_DIR/hgrid.gr3 \
   $GEOM_DIR/vgrid.in.3d \
   $GEOM_DIR/albedo.gr3 \
@@ -55,10 +55,10 @@ cp $BASE_DIR/bctides.in.2d \
   $BASE_DIR/schism.sh \
   .
 HOTNUDGE_DIR=/scratch/tomkovic/DSP_code/model/schism/roundtrip/hot_nudge
-cp $HOTNUDGE_DIR/TEM_*2015* \
-  $HOTNUDGE_DIR/SAL_*2015* \
-  $HOTNUDGE_DIR/2015/hotstart.20150218.nc \
-  $HOTNUDGE_DIR/2015/elev.ic \
+cp $HOTNUDGE_DIR/TEM_*cencoos_2015_suisun* \
+  $HOTNUDGE_DIR/SAL_*cencoos_2015_suisun* \
+  $HOTNUDGE_DIR/2015_suisun/hotstart.20150218.nc \
+  $HOTNUDGE_DIR/2015_suisun/elev.ic \
   .
 </pre>
 
@@ -149,15 +149,13 @@ rsync -avz tomkovic@10.3.80.51:/scratch/tomkovic/DSP_code/model/schism/roundtrip
 <pre>
 cd /scratch/tomkovic/DSP_code/model/schism/roundtrip/suisun-suisun;
 <!-- cd /scratch/dms/tomkovic/DSP_code/model/schism/roundtrip/suisun-suisun; -->
-mkdir -p outputs_tropic;
-mv outputs/* outputs_tropic; 
-mkdir -p outputs;
-cd outputs_tropic;
+
+<!-- # some rigamarole so that I can create uv3d from a separate run -->
 rsync -avz ../interpolate_variables.in ./;
 # link necessary files
-ln -sf ../hgrid.gr3 bg.gr3;
+ln -sf ../../suisun-base/hgrid.gr3 bg.gr3;
 ln -sf ../hgrid.gr3 fg.gr3;
-ln -sf ../vgrid.in.2d vgrid.bg;
+ln -sf ../../suisun-base/vgrid.in.2d vgrid.bg;
 ln -sf ../vgrid.in.3d vgrid.fg;
 ulimit -s unlimited;
 interpolate_variables8; # this takes quite a while
@@ -166,6 +164,6 @@ cd ../;
 ln -sf param.nml.clinic param.nml;
 ln -sf bctides.in.3d bctides.in;
 ln -sf vgrid.in.3d vgrid.in;
-bds set_nudge cencoos_2015;
+bds set_nudge cencoos_2015_suisun;
 ln -sf hotstart.20150218.nc hotstart.nc;
 </pre>
