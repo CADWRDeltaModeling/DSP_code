@@ -679,7 +679,11 @@ if __name__ == "__main__":
     #     annbc.get_meshcase_inouts("baseline", case)
 
     in_fname = "./input/pull_output_roundtrip_schism.yaml"
-    for case in ["suisun-base", "suisun-suisun", "slr-base", "slr-slr"]:
+    # for case in ["suisun-base", "slr-base", "slr-slr"]:
+    # annbc = ANNBCECGen(in_fname, model_type="SCHISM", envvar={"case": case})
+    # print(f"Gathering case {case} ===========================================")
+    # annbc.get_meshcase_inouts("baseline", case)
+    for case in ["suisun-suisun"]:
         annbc = ANNBCECGen(in_fname, model_type="SCHISM", envvar={"case": case})
         print(f"Gathering case {case} ===========================================")
-        annbc.get_meshcase_inouts("baseline", case)
+        annbc.get_meshcase_inouts("suisun", case)

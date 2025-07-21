@@ -250,11 +250,11 @@ if __name__ == "__main__":
     # schism_to_ann_csv(in_fname, mesh, mesh_outname)
 
     in_fname = "./input/ann_csv_config_roundtrip_schism.yaml"
-    mesh = "baseline"
-    mesh_outname = "base"
-    schism_to_ann_csv(
-        in_fname, mesh, mesh_outname, cases=["suisun-base", "slr-base", "slr-slr"]
-    )
+    # mesh = "baseline"
+    # mesh_outname = "base"
+    # schism_to_ann_csv(
+    #     in_fname, mesh, mesh_outname, cases=["suisun-base", "slr-base", "slr-slr"]
+    # )
     mesh = "suisun"
     mesh_outname = "suisun"
     schism_to_ann_csv(in_fname, mesh, mesh_outname, cases=["suisun-suisun"])

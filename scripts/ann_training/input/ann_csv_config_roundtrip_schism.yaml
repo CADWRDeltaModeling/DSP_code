@@ -82,12 +82,12 @@ in_vars:
   csv_header: SF Tidal Filter Out
 
 - ann_colname: x2
-  csv_file: '{x2_dir}/x2_ts_bay_sac_{mesh}_{case_name}.csv'
+  csv_file: '${x2_dir}/x2_ts_bay_sac_{mesh}_{case_name}.csv'
   unit_conv: 1
   csv_header: "1"
 
 - ann_colname: evap_delta
-  csv_file: '{evap_dir}/evap_ts_legal_delta_{mesh}_{case_name}.csv'
+  csv_file: '${evap_dir}/evap_ts_legal_delta_{mesh}_{case_name}.csv'
   unit_conv: 1 # already computed in cfs in previous scripts
   csv_header: evaporationRate
 
