@@ -48,7 +48,7 @@ flowchart LR
         cs3outputs --> modts
         geominputs@{ shape: docs, label: "Geometric Inputs"}
         atmosinputs@{ shape: docs, label: "Atmospheric Inputs"}
-        schismmod(["<strong style='font-size:18px'>SCHISM Model</strong>"])
+        schismmod(["<strong style='font-size:18px'>SCHISM Model</strong><br>15 Minute Timestep"])
         subgraph timeseries["<strong style='font-size:18px'>Time Series Inputs</strong>"]
             timeseriesinputs@{ shape: docs, label: "Historical<br>Timeseries Inputs"}
             modts@{ shape: docs, label: "Modified<br>Timeseries Inputs"}
@@ -82,3 +82,4 @@ flowchart LR
 
 %% Command Line prompt to produce the svg diagram
 %% > mmdc -i .\full_project.mmd -o ../img/full_project.svg
+%% > mmdc -i .\full_project.mmd -o ../img/full_project.png -w 1024 -H 768
