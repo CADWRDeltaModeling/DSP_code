@@ -19,6 +19,9 @@ library(stringr)
 library(ggh4x)
 library(htmlwidgets)
 library(scales)
+library(colorspace)
+library(grid)
+library(gtable)
 
 rm(list=ls(all=TRUE)) #start with empty workspace
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) # Setworking directory to this file's directory
@@ -88,120 +91,149 @@ dev.off()
 
 # NOTICE: Looks as though 4 clusters would be most appropriate when including May in analysis
 
-# # K-means clustering with 4 -----------------------------------------------
-# 
-# 
-# nclust <- 4 # Using 4 4 might be most appropriate
-# bivars <- c('Flow','Export')
-# nfex.decdry4 <- clust.plt(nclust, nf.dd.norm.stat, nfex.full.rshp, plt.out.dir, refdate=refdate, bivars=bivars, y.scale=y.scale, only.clust.legend=TRUE) # cluster with nfex.dd.norm.stat but plot with nfex.full.rshp (un-log-normalized full time series for plotting)
-# nfex.decdry4.km <- nfex.decdry4$km.cb
-# 
-# # save(nfex.decdry4.km, file=paste0('output/',plt.out.dir,'/nfexdecdry4km.RData'))
-# 
-# # Determine selected water years ------------------------------------------
-# 
-# slct.df <- nf.dd.norm
-# bivars <- c('Flow','Export')
-# obs <- ncol(slct.df) - 1 # number of days times number of bivariates
-# clusts <- nfex.decdry4.km$partition
-# 
-# wy.metrics <- data.frame(wy=slct.df$wy, clust=clusts, skill=NA, rmse=NA, mmskill=NA, mmrmse=NA)
-# 
-# slct.df$clust <- clusts
-# jds <- names(slct.df)[!(names(slct.df) %in% c('wy','clust'))]
-# for (c in sort(unique(clusts))) {
-#   
-#   # get average values for cluster
-#   mean.clust <- data.frame(jday=jds, mean=NA)
-#   for (jd in jds) {
-#     mean.clust$mean[mean.clust$jday==jd] <- mean(slct.df[slct.df$clust==c,names(slct.df) %in% c(jd)])
-#   } # end jd mean loop
-#   
-#   # compute metrics for each wy within cluster
-#   for (wy in slct.df$wy[slct.df$clust==c]) {
-#     wy.df <- data.frame(jday=jds,
-#                         pred=unlist(slct.df[slct.df$wy==wy, jds]))
-#     wy.df <- merge(wy.df, mean.clust, by='jday')
-#     wy.metrics$rmse[wy.metrics$wy==wy] <- sqrt(sum((wy.df$pred-wy.df$mean)^2)/nrow(wy.df))
-#     wy.metrics$skill[wy.metrics$wy==wy] <- 1-(sum((wy.df$pred-wy.df$mean)^2)/
-#                                                 (sum((abs(wy.df$pred-mean(wy.df$mean))+abs(wy.df$mean-mean(wy.df$mean)))^2)))
-#   } # end wy loop
-#   
-#   # compute max and min skill/rmse
-#   wy.metrics$mmskill[wy.metrics$skill==
-#                        max(wy.metrics$skill[wy.metrics$clust==c & wy.metrics$wy > 2007], na.rm=TRUE)] <- paste0('Max Skill cluster ', c)
-#   wy.metrics$mmskill[wy.metrics$skill==
-#                        min(wy.metrics$skill[wy.metrics$clust==c], na.rm=TRUE)] <- paste0('Min Skill cluster ', c)
-#   wy.metrics$mmrmse[wy.metrics$rmse==
-#                       max(wy.metrics$rmse[wy.metrics$clust==c], na.rm=TRUE)] <- paste0('Max RMSE cluster ', c)
-#   wy.metrics$mmrmse[wy.metrics$rmse==
-#                       min(wy.metrics$rmse[wy.metrics$clust==c & wy.metrics$wy > 2007], na.rm=TRUE)] <- paste0('Min RMSE cluster ', c)
-#   
-# } # end cluster loop
-# 
-# wy.metrics <- wy.metrics[order(wy.metrics$clust, wy.metrics$rmse),]
-# wy.metrics[grepl("Min RMSE",wy.metrics$mmrmse),]
-# wy.slcts <- wy.metrics[grepl("Min RMSE",wy.metrics$mmrmse),'wy']
-# wy.slcts <- wy.slcts[!(wy.slcts %in% c(2019))] # chose to only include 2017 and not 2019 in cluster 6 to keep limited to 6 years
-# sort(wy.slcts) 
-# 
-# # save(wy.metrics, file=paste0('output/',plt.out.dir,'/wymetrics_cluster.RData'))
-# 
-# df.plt.rshp <- nfex.decdry4$df.plt.rshp
-# plt.cst.rshp <- nfex.decdry4$plt.cst.rshp
-# plots <- c('Min Skill','Max Skill','Min RMSE','Max RMSE')
-# 
-# wy.to.clust <- slct.df[,c('wy','clust')]
-# # save(wy.to.clust, file=paste0('output/',plt.out.dir,'/wytoclust.RData'))
-# 
-# # Plot final selection ----------------------------------------------------
-# 
-# slct.wys <- wy.slcts
-# 
-# wycol <- merge(wy.to.clust, col.clust, by='clust')
-# unslcted <- sort(unique(df.plt.rshp$variable)[!(unique(df.plt.rshp$variable) %in% slct.wys)])
-# c.colordf <- data.frame(breaks=c(unslcted, 
-#                                  wycol$wy[wycol$wy %in% slct.wys]),
-#                         values=c(rep('grey',length(unslcted)),
-#                                  wycol$color[wycol$wy %in% slct.wys]))
-# flow.brks <- c(5000,10000, 20000, 30000, 40000, 50000,100000)
-# figname <-  paste0(plt.out.dir,'/Final_WY_Selection.png')
-# 
-# # create facet wrap plot for all years with the selected years plotted in respective cluster color
-# plt <- ggplot() +
-#   geom_line(data=df.plt.rshp, mapping=aes(x=dt,y=value,color=variable), linewidth=0.5, alpha=0.5, show.legend=FALSE) +
-#   geom_line(data=df.plt.rshp[df.plt.rshp$variable %in% slct.wys,], mapping=aes(x=dt,y=value,color=variable), linewidth=1) +
-#   facet_wrap(~bivar, nrow=length(bivars), scales='free') +
-#   scale_color_manual(breaks= c.colordf$breaks,
-#                      values=c.colordf$values,
-#                      # guide=guide_legend(override.aes=list(linetype=0)),
-#                      name="Cluster") +
-#   # scale_y_continuous(limits=c(0,500000), breaks=seq(0,500000,100000), expand=c(0,0)) +
-#   # scale_y_continuous(limits=c(0,25000), expand=c(0,0)) +
-#   scale_x_date(date_breaks = "1 month", date_labels = "%b", expand=c(0,0)) +
-#   labs(x='',y='Discharge (cfs)') +
-#   guides(color=guide_legend(nrow=2)) + 
-#   facetted_pos_scales(y=list(
-#     scale_y_continuous(limits=c(0,14000), expand=c(0,0)),
-#     scale_y_log10(breaks=flow.brks, labels=comma(flow.brks, accuracy=1)))) +
-#   theme(text=element_text(size=12),
-#         panel.border=element_rect(colour = "black", fill=NA, linewidth=0.5),
-#         panel.background = element_blank(),
-#         # legend.key=element_blank(),
-#         panel.grid.major.y = element_line(size=.25, colour='grey80', linetype = 'dashed'),
-#         axis.line = element_line(colour = "black"),
-#         # legend.position=c(0.975,0.975),
-#         legend.position='bottom',
-#         legend.box='vertical',
-#         # legend.justification=c(0.975,0.975),
-#         legend.spacing=unit(c(0,0,0,0),"null"),
-#         legend.background = element_rect(fill = "white", color = NULL),
-#         # legend.title=element_blank(),
-#         axis.title.y = element_text(color='black'),
-#         axis.text.x = element_text(angle=90))
+# K-means clustering with 4 -----------------------------------------------
+
+
+nclust <- 4 # Using 4 4 might be most appropriate
+bivars <- c('Flow','Export')
+nfex.decdry4 <- clust.plt(nclust, nf.dd.norm.stat, nfex.full.rshp, plt.out.dir, refdate=refdate, bivars=bivars, y.scale=y.scale, only.clust.legend=TRUE) # cluster with nfex.dd.norm.stat but plot with nfex.full.rshp (un-log-normalized full time series for plotting)
+nfex.decdry4.km <- nfex.decdry4$km.cb
+
+# save(nfex.decdry4.km, file=paste0('output/',plt.out.dir,'/nfexdecdry4km.RData'))
+
+# Determine selected water years ------------------------------------------
+
+slct.df <- nf.dd.norm
+bivars <- c('Flow','Export')
+obs <- ncol(slct.df) - 1 # number of days times number of bivariates
+clusts <- nfex.decdry4.km$partition
+
+wy.metrics <- data.frame(wy=slct.df$wy, clust=clusts, skill=NA, rmse=NA, mmskill=NA, mmrmse=NA)
+
+slct.df$clust <- clusts
+jds <- names(slct.df)[!(names(slct.df) %in% c('wy','clust'))]
+for (c in sort(unique(clusts))) {
+
+  # get average values for cluster
+  mean.clust <- data.frame(jday=jds, mean=NA)
+  for (jd in jds) {
+    mean.clust$mean[mean.clust$jday==jd] <- mean(slct.df[slct.df$clust==c,names(slct.df) %in% c(jd)])
+  } # end jd mean loop
+
+  # compute metrics for each wy within cluster
+  for (wy in slct.df$wy[slct.df$clust==c]) {
+    wy.df <- data.frame(jday=jds,
+                        pred=unlist(slct.df[slct.df$wy==wy, jds]))
+    wy.df <- merge(wy.df, mean.clust, by='jday')
+    wy.metrics$rmse[wy.metrics$wy==wy] <- sqrt(sum((wy.df$pred-wy.df$mean)^2)/nrow(wy.df))
+    wy.metrics$skill[wy.metrics$wy==wy] <- 1-(sum((wy.df$pred-wy.df$mean)^2)/
+                                                (sum((abs(wy.df$pred-mean(wy.df$mean))+abs(wy.df$mean-mean(wy.df$mean)))^2)))
+  } # end wy loop
+
+  # compute max and min skill/rmse
+  wy.metrics$mmskill[wy.metrics$skill==
+                       max(wy.metrics$skill[wy.metrics$clust==c & wy.metrics$wy > 2007], na.rm=TRUE)] <- paste0('Max Skill cluster ', c)
+  wy.metrics$mmskill[wy.metrics$skill==
+                       min(wy.metrics$skill[wy.metrics$clust==c], na.rm=TRUE)] <- paste0('Min Skill cluster ', c)
+  wy.metrics$mmrmse[wy.metrics$rmse==
+                      max(wy.metrics$rmse[wy.metrics$clust==c], na.rm=TRUE)] <- paste0('Max RMSE cluster ', c)
+  wy.metrics$mmrmse[wy.metrics$rmse==
+                      min(wy.metrics$rmse[wy.metrics$clust==c & wy.metrics$wy > 2007], na.rm=TRUE)] <- paste0('Min RMSE cluster ', c)
+
+} # end cluster loop
+
+wy.metrics <- wy.metrics[order(wy.metrics$clust, wy.metrics$rmse),]
+wy.metrics[grepl("Min RMSE",wy.metrics$mmrmse),]
+wy.slcts <- wy.metrics[grepl("Min RMSE",wy.metrics$mmrmse),'wy']
+wy.slcts <- wy.slcts[!(wy.slcts %in% c(2019))] # chose to only include 2017 and not 2019 in cluster 6 to keep limited to 6 years
+sort(wy.slcts)
+
+# save(wy.metrics, file=paste0('output/',plt.out.dir,'/wymetrics_cluster.RData'))
+
+df.plt.rshp <- nfex.decdry4$df.plt.rshp
+plt.cst.rshp <- nfex.decdry4$plt.cst.rshp
+plots <- c('Min Skill','Max Skill','Min RMSE','Max RMSE')
+
+wy.to.clust <- slct.df[,c('wy','clust')]
+# save(wy.to.clust, file=paste0('output/',plt.out.dir,'/wytoclust.RData'))
+
+# Plot final selection ----------------------------------------------------
+
+slct.wys <- wy.slcts
+slct.wys <- c(2008, 2010, 2012, 2014)
+
+wycol <- merge(wy.to.clust, col.clust, by='clust')
+unslcted <- sort(unique(df.plt.rshp$variable)[!(unique(df.plt.rshp$variable) %in% slct.wys)])
+c.colordf <- data.frame(breaks=c(unslcted,
+                                 wycol$wy[wycol$wy %in% slct.wys]),
+                        values=c(rep('grey',length(unslcted)),
+                                 wycol$color[wycol$wy %in% slct.wys]))
+flow.brks <- c(5000,10000, 20000, 30000, 40000, 50000,100000)
+figname <-  paste0(plt.out.dir,'/Final_WY_Selection.png')
+
+df.plt.rshp$variable <- as.character(df.plt.rshp$variable)
+other_levels <- setdiff(unique(df.plt.rshp$variable), as.character(slct.wys))
+ordered_levels <- c(as.character(slct.wys), sort(other_levels))
+df.plt.rshp$variable <- factor(df.plt.rshp$variable, levels = ordered_levels)
+
+unanalyzed.rect <- data.frame(xmin=rep(as.Date("2001-05-01"),2),
+                              xmax=rep(as.Date("2001-05-01"),2),
+                              ymin=c(min(df.plt.rshp$value[df.plt.rshp$bivar==bivars[1]]),
+                                     min(df.plt.rshp$value[df.plt.rshp$bivar==bivars[2]])),
+                              ymax=c(max(df.plt.rshp$value[df.plt.rshp$bivar==bivars[1]]),
+                                     max(df.plt.rshp$value[df.plt.rshp$bivar==bivars[2]])),
+                              bivar=bivars)
+# create facet wrap plot for all years with the selected years plotted in respective cluster color
+plt <- ggplot() +
+  geom_line(data=df.plt.rshp, mapping=aes(x=dt,y=value,color=variable), linewidth=0.5, alpha=0.5, show.legend=FALSE) +
+  geom_line(data=df.plt.rshp[df.plt.rshp$variable %in% slct.wys,], mapping=aes(x=dt,y=value,color=variable), linewidth=1) +
+  geom_rect(data=unanalyzed.rect, aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax),
+            fill = alpha("grey", 0.5), color = NA, inherit.aes = FALSE) +
+  facet_wrap(~bivar, nrow=length(bivars), scales='free') +
+  scale_color_manual(breaks=as.character(slct.wys),
+                     values=setNames(c.colordf$values, as.character(c.colordf$breaks)),
+                     # guide=guide_legend(override.aes=list(linetype=0)),
+                     name="Cluster") +
+  # scale_y_continuous(limits=c(0,500000), breaks=seq(0,500000,100000), expand=c(0,0)) +
+  # scale_y_continuous(limits=c(0,25000), expand=c(0,0)) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b", expand=c(0,0)) +
+  labs(x='',y='Discharge (cfs)') +
+  guides(color=guide_legend(nrow=1)) +
+  facetted_pos_scales(y=list(
+    scale_y_continuous(limits=c(0,14000), expand=c(0,0)),
+    scale_y_log10(breaks=flow.brks, labels=comma(flow.brks, accuracy=1)))) +
+  theme(text=element_text(size=12),
+        strip.text = element_text(face = "bold", color = "black"),
+        strip.background = element_rect(fill = "white", color = "black", linewidth=0.5),
+        panel.border=element_rect(colour = "black", fill=NA, linewidth=0.5),
+        panel.background = element_blank(),
+        # legend.key=element_blank(),
+        panel.grid.major.y = element_line(size=.25, colour='grey80', linetype = 'dashed'),
+        axis.line = element_line(colour = "black"),
+        # legend.position=c(0.975,0.975),
+        legend.position='bottom',
+        legend.box='vertical',
+        # legend.justification=c(0.975,0.975),
+        legend.spacing=unit(c(0,0,0,0),"null"),
+        legend.background = element_rect(fill = "white", color = NULL),
+        # legend.title=element_blank(),
+        axis.title.y = element_text(color='black'),
+        axis.text.x = element_text(angle=90))
+plt
+gt = ggplot_gtable(ggplot_build(plt))
+which.ylab = grep('ylab-l', gt$layout$name)
+which.axes = grep('axis-l', gt$layout$name)
+axis.rows  = gt$layout$t[which.axes]
+label.col  = gt$layout$l[which.ylab]
+gt = gtable::gtable_add_grob(gt, rep(gt$grobs[which.ylab], length(axis.rows)), axis.rows, label.col)
+gt = gtable::gtable_filter  (gt, 'ylab-l', invert = TRUE) 
+grid::grid.draw(gt)
 # plt
+png(filename = figname, width = 12.5, height = 7, units = "in", res = 300)
+grid::grid.draw(gt)
+dev.off()
 # ggsave(figname, width=12.5, height=7)
-# 
+
 
 # K-means clustering with N# -----------------------------------------------
 
