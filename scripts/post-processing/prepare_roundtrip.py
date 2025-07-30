@@ -260,9 +260,16 @@ if __name__ == "__main__":
             color="gray",
             alpha=0.3,
             label="CalSim Standard",
+            step="post",  # Make fill stepped
         )
         # Plot main line
-        ax.plot(main_df.index, main_df.iloc[:, 0], color="#1f77b4", label="CalSim")
+        ax.plot(
+            main_df.index,
+            main_df.iloc[:, 0],
+            color="#1f77b4",
+            label="CalSim",
+            drawstyle="steps-post",
+        )
         ax.set_ylim(0, ymax)
         ax.set_title(title)
         ax.grid(True)
